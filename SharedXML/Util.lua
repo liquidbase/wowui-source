@@ -13,6 +13,19 @@ RAID_CLASS_COLORS = {
 	["DEMONHUNTER"] = { r = 0.64, g = 0.19, b = 0.79, colorStr = "ffa330c9" },
 };
 
+function GetClassColor(classFilename)
+	local color = RAID_CLASS_COLORS[classFilename];
+	if color then
+		return color.r, color.g, color.b, color.colorStr;
+	end
+
+	return 1, 1, 1, "ffffffff";
+end
+
+function WrapTextInColorCode(text, colorHexString)
+	return ("|c%s%s|r"):format(colorHexString, text);
+end
+
 CLASS_ICON_TCOORDS = {
 	["WARRIOR"]		= {0, 0.25, 0, 0.25},
 	["MAGE"]		= {0.25, 0.49609375, 0, 0.25},
@@ -79,7 +92,7 @@ end
 
 function ClearClampedTextureRotation(texture)
 	if (texture.rotationDegrees) then
-		SetClampedRotation(0);
+		SetClampedTextureRotation(0);
 		texture.origTexCoords = nil;
 		texture.origWidth = nil;
 		texture.origHeight = nil;
@@ -130,6 +143,14 @@ function tContains(table, item)
 		index = index + 1;
 	end
 	return nil;
+end
+
+function tInvert(tbl)
+	local inverted = {};
+	for k, v in pairs(tbl) do
+		inverted[v] = k;
+	end
+	return inverted;
 end
 
 function CopyTable(settings)
@@ -208,12 +229,12 @@ function GetMoneyString(money, separateThousands)
 		copperString = copper..COPPER_AMOUNT_SYMBOL;
 	else
 		if (separateThousands) then
-			goldString = format(GOLD_AMOUNT_TEXTURE_STRING, FormatLargeNumber(gold), 0, 0);
+			goldString = GOLD_AMOUNT_TEXTURE_STRING:format(FormatLargeNumber(gold), 0, 0);
 		else
-			goldString = format(GOLD_AMOUNT_TEXTURE, gold, 0, 0);
+			goldString = GOLD_AMOUNT_TEXTURE:format(gold, 0, 0);
 		end
-		silverString = format(SILVER_AMOUNT_TEXTURE, silver, 0, 0);
-		copperString = format(COPPER_AMOUNT_TEXTURE, copper, 0, 0);
+		silverString = SILVER_AMOUNT_TEXTURE:format(silver, 0, 0);
+		copperString = COPPER_AMOUNT_TEXTURE:format(copper, 0, 0);
 	end
 
 	local moneyString = "";
@@ -262,8 +283,12 @@ function ClampedPercentageBetween(value, startValue, endValue)
 end
 
 local TARGET_FRAME_PER_SEC = 60.0;
+function DeltaLerp(startValue, endValue, amount, timeSec)
+	return Lerp(startValue, endValue, Saturate(amount * timeSec * TARGET_FRAME_PER_SEC));
+end
+
 function FrameDeltaLerp(startValue, endValue, amount)
-	return Lerp(startValue, endValue, Saturate(amount * GetTickTime() * TARGET_FRAME_PER_SEC));
+	return DeltaLerp(startValue, endValue, amount, GetTickTime());
 end
 
 ----------------------------------
@@ -294,146 +319,6 @@ function TriStateCheckbox_SetState(checked, checkButton)
 		checkedTexture:SetDesaturated(true);
 		checkButton.state = 1;
 	end
-end
-
-ObjectPoolMixin = {};
-
-function ObjectPoolMixin:OnLoad(creationFunc, resetterFunc)
-	self.creationFunc = creationFunc;
-	self.resetterFunc = resetterFunc;
-
-	self.activeObjects = {};
-	self.inactiveObjects = {};
-
-	self.numActiveObjects = 0;
-end
-
-function ObjectPoolMixin:Acquire()
-	local numInactiveObjects = #self.inactiveObjects;
-	if numInactiveObjects > 0 then
-		local obj = self.inactiveObjects[numInactiveObjects];
-		self.activeObjects[obj] = true;
-		self.numActiveObjects = self.numActiveObjects + 1;
-		self.inactiveObjects[numInactiveObjects] = nil;
-		return obj, false;
-	end
-
-	local newObj = self.creationFunc(self);
-	if self.resetterFunc then
-		self.resetterFunc(self, newObj);
-	end
-	self.activeObjects[newObj] = true;
-	self.numActiveObjects = self.numActiveObjects + 1;
-	return newObj, true;
-end
-
-function ObjectPoolMixin:Release(obj)
-	assert(self.activeObjects[obj]);
-
-	self.inactiveObjects[#self.inactiveObjects + 1] = obj;
-	self.activeObjects[obj] = nil;
-	self.numActiveObjects = self.numActiveObjects - 1;
-	if self.resetterFunc then
-		self.resetterFunc(self, obj);
-	end
-end
-
-function ObjectPoolMixin:ReleaseAll()
-	for obj in pairs(self.activeObjects) do
-		self:Release(obj);
-	end
-end
-
-function ObjectPoolMixin:EnumerateActive()
-	return pairs(self.activeObjects);
-end
-
-function ObjectPoolMixin:GetNextActive(current)
-	return (next(self.activeObjects, current));
-end
-
-function ObjectPoolMixin:GetNumActive()
-	return self.numActiveObjects;
-end
-
-function CreateObjectPool(creationFunc, resetterFunc)
-	local objectPool = CreateFromMixins(ObjectPoolMixin);
-	objectPool:OnLoad(creationFunc, resetterFunc);
-	return objectPool;
-end
-
-FramePoolMixin = Mixin({}, ObjectPoolMixin);
-
-local function FramePoolFactory(framePool)
-	return CreateFrame(framePool.frameType, nil, framePool.parent, framePool.frameTemplate);
-end
-
-function FramePoolMixin:OnLoad(frameType, parent, frameTemplate, resetterFunc)
-	ObjectPoolMixin.OnLoad(self, FramePoolFactory, resetterFunc);
-	self.frameType = frameType;
-	self.parent = parent;
-	self.frameTemplate = frameTemplate;
-end
-
-function FramePool_Hide(framePool, frame)
-	frame:Hide();
-end
-
-function FramePool_HideAndClearAnchors(framePool, frame)
-	frame:Hide();
-	frame:ClearAllPoints();
-end
-
-function CreateFramePool(frameType, parent, frameTemplate, resetterFunc)
-	local framePool = CreateFromMixins(FramePoolMixin);
-	framePool:OnLoad(frameType, parent, frameTemplate, resetterFunc or FramePool_HideAndClearAnchors);
-	return framePool;
-end
-
-TexturePoolMixin = Mixin({}, ObjectPoolMixin);
-
-local function TexturePoolFactory(texturePool)
-	return texturePool.parent:CreateTexture(nil, texturePool.layer, texturePool.textureTemplate, texturePool.subLayer);
-end
-
-function TexturePoolMixin:OnLoad(parent, layer, subLayer, textureTemplate, resetterFunc)
-	ObjectPoolMixin.OnLoad(self, TexturePoolFactory, resetterFunc);
-	self.parent = parent;
-	self.layer = layer;
-	self.subLayer = subLayer;
-	self.textureTemplate = textureTemplate;
-end
-
-TexturePool_Hide = FramePool_Hide;
-TexturePool_HideAndClearAnchors = FramePool_HideAndClearAnchors;
-
-function CreateTexturePool(parent, layer, subLayer, textureTemplate, resetterFunc)
-	local texturePool = CreateFromMixins(TexturePoolMixin);
-	texturePool:OnLoad(parent, layer, subLayer, textureTemplate, resetterFunc or TexturePool_HideAndClearAnchors);
-	return texturePool;
-end
-
-FontStringPoolMixin = Mixin({}, ObjectPoolMixin);
-
-local function FontStringPoolFactory(fontStringPool)
-	return fontStringPool.parent:CreateFontString(nil, fontStringPool.layer, fontStringPool.fontStringTemplate, fontStringPool.subLayer);
-end
-
-function FontStringPoolMixin:OnLoad(parent, layer, subLayer, fontStringTemplate, resetterFunc)
-	ObjectPoolMixin.OnLoad(self, FontStringPoolFactory, resetterFunc);
-	self.parent = parent;
-	self.layer = layer;
-	self.subLayer = subLayer;
-	self.fontStringTemplate = fontStringTemplate;
-end
-
-FontStringPool_Hide = FramePool_Hide;
-FontStringPool_HideAndClearAnchors = FramePool_HideAndClearAnchors;
-
-function CreateFontStringPool(parent, layer, subLayer, fontStringTemplate, resetterFunc)
-	local fontStringPool = CreateFromMixins(FontStringPoolMixin);
-	fontStringPool:OnLoad(parent, layer, subLayer, fontStringTemplate, resetterFunc or FontStringPool_HideAndClearAnchors);
-	return fontStringPool;
 end
 
 RectangleMixin = {};
@@ -676,7 +561,7 @@ function ColorMixin:GenerateHexColor()
 end
 
 function ColorMixin:WrapTextInColorCode(text)
-	return ("|c%s%s|r"):format(self:GenerateHexColor(), text);
+	return WrapTextInColorCode(text, self:GenerateHexColor());
 end
 
 -- Time --
@@ -694,9 +579,9 @@ function SecondsToTime(seconds, noSeconds, notAbbreviated, maxCount, roundUp)
 			tempTime = floor(seconds / 86400);
 		end
 		if ( notAbbreviated ) then
-			time = format(D_DAYS,tempTime);
+			time = D_DAYS:format(tempTime);
 		else
-			time = format(DAYS_ABBR,tempTime);
+			time = DAYS_ABBR:format(tempTime);
 		end
 		seconds = mod(seconds, 86400);
 	end
@@ -711,9 +596,9 @@ function SecondsToTime(seconds, noSeconds, notAbbreviated, maxCount, roundUp)
 			tempTime = floor(seconds / 3600);
 		end
 		if ( notAbbreviated ) then
-			time = time..format(D_HOURS, tempTime);
+			time = time..D_HOURS:format(tempTime);
 		else
-			time = time..format(HOURS_ABBR, tempTime);
+			time = time..HOURS_ABBR:format(tempTime);
 		end
 		seconds = mod(seconds, 3600);
 	end
@@ -728,9 +613,9 @@ function SecondsToTime(seconds, noSeconds, notAbbreviated, maxCount, roundUp)
 			tempTime = floor(seconds / 60);
 		end
 		if ( notAbbreviated ) then
-			time = time..format(D_MINUTES, tempTime);
+			time = time..D_MINUTES:format(tempTime);
 		else
-			time = time..format(MINUTES_ABBR, tempTime);
+			time = time..MINUTES_ABBR:format(tempTime);
 		end
 		seconds = mod(seconds, 60);
 	end
@@ -738,11 +623,10 @@ function SecondsToTime(seconds, noSeconds, notAbbreviated, maxCount, roundUp)
 		if ( time ~= "" ) then
 			time = time..TIME_UNIT_DELIMITER;
 		end
-		seconds = format("%d", seconds);
 		if ( notAbbreviated ) then
-			time = time..format(D_SECONDS, seconds);
+			time = time..D_SECONDS:format(seconds);
 		else
-			time = time..format(SECONDS_ABBR, seconds);
+			time = time..SECONDS_ABBR:format(seconds);
 		end
 	end
 	return time;
@@ -763,4 +647,76 @@ function SecondsToTimeAbbrev(seconds)
 		return MINUTE_ONELETTER_ABBR, tempTime;
 	end
 	return SECOND_ONELETTER_ABBR, seconds;
+end
+
+function FormatShortDate(day, month, year)
+	if (LOCALE_enGB) then
+		return SHORTDATE_EU:format(day, month, year);
+	else
+		return SHORTDATE:format(day, month, year);
+	end
+end
+
+function Round(value)
+	if value < 0.0 then
+		return math.ceil(value - .5);
+	end
+	return math.floor(value + .5);
+end
+
+function FormatPercentage(percentage)
+	return ("%d%%"):format(Round(percentage * 100));
+end
+
+function CreateTextureMarkup(file, fileWidth, fileHeight, width, height, left, right, top, bottom)
+	return ("|T%s:%d:%d:0:0:%d:%d:%d:%d:%d:%d|t"):format(
+		  file
+		, height
+		, width
+		, fileWidth
+		, fileHeight
+		, left * fileWidth
+		, right * fileWidth
+		, top * fileHeight
+		, bottom * fileHeight
+	);
+end
+
+function CreateAtlasMarkup(atlasName, height, width, offsetX, offsetY)
+	return ("|A:%s:%d:%d:%d:%d|a"):format(
+		  atlasName
+		, height or 0
+		, width or 0
+		, offsetX or 0
+		, offsetY or 0
+	);
+end
+
+CallbackRegistryBaseMixin = {};
+
+function CallbackRegistryBaseMixin:OnLoad()
+	self.callbackRegistry = {};
+end
+
+function CallbackRegistryBaseMixin:RegisterCallback(event, callback)
+	if not self.callbackRegistry[event] then
+		self.callbackRegistry[event] = {};
+	end
+
+	self.callbackRegistry[event][callback] = true;
+end
+
+function CallbackRegistryBaseMixin:UnregisterCallback(event, callback)
+	if self.callbackRegistry[event] then
+		self.callbackRegistry[event][callback] = nil;
+	end
+end
+
+function CallbackRegistryBaseMixin:TriggerEvent(event, ...)
+	local registry = self.callbackRegistry[event];
+	if registry then
+		for callback in pairs(registry) do
+			callback(event, ...);
+		end
+	end
 end

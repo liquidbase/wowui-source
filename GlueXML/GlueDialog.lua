@@ -307,6 +307,22 @@ GlueDialogTypes["ADVANCED_CHARACTER_CREATION_WARNING"] = {
 	end,
 }
 
+GlueDialogTypes["CHARACTER_BOOST_FEATURE_RESTRICTED"] = {
+	text = "",
+	button1 = OKAY,
+	escapeHides = true,
+};
+
+GlueDialogTypes["UNLOCK_REVOKED_UPGRADE_CHARACTER"] = {
+	button1 = YES,
+	button2 = NO,
+	escapeHides = true,
+
+	OnAccept = function ()
+		C_CharacterServices.RequestManualUnrevoke(GlueDialog.data);
+	end,
+}
+
 --[[
 
 GlueDialogTypes["DISCONNECTED"] = {

@@ -1,5 +1,5 @@
 ---------------
---NOTE - Please do not change this section without talking to Jacob
+--NOTE - Please do not change this section without talking to Dan
 --We usually don't want to call out of this environment from this file. Calls should usually go through Outbound
 local _, tbl = ...;
 tbl.SecureCapsuleGet = SecureCapsuleGet;
@@ -37,6 +37,7 @@ Import("C_ClassTrial");
 Import("C_AuthChallenge");
 Import("C_Timer");
 Import("C_WowTokenPublic");
+Import("C_WowTokenSecure");
 Import("CreateForbiddenFrame");
 Import("IsGMClient");
 Import("HideGMOnly");
@@ -50,6 +51,7 @@ Import("tonumber");
 Import("unpack");
 Import("wipe");
 Import("type");
+Import("string");
 Import("LoadURLIndex");
 Import("GetContainerNumFreeSlots");
 Import("GetCursorPosition");
@@ -193,7 +195,6 @@ Import("BLIZZARD_STORE_PURCHASE_SENT");
 Import("BLIZZARD_STORE_YOU_ALREADY_OWN_THIS");
 Import("BLIZZARD_STORE_TOKEN_CURRENT_MARKET_PRICE");
 Import("BLIZZARD_STORE_TOKEN_DESC_30_DAYS");
-Import("BLIZZARD_STORE_TOKEN_DESC_2700_MINUTES");
 Import("BLIZZARD_STORE_LOG_OUT_TO_PURCHASE_THIS_PRODUCT");
 Import("BLIZZARD_STORE_PRODUCT_IS_READY");
 Import("BLIZZARD_STORE_VAS_SERVICE_READY_DESCRIPTION");
@@ -238,6 +239,15 @@ Import("VAS_CHARACTER_TRANSFER_CONFIRMATION");
 Import("VAS_RACE_CHANGE_VALIDATION_DESCRIPTION");
 Import("VAS_FACTION_CHANGE_VALIDATION_DESCRIPTION");
 Import("VAS_APPEARANCE_CHANGE_VALIDATION_DESCRIPTION");
+Import("BLIZZARD_STORE_VAS_SELECT_ACCOUNT");
+Import("BLIZZARD_STORE_VAS_DIFFERENT_BNET");
+Import("BLIZZARD_STORE_VAS_TRANSFER_REALM");
+Import("BLIZZARD_STORE_VAS_REALM_NAME");
+Import("BLIZZARD_STORE_VAS_TRANSFER_ACCOUNT");
+Import("BLIZZARD_STORE_VAS_TRANSFER_FACTION_BUNDLE");
+Import("BLIZZARD_STORE_VAS_EMAIL_ADDRESS");
+Import("BLIZZARD_STORE_VAS_DESTINATION_BNET_ACCOUNT");
+Import("BLIZZARD_STORE_VAS_REALMS_AND_MORE");
 Import("TOKEN_CURRENT_AUCTION_VALUE");
 Import("TOKEN_MARKET_PRICE_NOT_AVAILABLE");
 Import("OKAY");
@@ -295,8 +305,7 @@ Import("LE_VAS_ERROR_BATTLEPAY_DELIVERY_PENDING");
 Import("LE_VAS_ERROR_HAS_WOW_TOKEN");
 Import("LE_VAS_ERROR_CHAR_LOCKED");
 Import("LE_VAS_ERROR_LAST_SAVE_TOO_RECENT");
-Import("LE_CONSUMABLE_TOKEN_REDEEM_FOR_SUB_AMOUNT_30_DAYS");
-Import("LE_CONSUMABLE_TOKEN_REDEEM_FOR_SUB_AMOUNT_2700_MINUTES");
+Import("LE_MODEL_BLEND_OPERATION_NONE");
 
 --Data
 local CURRENCY_UNKNOWN = 0;
@@ -316,7 +325,6 @@ local CURRENCY_BETA = 16;
 local NUM_STORE_PRODUCT_CARDS = 8;
 local NUM_STORE_PRODUCT_CARDS_PER_ROW = 4;
 local ROTATIONS_PER_SECOND = .5;
-local MODELFRAME_DRAG_ROTATION_CONSTANT = 0.010;
 local BATTLEPAY_GROUP_DISPLAY_DEFAULT = 0;
 local BATTLEPAY_GROUP_DISPLAY_SPLASH = 1;
 local BATTLEPAY_SPLASH_BANNER_TEXT_FEATURED = 0;
@@ -358,66 +366,66 @@ end
 
 local function formatCurrency(dollars, cents, alwaysShowCents)
 	if ( alwaysShowCents or cents ~= 0 ) then
-		return ("%s%s%02d"):format(formatLargeNumber(dollars), DECIMAL_SEPERATOR, cents);
+		return string.format("%s%s%02d", formatLargeNumber(dollars), DECIMAL_SEPERATOR, cents);
 	else
 		return formatLargeNumber(dollars);
 	end
 end
 
 local function currencyFormatUSD(dollars, cents)
-	return BLIZZARD_STORE_CURRENCY_FORMAT_USD:format(formatCurrency(dollars, cents, false));
+	return string.format(BLIZZARD_STORE_CURRENCY_FORMAT_USD, formatCurrency(dollars, cents, false));
 end
 
 local function currencyFormatGBP(dollars, cents)
-	return BLIZZARD_STORE_CURRENCY_FORMAT_GBP:format(formatCurrency(dollars, cents, false));
+	return string.format(BLIZZARD_STORE_CURRENCY_FORMAT_GBP, formatCurrency(dollars, cents, false));
 end
 
 local function currencyFormatKRWLong(dollars, cents)
-	return BLIZZARD_STORE_CURRENCY_FORMAT_KRW_LONG:format(formatCurrency(dollars, cents, false));
+	return string.format(BLIZZARD_STORE_CURRENCY_FORMAT_KRW_LONG, formatCurrency(dollars, cents, false));
 end
 
 local function currencyFormatEuro(dollars, cents)
-	return BLIZZARD_STORE_CURRENCY_FORMAT_EURO:format(formatCurrency(dollars, cents, false));
+	return string.format(BLIZZARD_STORE_CURRENCY_FORMAT_EURO, formatCurrency(dollars, cents, false));
 end
 
 local function currencyFormatRUB(dollars, cents)
-	return BLIZZARD_STORE_CURRENCY_FORMAT_RUB:format(formatCurrency(dollars, cents, false));
+	return string.format(BLIZZARD_STORE_CURRENCY_FORMAT_RUB, formatCurrency(dollars, cents, false));
 end
 
 local function currencyFormatARS(dollars, cents)
-	return BLIZZARD_STORE_CURRENCY_FORMAT_ARS:format(formatCurrency(dollars, cents, false));
+	return string.format(BLIZZARD_STORE_CURRENCY_FORMAT_ARS, formatCurrency(dollars, cents, false));
 end
 
 local function currencyFormatCLP(dollars, cents)
-	return BLIZZARD_STORE_CURRENCY_FORMAT_CLP:format(formatCurrency(dollars, cents, false));
+	return string.format(BLIZZARD_STORE_CURRENCY_FORMAT_CLP, formatCurrency(dollars, cents, false));
 end
 
 local function currencyFormatMXN(dollars, cents)
-	return BLIZZARD_STORE_CURRENCY_FORMAT_MXN:format(formatCurrency(dollars, cents, false));
+	return string.format(BLIZZARD_STORE_CURRENCY_FORMAT_MXN, formatCurrency(dollars, cents, false));
 end
 
 local function currencyFormatBRL(dollars, cents)
-	return BLIZZARD_STORE_CURRENCY_FORMAT_BRL:format(formatCurrency(dollars, cents, false));
+	return string.format(BLIZZARD_STORE_CURRENCY_FORMAT_BRL, formatCurrency(dollars, cents, false));
 end
 
 local function currencyFormatAUD(dollars, cents)
-	return BLIZZARD_STORE_CURRENCY_FORMAT_AUD:format(formatCurrency(dollars, cents, false));
+	return string.format(BLIZZARD_STORE_CURRENCY_FORMAT_AUD, formatCurrency(dollars, cents, false));
 end
 
 local function currencyFormatCPTLong(dollars, cents)
-	return BLIZZARD_STORE_CURRENCY_FORMAT_CPT_LONG:format(formatCurrency(dollars, cents, false));
+	return string.format(BLIZZARD_STORE_CURRENCY_FORMAT_CPT_LONG, formatCurrency(dollars, cents, false));
 end
 
 local function currencyFormatTPT(dollars, cents)
-	return BLIZZARD_STORE_CURRENCY_FORMAT_TPT:format(formatCurrency(dollars, cents, false));
+	return string.format(BLIZZARD_STORE_CURRENCY_FORMAT_TPT, formatCurrency(dollars, cents, false));
 end
 
 local function currencyFormatRawStar(dollars, cents)
-	return BLIZZARD_STORE_CURRENCY_RAW_ASTERISK:format(formatCurrency(dollars, cents, false));
+	return string.format(BLIZZARD_STORE_CURRENCY_RAW_ASTERISK, formatCurrency(dollars, cents, false));
 end
 
 local function currencyFormatBeta(dollars, cents)
-	return BLIZZARD_STORE_CURRENCY_BETA:format(formatCurrency(dollars, cents, true));
+	return string.format(BLIZZARD_STORE_CURRENCY_BETA, formatCurrency(dollars, cents, true));
 end
 
 -- This is copied from WowTokenUI.lua
@@ -439,12 +447,12 @@ function GetSecureMoneyString(money, separateThousands, forceColorBlind)
 		copperString = copper..COPPER_AMOUNT_SYMBOL;
 	else
 		if (separateThousands) then
-			goldString = GOLD_AMOUNT_TEXTURE_STRING:format(formatLargeNumber(gold), 0, 0);
+			goldString = string.format(GOLD_AMOUNT_TEXTURE_STRING, formatLargeNumber(gold), 0, 0);
 		else
-			goldString = GOLD_AMOUNT_TEXTURE:format(gold, 0, 0);
+			goldString = string.format(GOLD_AMOUNT_TEXTURE, gold, 0, 0);
 		end
-		silverString = SILVER_AMOUNT_TEXTURE:format(silver, 0, 0);
-		copperString = COPPER_AMOUNT_TEXTURE:format(copper, 0, 0);
+		silverString = string.format(SILVER_AMOUNT_TEXTURE, silver, 0, 0);
+		copperString = string.format(COPPER_AMOUNT_TEXTURE, copper, 0, 0);
 	end
 
 	local moneyString = "";
@@ -976,7 +984,7 @@ local vasErrorData = {
 			elseif (character.level >= 10) then
 				str = GetSecureMoneyString(300 * COPPER_PER_SILVER * SILVER_PER_GOLD, true, true);
 			end
-			return BLIZZARD_STORE_VAS_ERROR_TOO_MUCH_MONEY_FOR_LEVEL:format(str);
+			return string.format(BLIZZARD_STORE_VAS_ERROR_TOO_MUCH_MONEY_FOR_LEVEL, str);
 		end
 	},
 	[LE_VAS_ERROR_HAS_AUCTIONS] = {
@@ -1083,7 +1091,7 @@ local function getIndex(tbl, value)
 	end
 end
 
-function StoreFrame_UpdateCard(card,entryID,discountReset)
+function StoreFrame_UpdateCard(card,entryID,discountReset,forceModelUpdate)
 	local entryInfo = C_PurchaseAPI.GetEntryInfo(entryID);
 	StoreProductCard_ResetCornerPieces(card);
 
@@ -1135,7 +1143,7 @@ function StoreFrame_UpdateCard(card,entryID,discountReset)
 	elseif ( card.HotTexture and hot ) then
 		card.HotTexture:Show();
 	elseif ( card.DiscountMiddle and discountAmount ) then
-		card.DiscountText:SetText(BLIZZARD_STORE_DISCOUNT_TEXT_FORMAT:format(discountAmount));
+		card.DiscountText:SetText(string.format(BLIZZARD_STORE_DISCOUNT_TEXT_FORMAT, discountAmount));
 
 		local stringWidth = card.DiscountText:GetStringWidth();
 		card.DiscountLeft:SetPoint("RIGHT", card.DiscountRight, "LEFT", -stringWidth, 0);
@@ -1168,7 +1176,7 @@ function StoreFrame_UpdateCard(card,entryID,discountReset)
 			card.SplashBannerText:SetText(BLIZZARD_STORE_SPLASH_BANNER_NEW);
 		elseif ( entryInfo.bannerType == BATTLEPAY_SPLASH_BANNER_TEXT_DISCOUNT ) then
 			if ( discount ) then
-				card.SplashBannerText:SetText(BLIZZARD_STORE_SPLASH_BANNER_DISCOUNT_FORMAT:format(discountAmount));
+				card.SplashBannerText:SetText(string.format(BLIZZARD_STORE_SPLASH_BANNER_DISCOUNT_FORMAT, discountAmount));
 			else
 				card.SplashBannerText:SetText(BLIZZARD_STORE_SPLASH_BANNER_FEATURED);
 			end
@@ -1209,9 +1217,9 @@ function StoreFrame_UpdateCard(card,entryID,discountReset)
 		if (entryInfo.isWowToken) then
 			local price = C_WowTokenPublic.GetCurrentMarketPrice();
 			if (price) then
-				card.CurrentMarketPrice:SetText(TOKEN_CURRENT_AUCTION_VALUE:format(GetSecureMoneyString(price, true)));
+				card.CurrentMarketPrice:SetText(string.format(TOKEN_CURRENT_AUCTION_VALUE, GetSecureMoneyString(price, true)));
 			else
-				card.CurrentMarketPrice:SetText(TOKEN_CURRENT_AUCTION_VALUE:format(TOKEN_MARKET_PRICE_NOT_AVAILABLE));
+				card.CurrentMarketPrice:SetText(string.format(TOKEN_CURRENT_AUCTION_VALUE, TOKEN_MARKET_PRICE_NOT_AVAILABLE));
 			end
 			card.CurrentPrice:ClearAllPoints();
 			card.CurrentPrice:SetPoint("TOPLEFT", card.CurrentMarketPrice, "BOTTOMLEFT", 0, -28);
@@ -1238,18 +1246,15 @@ function StoreFrame_UpdateCard(card,entryID,discountReset)
 	if (card.Description) then
 		local description = entryInfo.description;
 		if (entryInfo.isWowToken) then
-			local redeemIndex = select(3, C_WowTokenPublic.GetCommerceSystemStatus());
-			if (redeemIndex == LE_CONSUMABLE_TOKEN_REDEEM_FOR_SUB_AMOUNT_30_DAYS) then
-				description = BLIZZARD_STORE_TOKEN_DESC_30_DAYS;
-			elseif (redeemIndex == LE_CONSUMABLE_TOKEN_REDEEM_FOR_SUB_AMOUNT_2700_MINUTES) then
-				description = BLIZZARD_STORE_TOKEN_DESC_2700_MINUTES;
-			end
+			local balanceEnabled = select(3, C_WowTokenPublic.GetCommerceSystemStatus());
+			local balanceAmount = C_WowTokenSecure.GetBalanceRedeemAmount();
+			description = BLIZZARD_STORE_TOKEN_DESC_30_DAYS;
 		end
 		card.Description:SetText(description);
 	end
 
 	if ( entryInfo.displayID ) then
-		StoreProductCard_SetModel(card, entryInfo.displayID, entryInfo.alreadyOwned);
+		StoreProductCard_SetModel(card, entryInfo.displayID, entryInfo.alreadyOwned, entryInfo.modelSceneID, forceModelUpdate);
 	else
 		local icon = entryInfo.texture;
 		if (not icon) then
@@ -1340,7 +1345,7 @@ function StoreFrame_CheckAndUpdateEntryID(isSplash, isThreeSplash)
 	end
 end
 
-function StoreFrame_SetSplashCategory()
+function StoreFrame_SetSplashCategory(forceModelUpdate)
 	local id = selectedCategoryID;
 	local self = StoreFrame;
 
@@ -1358,7 +1363,7 @@ function StoreFrame_SetSplashCategory()
 	local currencyFormat = info.formatShort;
 	self.Notice:Hide();
 
-	local products = C_PurchaseAPI.GetProducts(id);
+	local products = C_PurchaseAPI.GetProducts(selectedCategoryID);
 
 	local isThreeSplash = #products >= 3;
 
@@ -1366,15 +1371,15 @@ function StoreFrame_SetSplashCategory()
 
 	if (isThreeSplash) then
 		self.SplashSingle:Hide();
-		StoreFrame_UpdateCard(self.SplashPrimary, products[1]);
-		StoreFrame_UpdateCard(self.SplashSecondary1, products[2]);
-		StoreFrame_UpdateCard(self.SplashSecondary2, products[3]);
+		StoreFrame_UpdateCard(self.SplashPrimary, products[1], nil, forceModelUpdate);
+		StoreFrame_UpdateCard(self.SplashSecondary1, products[2], nil, forceModelUpdate);
+		StoreFrame_UpdateCard(self.SplashSecondary2, products[3], nil, forceModelUpdate);
 	else
 		self.SplashPrimary:Hide();
 		self.SplashSecondary1:Hide();
 		self.SplashSecondary2:Hide();
 		selectedEntryID = products[1]; -- This is the only card here so just auto select it so the buy button works
-		StoreFrame_UpdateCard(self.SplashSingle, products[1]);
+		StoreFrame_UpdateCard(self.SplashSingle, products[1], nil, forceModelUpdate);
 	end
 
 	StoreFrame_UpdateBuyButton();
@@ -1384,7 +1389,7 @@ function StoreFrame_SetSplashCategory()
 	self.PrevPageButton:Hide();
 end
 
-function StoreFrame_SetNormalCategory()
+function StoreFrame_SetNormalCategory(forceModelUpdate)
 	local id = selectedCategoryID;
 	local self = StoreFrame;
 	local pageNum = selectedPageNum;
@@ -1413,14 +1418,14 @@ function StoreFrame_SetNormalCategory()
 		if ( not entryID ) then
 			card:Hide();
 		else
-			StoreFrame_UpdateCard(card, entryID);
+			StoreFrame_UpdateCard(card, entryID, nil, forceModelUpdate);
 		end
 	end
 
 	if ( #products > NUM_STORE_PRODUCT_CARDS ) then
 		-- 10, 10/8 = 1, 2 remain
 		local numPages = math.ceil(#products / NUM_STORE_PRODUCT_CARDS);
-		self.PageText:SetText(BLIZZARD_STORE_PAGE_NUMBER:format(pageNum,numPages));
+		self.PageText:SetText(string.format(BLIZZARD_STORE_PAGE_NUMBER, pageNum,numPages));
 		self.PageText:Show();
 		self.NextPageButton:Show();
 		self.PrevPageButton:Show();
@@ -1435,11 +1440,11 @@ function StoreFrame_SetNormalCategory()
 	StoreFrame_UpdateBuyButton();
 end
 
-function StoreFrame_SetCategory()
+function StoreFrame_SetCategory(forceModelUpdate)
 	if (select(5, C_PurchaseAPI.GetProductGroupInfo(selectedCategoryID)) == BATTLEPAY_GROUP_DISPLAY_SPLASH) then
-		StoreFrame_SetSplashCategory();
+		StoreFrame_SetSplashCategory(forceModelUpdate);
 	else
-		StoreFrame_SetNormalCategory();
+		StoreFrame_SetNormalCategory(forceModelUpdate);
 	end
 	StoreFrame_CheckMarketPriceUpdates();
 end
@@ -1511,8 +1516,8 @@ function StoreFrame_CreateCards(self, num, numPerRow)
 			card:SetScript("OnEnter", StoreProductCard_OnEnter);
 			card:SetScript("OnLeave", StoreProductCard_OnLeave);
 			card:SetScript("OnClick", StoreProductCard_OnClick);
-			card:SetScript("OnDragStart", StoreProductCard_OnDragStart);
-			card:SetScript("OnDragStop", StoreProductCard_OnDragStop);
+			card:SetScript("OnMouseDown", StoreProductCard_OnMouseDown);
+			card:SetScript("OnMouseUp", StoreProductCard_OnMouseUp);
 		end
 	end
 end
@@ -1562,6 +1567,8 @@ function StoreFrame_OnLoad(self)
 	self:RegisterEvent("TOKEN_MARKET_PRICE_UPDATED");
 	self:RegisterEvent("TOKEN_STATUS_CHANGED");
 	self:RegisterEvent("STORE_BOOST_AUTO_CONSUMED");
+	self:RegisterEvent("STORE_REFRESH");
+	self:RegisterEvent("UI_MODEL_SCENE_INFO_UPDATED");
 
 	-- We have to call this from CharacterSelect on the glue screen because the addon engine will load
 	-- the store addon more than once if we try to make it ondemand, forcing us to load it before we
@@ -1708,6 +1715,12 @@ function StoreFrame_OnEvent(self, event, ...)
 		else
 			StoreFrame_ShowUnrevokeConsumptionDialog();
 		end
+	elseif ( event == "STORE_REFRESH" ) then
+		C_PurchaseAPI.GetProductList();
+	elseif ( event == "UI_MODEL_SCENE_INFO_UPDATED" ) then
+		if (self:IsVisible()) then
+			StoreFrame_SetCategory(true);
+		end
 	end
 end
 
@@ -1720,8 +1733,8 @@ function StoreFrame_OnShow(self)
 		Outbound.UpdateMicroButtons();
 	end
 
-	UseBoostToUnlockTrialCharacter = false;
-	BoostTrialCharacterGuid = nil;
+	BoostDeliveredUsageReason = nil;
+	BoostDeliveredUsageGUID = nil;
 
 	StoreFrame_UpdateCoverState();
 	PlaySound("UI_igStore_WindowOpen_Button");
@@ -1743,19 +1756,13 @@ function StoreFrame_OnCharacterBoostDelivered(self)
 	if (IsOnGlueScreen() and not _G.CharacterSelect.undeleting) then
 		self:Hide();
 
-		local flowData = _G.CharacterUpgrade_Items[BoostProduct].paid;
-
-		if (BoostProduct == LE_BATTLEPAY_PRODUCT_ITEM_LEVEL_100_CHARACTER_UPGRADE) and UseBoostToUnlockTrialCharacter then
-			_G.CharacterUpgradePopup_BeginUnlockTrialCharacter(flowData, BoostTrialCharacterGuid);
-		else
-			_G.CharacterUpgradePopup_BeginCharacterUpdgradeFlow(flowData);
-		end
+		_G.CharacterUpgradePopup_OnCharacterBoostDelivered(BoostProduct, BoostDeliveredUsageGUID, BoostDeliveredUsageReason);
 	elseif (not IsOnGlueScreen()) then
 		self:Hide();
 
 		local showReason = "forBoost";
 
-		if C_ClassTrial.IsClassTrialCharacter() and (BoostProduct == LE_BATTLEPAY_PRODUCT_ITEM_LEVEL_100_CHARACTER_UPGRADE) and UseBoostToUnlockTrialCharacter then
+		if C_ClassTrial.IsClassTrialCharacter() and (BoostProduct == LE_BATTLEPAY_PRODUCT_ITEM_LEVEL_100_CHARACTER_UPGRADE) and BoostDeliveredUsageReason == "forClassTrialUnlock" then
 			showReason = "forClassTrialUnlock";
 		end
 
@@ -1835,8 +1842,11 @@ local function SetStoreCategoryFromAttribute(category)
 	StoreFrame_SetCategory();
 end
 
-local function SelectBoostFromAttribute(boostProduct)
-	StoreFrame_SelectBoostProductForPurchase(boostProduct);
+local function SelectBoostProductForPurchase(category, boostProductID, boostReason, characterToApplyToGUID)
+	SetStoreCategoryFromAttribute(category);
+	StoreFrame_SelectBoostProductForPurchase(boostProductID);
+	BoostDeliveredUsageReason = boostReason;
+	BoostDeliveredUsageGUID = characterToApplyToGUID;
 end
 
 function StoreFrame_OnAttributeChanged(self, name, value)
@@ -1873,13 +1883,9 @@ function StoreFrame_OnAttributeChanged(self, name, value)
 	elseif ( name == "setservicescategory" ) then
 		SetStoreCategoryFromAttribute(WOW_SERVICES_CATEGORY_ID);
 	elseif ( name == "selectlevel100boostproduct") then
-		SetStoreCategoryFromAttribute(WOW_SERVICES_CATEGORY_ID);
-		SelectBoostFromAttribute(LE_BATTLEPAY_PRODUCT_ITEM_LEVEL_100_CHARACTER_UPGRADE);
-		UseBoostToUnlockTrialCharacter = true;
-
-		if ( value ) then
-			BoostTrialCharacterGuid = value;
-		end
+		SelectBoostProductForPurchase(WOW_SERVICES_CATEGORY_ID, LE_BATTLEPAY_PRODUCT_ITEM_LEVEL_100_CHARACTER_UPGRADE, "forClassTrialUnlock", value);
+	elseif ( name == "selectunrevokeboostproduct" ) then
+		SelectBoostProductForPurchase(WOW_SERVICES_CATEGORY_ID, LE_BATTLEPAY_PRODUCT_ITEM_LEVEL_100_CHARACTER_UPGRADE, "forUnrevokeBoost", value);
 	elseif ( name == "getvaserrormessage" ) then
 		if (IsOnGlueScreen()) then
 			self:SetAttribute("vaserrormessageresult", nil);
@@ -2014,7 +2020,7 @@ end
 function StoreFrame_ShowUnrevokeConsumptionDialog()
 	local productName, characterName, realmName = C_PurchaseAPI.GetUnrevokedBoostInfo();
 
-	StoreDialog.Description:SetText(BLIZZARD_STORE_BOOST_UNREVOKED_CONSUMPTION:format(productName, characterName, realmName));
+	StoreDialog.Description:SetText(string.format(BLIZZARD_STORE_BOOST_UNREVOKED_CONSUMPTION, productName, characterName, realmName));
 	StoreDialog:Show();
 end
 
@@ -2128,8 +2134,8 @@ function StoreFrame_HasFreeBagSlots()
 	return false;
 end
 
-function StoreFrame_ShowPreview(name, modelID)
-	Outbound.ShowPreview(name, modelID);
+function StoreFrame_ShowPreview(name, modelID, modelSceneID)
+	Outbound.ShowPreview(name, modelID, modelSceneID);
 	StoreProductCard_UpdateAllStates();
 end
 
@@ -2176,8 +2182,15 @@ local SelectedRealm = nil;
 local SelectedCharacter = nil;
 local NewCharacterName = nil;
 local SelectedDestinationRealm = nil;
-local DestinationRealmMapping = nil;
+local DestinationRealmMapping = {};
 local StoreDropdownLists = {};
+local SelectedDestinationWowAccount = nil;
+local SelectedDestinationBnetAccount = nil;
+local CharacterTransferFactionChangeBundle = nil;
+local RealmAutoCompleteList;
+local RealmAutoCompleteIndexByKey = {};
+local RealmList = {};
+local RealmRpPvpMap = {};
 
 ------------------------------------------
 function StoreConfirmationFrame_OnLoad(self)
@@ -2192,6 +2205,36 @@ function StoreConfirmationFrame_OnLoad(self)
 	self.NoticeFrame.Notice:SetSpacing(6);
 
 	self:RegisterEvent("STORE_CONFIRM_PURCHASE");
+end
+
+function BuildCharacterTransferConfirmationString(character)
+	local confStr = "";
+	local sep = "";
+
+	if (SelectedDestinationWowAccount and SelectedDestinationWowAccount ~= BLIZZARD_STORE_VAS_DIFFERENT_BNET) then
+		confStr = SelectedDestinationWowAccount;
+		sep = ", ";
+	elseif (SelectedDestinationBnetAccount) then
+		confStr = SelectedDestinationBnetAccount;
+		sep = ", ";
+	end
+
+	if (CharacterTransferFactionChangeBundle) then
+		local newFaction;
+		if (character.faction == 0) then
+			newFaction = FACTION_ALLIANCE;
+		elseif (character.faction == 1) then
+			newFaction = FACTION_HORDE;
+		end
+		confStr = confStr .. sep .. newFaction;
+		sep = ", ";
+	end
+
+	if (SelectedDestinationRealm) then
+		confStr = confStr .. sep .. SelectedDestinationRealm
+	end
+
+	return confStr;
 end
 
 function StoreConfirmationFrame_SetNotice(self, icon, name, dollars, cents, walletName, upgrade, vasService, expansion)
@@ -2214,7 +2257,7 @@ function StoreConfirmationFrame_SetNotice(self, icon, name, dollars, cents, wall
 		local character = characters[SelectedCharacter];
 		local confirmationNotice;
 		if (VASServiceType == LE_VAS_SERVICE_NAME_CHANGE) then
-			notice = VAS_NAME_CHANGE_CONFIRMATION:format(character.name, NewCharacterName);
+			notice = string.format(VAS_NAME_CHANGE_CONFIRMATION, character.name, NewCharacterName);
 			confirmationNotice = info.vasNameChangeConfirmationNotice;
 		elseif (VASServiceType == LE_VAS_SERVICE_FACTION_CHANGE) then
 			local newFaction;
@@ -2223,16 +2266,16 @@ function StoreConfirmationFrame_SetNotice(self, icon, name, dollars, cents, wall
 			elseif (character.faction == 1) then
 				newFaction = FACTION_HORDE;
 			end
-			notice = VAS_FACTION_CHANGE_CONFIRMATION:format(character.name, SelectedRealm, newFaction);
+			notice = string.format(VAS_FACTION_CHANGE_CONFIRMATION, character.name, SelectedRealm, newFaction);
 			confirmationNotice = info.servicesConfirmationNotice;
 		elseif (VASServiceType == LE_VAS_SERVICE_RACE_CHANGE) then
-			notice = VAS_RACE_CHANGE_CONFIRMATION:format(character.name, SelectedRealm);
+			notice = string.format(VAS_RACE_CHANGE_CONFIRMATION, character.name, SelectedRealm);
 			confirmationNotice = info.servicesConfirmationNotice;
 		elseif (VASServiceType == LE_VAS_SERVICE_APPEARANCE_CHANGE) then
-			notice = VAS_APPEARANCE_CHANGE_CONFIRMATION:format(character.name, SelectedRealm);
+			notice = string.format(VAS_APPEARANCE_CHANGE_CONFIRMATION, character.name, SelectedRealm);
 			confirmationNotice = info.servicesConfirmationNotice;
-		elseif (VASServiceType == LE_VAS_SERVICE_CHARACTER_TRANSFER) then
-			notice = VAS_CHARACTER_TRANSFER_CONFIRMATION:format(character.name, SelectedRealm, DestinationRealmMapping[SelectedDestinationRealm]);
+		elseif (VASServiceType == LE_VAS_SERVICE_CHARACTER_TRANSFER ) then
+			notice = string.format(VAS_CHARACTER_TRANSFER_CONFIRMATION, character.name, SelectedRealm, BuildCharacterTransferConfirmationString(character));
 			confirmationNotice = info.servicesConfirmationNotice;
 		end
 		notice = notice .. "|n|n" .. confirmationNotice;
@@ -2244,7 +2287,7 @@ function StoreConfirmationFrame_SetNotice(self, icon, name, dollars, cents, wall
 		walletName = BLIZZARD_STORE_BATTLE_NET_BALANCE;
 	end
 	if (walletName) then
-		notice = notice .. "\n\n" .. BLIZZARD_STORE_WALLET_INFO:format(walletName);
+		notice = notice .. "\n\n" .. string.format(BLIZZARD_STORE_WALLET_INFO, walletName);
 	end
 	if (upgrade) then
 		self.UpgradeArrow:Show();
@@ -2291,7 +2334,7 @@ local IsUpgrade;
 local IsLegion;
 
 function StoreConfirmationFrame_Update(self)
-	local productID, walletName = C_PurchaseAPI.GetConfirmationInfo();
+	local productID, walletName, _, _, currentDollars, currentCents = C_PurchaseAPI.GetConfirmationInfo();
 	if ( not productID ) then
 		self:Hide(); --May want to show an error message
 		return;
@@ -2302,7 +2345,7 @@ function StoreConfirmationFrame_Update(self)
 	if ( not finalIcon ) then
 		finalIcon = "Interface\\Icons\\INV_Misc_Note_02";
 	end
-	StoreConfirmationFrame_SetNotice(self, finalIcon, productInfo.name, productInfo.currentDollars, productInfo.currentCents, walletName, productInfo.isBoost, productInfo.isVasService, productInfo.isExpansion);
+	StoreConfirmationFrame_SetNotice(self, finalIcon, productInfo.name, currentDollars, currentCents, walletName, productInfo.isBoost, productInfo.isVasService, productInfo.isExpansion);
 	IsUpgrade = productInfo.isBoost;
 	IsLegion = productInfo.isExpansion;
 	if (productInfo.isBoost) then
@@ -2337,8 +2380,8 @@ function StoreConfirmationFrame_Update(self)
 	end
 	self.BuyButton:SetText(text);
 
-	FinalPriceDollars = productInfo.currentDollars;
-	FinalPriceCents = productInfo.currentCents;
+	FinalPriceDollars = currentDollars;
+	FinalPriceCents = currentCents;
 
 	local height = 370 + self.NoticeFrame.Notice:GetContentHeight() + 35;
 	self:SetHeight(height);
@@ -2390,9 +2433,11 @@ function StoreVASValidationFrame_OnLoad(self)
 	self.CharacterSelectionFrame.RealmSelector.Label:SetText(VAS_REALM_LABEL);
 	self.CharacterSelectionFrame.CharacterSelector.Label:SetText(VAS_CHARACTER_LABEL);
 	self.CharacterSelectionFrame.NewCharacterName.Label:SetText(VAS_NEW_CHARACTER_NAME_LABEL);
-	self.CharacterSelectionFrame.DestinationRealmSelector.Label:SetText(VAS_DESTINATION_REALM_LABEL);
+
 	if (IsOnGlueScreen()) then
 		self.CharacterSelectionFrame.NewCharacterName:SetFontObject("GlueEditBoxFont");
+		self.CharacterSelectionFrame.TransferRealmEditbox:SetFontObject("GlueEditBoxFont");
+		self.CharacterSelectionFrame.TransferBattlenetAccountEditbox:SetFontObject("GlueEditBoxFont");
 	end
 
 	self:RegisterEvent("STORE_CHARACTER_LIST_RECEIVED");
@@ -2438,14 +2483,21 @@ function StoreVASValidationFrame_SetVASStart(self)
 		SelectedRealm = GetRealmName();
 	end
 	SelectedDestinationRealm = nil;
-
+	SelectedDestinationWowAccount = nil;
+	SelectedDestinationBnetAccount = nil;
+	RealmAutoCompleteList = nil;
 	self.CharacterSelectionFrame.RealmSelector.Text:SetText(SelectedRealm);
 	self.CharacterSelectionFrame.RealmSelector.Button:Enable();
 	self.CharacterSelectionFrame.CharacterSelector.Text:SetText(VAS_SELECT_CHARACTER);
 	self.CharacterSelectionFrame.CharacterSelector.Button:Enable();
 	self.CharacterSelectionFrame.NewCharacterName:Hide();
-	self.CharacterSelectionFrame.DestinationRealmSelector.Text:SetText(VAS_SELECT_REALM);
-	self.CharacterSelectionFrame.DestinationRealmSelector:Hide();
+	self.CharacterSelectionFrame.TransferRealmCheckbox:Hide();
+	self.CharacterSelectionFrame.TransferRealmEditbox:Hide();
+	self.CharacterSelectionFrame.TransferRealmAutoCompleteBox:Hide();
+	self.CharacterSelectionFrame.TransferAccountCheckbox:Hide();
+	self.CharacterSelectionFrame.TransferAccountDropDown:Hide();
+	self.CharacterSelectionFrame.TransferFactionCheckbox:Hide();
+	self.CharacterSelectionFrame.TransferBattlenetAccountEditbox:Hide();
 	self.CharacterSelectionFrame.ClassIcon:Hide();
 	self.CharacterSelectionFrame.SelectedCharacterFrame:Hide();
 	self.CharacterSelectionFrame.SelectedCharacterName:Hide();
@@ -2455,7 +2507,13 @@ function StoreVASValidationFrame_SetVASStart(self)
 	self.CharacterSelectionFrame:Show();
 
 	self:ClearAllPoints();
-	self:SetPoint("CENTER", 0, 0);
+	if ( VASServiceType == LE_VAS_SERVICE_CHARACTER_TRANSFER ) then
+		self:SetHeight(700);
+		self:SetPoint("CENTER", 0, -20);
+	else
+		self:SetHeight(626);
+		self:SetPoint("CENTER", 0, 0);
+	end
 
 	self:Show();
 end
@@ -2519,7 +2577,7 @@ function StoreVASValidationFrame_OnEvent(self, event, ...)
 				frame.ValidationDescription:SetPoint("TOPLEFT", frame.NewCharacterName, "BOTTOMLEFT", -5, -6);
 			elseif (VASServiceType == LE_VAS_SERVICE_CHARACTER_TRANSFER) then
 				frame.ValidationDescription:ClearAllPoints();
-				frame.ValidationDescription:SetPoint("TOPLEFT", frame.DestinationRealmSelector, "BOTTOMLEFT", 8, -8);
+				frame.ValidationDescription:SetPoint("TOPLEFT", frame.TransferFactionCheckbox, "BOTTOMLEFT", 8, -24);
 			else
 				frame.ValidationDescription:ClearAllPoints();
 				frame.ValidationDescription:SetPoint("TOPLEFT", frame.SelectedCharacterFrame, "BOTTOMLEFT", 8, -8);
@@ -2547,11 +2605,11 @@ function StoreVASValidationFrame_OnVasProductComplete(self)
 	local productInfo = C_PurchaseAPI.GetProductInfo(productID);
 	if (IsOnGlueScreen()) then
 		self:GetParent():Hide();
-		_G.StoreFrame_ShowGlueDialog((_G.BLIZZARD_STORE_VAS_PRODUCT_READY):format(productInfo.name), guid, realmName);
+		_G.StoreFrame_ShowGlueDialog(string.format(_G.BLIZZARD_STORE_VAS_PRODUCT_READY, productInfo.name), guid, realmName);
 	else
 		self:GetParent():Hide();
 
-		local titleOverride = BLIZZARD_STORE_PRODUCT_IS_READY:format(productInfo.name);
+		local titleOverride = string.format(BLIZZARD_STORE_PRODUCT_IS_READY, productInfo.name);
 		local descriptionOverride = (productInfo.vasServiceType == LE_VAS_SERVICE_NAME_CHANGE) and BLIZZARD_STORE_NAME_CHANGE_READY_DESCRIPTION or BLIZZARD_STORE_VAS_SERVICE_READY_DESCRIPTION;
 		ServicesLogoutPopup_SetShowReason(ServicesLogoutPopup, "forVasService", titleOverride, descriptionOverride);
 	end
@@ -2632,7 +2690,7 @@ function StoreProductCard_OnEnter(self)
 		if (self.HighlightTexture) then
 			self.HighlightTexture:SetShown(selectedEntryID ~= self:GetID());
 		end
-		if (self.Magnifier and self.Model:IsShown() and self ~= StoreFrame.SplashSingle) then
+		if (self.Magnifier and self.ModelScene:IsShown() and self ~= StoreFrame.SplashSingle) then
 			self.Magnifier:Show();
 		end
 	end
@@ -2649,12 +2707,7 @@ function StoreProductCard_OnLeave(self)
 	StoreTooltip:Hide();
 end
 
-function StoreProductCard_OnClick(self,button,down)
-	local entryInfo = C_PurchaseAPI.GetEntryInfo(self:GetID());
-	if (entryInfo.isVasService and not IsOnGlueScreen()) then
-		return;
-	end
-
+function StoreProductCard_CheckShowStorePreviewOnClick(self)
 	local showPreview;
 	if ( IsOnGlueScreen() ) then
 		showPreview = _G.IsControlKeyDown();
@@ -2663,9 +2716,20 @@ function StoreProductCard_OnClick(self,button,down)
 	end
 	if ( showPreview ) then
 		if ( entryInfo.displayID ) then
-			StoreFrame_ShowPreview(entryInfo.name, entryInfo.displayID);
+			StoreFrame_ShowPreview(entryInfo.name, entryInfo.displayID, entryInfo.modelSceneID);
 		end
-	else
+	end
+	
+	return showPreview;
+end
+
+function StoreProductCard_OnClick(self,button,down)
+	local entryInfo = C_PurchaseAPI.GetEntryInfo(self:GetID());
+	if (entryInfo.isVasService and not IsOnGlueScreen()) then
+		return;
+	end
+
+	if ( not StoreProductCard_CheckShowStorePreviewOnClick(self) ) then
 		selectedEntryID = self:GetID();
 		StoreProductCard_UpdateAllStates();
 
@@ -2674,20 +2738,17 @@ function StoreProductCard_OnClick(self,button,down)
 	end
 end
 
+function StoreProductCard_OnMouseDown(self, ...)
+	self.ModelScene:OnMouseDown(...);
+end
+
+function StoreProductCard_OnMouseUp(self, ...)
+	self.ModelScene:OnMouseUp(...);
+end
+
 local basePoints = {};
 
 function StoreProductCard_OnLoad(self)
-	-- set up data
-	self.Model.maxZoom = 0.7;
-	self.Model.minZoom = 0.0;
-	self.Model.defaultRotation = 0.61;
-
-	self.Model.rotation = self.Model.defaultRotation;
-	self.Model:SetRotation(self.Model.rotation);
-	self.Model:RegisterEvent("UI_SCALE_CHANGED");
-	self.Model:RegisterEvent("DISPLAY_SIZE_CHANGED");
-	self.Model:SetScript("OnEvent", StoreProductCard_ModelOnEvent);
-
 	if (not StoreProductCard_IsSplashPage(self)) then
 		self.ProductName:SetSpacing(3);
 	else
@@ -2700,75 +2761,13 @@ function StoreProductCard_OnLoad(self)
 
 	self.CurrentPrice:SetTextColor(1.0, 0.82, 0);
 	basePoints[self] = { self.NormalPrice:GetPoint() };
-
-	self:RegisterForDrag("LeftButton");
 end
 
-function StoreProductCardModel_RotateLeft(model, rotationIncrement)
-	if ( not rotationIncrement ) then
-		rotationIncrement = 0.03;
-	end
-	model.rotation = model.rotation - rotationIncrement;
-	model:SetRotation(model.rotation);
-	PlaySound("igInventoryRotateCharacter");
+function StoreSplashSingleProductCard_OnClick(self)
+	StoreProductCard_CheckShowStorePreviewOnClick(self);
 end
 
-function StoreProductCardModel_RotateRight(model, rotationIncrement)
-	if ( not rotationIncrement ) then
-		rotationIncrement = 0.03;
-	end
-	model.rotation = model.rotation + rotationIncrement;
-	model:SetRotation(model.rotation);
-	PlaySound("igInventoryRotateCharacter");
-end
-
-function StoreProductCardModel_OnUpdate(self, elapsedTime, rotationsPerSecond)
-	if ( not rotationsPerSecond ) then
-		rotationsPerSecond = ROTATIONS_PER_SECOND;
-	end
-
-	-- Mouse drag rotation
-	if (self.mouseDown) then
-		if ( self.rotationCursorStart ) then
-			local x = GetCursorPosition();
-			local diff = (x - self.rotationCursorStart) * MODELFRAME_DRAG_ROTATION_CONSTANT;
-			self.rotationCursorStart = GetCursorPosition();
-			self.rotation = self.rotation + diff;
-			if ( self.rotation < 0 ) then
-				self.rotation = self.rotation + (2 * PI);
-			end
-			if ( self.rotation > (2 * PI) ) then
-				self.rotation = self.rotation - (2 * PI);
-			end
-			self:SetRotation(self.rotation, false);
-		end
-	end
-end
-
-function StoreProductCard_OnDragStart(self)
-	local model = self.Model;
-	model.mouseDown = true;
-	model.rotationCursorStart = GetCursorPosition();
-	local card = model:GetParent();
-	isRotating = true;
-	StoreProductCard_UpdateAllStates();
-end
-
-function StoreProductCard_OnDragStop(self)
-	local model = self.Model;
-	model.mouseDown = false;
-	local card = model:GetParent();
-	isRotating = false;
-	StoreProductCard_UpdateAllStates();
-end
-
-function StoreProductCard_ModelOnEvent(self, event, ...)
-	self:RefreshCamera();
-end
-
-local cardModels = {}
-
-function StoreProductCard_SetModel(self, modelID, owned)
+function StoreProductCard_SetModel(self, modelID, owned, modelSceneID, forceModelUpdate)
 	self.IconBorder:Hide();
 	self.Icon:Hide();
 	self.InvisibleMouseOverFrame:Hide();
@@ -2783,19 +2782,17 @@ function StoreProductCard_SetModel(self, modelID, owned)
 		self.GlowPulse.PulseAnim:Stop();
 	end
 
-	self.Model:Show();
+	self.ModelScene:Show();
 	self.Shadows:SetShown(self ~= StoreFrame.SplashSingle);
-	if (cardModels[self] ~= modelID) then
-		self.Model:SetDisplayInfo(modelID);
-		self.Model:SetDoBlend(false);
-		self.Model:SetAnimation(0,-1);
-		self.Model.rotation = self.Model.defaultRotation;
-		self.Model:SetRotation(self.Model.rotation);
-		self.Model:SetPosition(0, 0, 0);
-		self.Model.zoomLevel = self.Model.minZoom;
-		self.Model:SetPortraitZoom(self.Model.zoomLevel);
-		cardModels[self] = modelID;
+	self.ModelScene:Show();
+	self.ModelScene:SetFromModelSceneID(modelSceneID, forceModelUpdate);
+
+	local item = self.ModelScene:GetActorByTag("item");
+	if ( item ) then
+		item:SetModelByCreatureDisplayID(modelID);
+		item:SetAnimationBlendOperation(LE_MODEL_BLEND_OPERATION_NONE);
 	end
+
 	if ( owned ) then
 		self.Checkmark:Show();
 	end
@@ -2805,7 +2802,7 @@ function StoreProductCard_SetModel(self, modelID, owned)
 end
 
 function StoreProductCard_ShowIcon(self, icon, itemID, overrideTexture)
-	self.Model:Hide();
+	self.ModelScene:Hide();
 	self.Shadows:Hide();
 
 	if (self.Magnifier) then
@@ -2818,9 +2815,9 @@ function StoreProductCard_ShowIcon(self, icon, itemID, overrideTexture)
 
 	if (not overrideTexture) then
 		if (self == StoreFrame.SplashSingle) then
-			self.Icon:SetPoint("TOPLEFT", 86, -96);
+			self.Icon:SetPoint("TOPLEFT", 88, -99);
 		end
-		self.Icon:SetSize(63, 63);
+		self.Icon:SetSize(64, 64);
 		SetPortraitToTexture(self.Icon, icon);
 		self.IconBorder:Show();
 	else
@@ -2828,19 +2825,19 @@ function StoreProductCard_ShowIcon(self, icon, itemID, overrideTexture)
 		if (self == StoreFrame.SplashSingle) then
 			local adjustX, adjustY;
 			local width, height = self.Icon:GetSize();
-			if (width > 63) then
-				adjustX = -(width - 63);
+			if (width > 64) then
+				adjustX = -(width - 64);
 			else
-				adjustX = 63 - width;
+				adjustX = 64 - width;
 			end
 
-			if (height > 63) then
-				adjustY = height - 63;
+			if (height > 64) then
+				adjustY = height - 64;
 			else
-				adjustY = -(63 - height);
+				adjustY = -(64 - height);
 			end
 
-			self.Icon:SetPoint("TOPLEFT", 86 + math.floor(adjustX / 2), -96 + math.floor(adjustY / 2));
+			self.Icon:SetPoint("TOPLEFT", 88 + math.floor(adjustX / 2), -99 + math.floor(adjustY / 2));
 		end
 		self.IconBorder:Hide();
 	end
@@ -2924,7 +2921,7 @@ function StoreProductCardMagnifyingGlass_OnClick(self, button, down)
 	local card = self:GetParent();
 	local entryID = card:GetID();
 	local entryInfo = C_PurchaseAPI.GetEntryInfo(entryID);
-	StoreFrame_ShowPreview(entryInfo.name, entryInfo.displayID);
+	StoreFrame_ShowPreview(entryInfo.name, entryInfo.displayID, entryInfo.modelSceneID);
 end
 
 function StoreProductCardSpecialMagnifyingGlass_OnEnter(self)
@@ -2942,7 +2939,7 @@ function StoreProductCardSpecialMagnifyingGlass_OnClick(self, button, down)
 	local entryID = card:GetID();
 	local entryInfo = C_PurchaseAPI.GetEntryInfo(entryID);
 	local modelID = self:GetID();
-	StoreFrame_ShowPreview(entryInfo.name, modelID);
+	StoreFrame_ShowPreview(entryInfo.name, modelID, entryInfo.modelSceneID);
 end
 
 function StoreProductCardCheckmark_OnEnter(self)
@@ -3074,9 +3071,9 @@ function StoreTooltip_Show(name, description, isToken)
 	if (isToken) then
 		local price = C_WowTokenPublic.GetCurrentMarketPrice();
 		if (price) then
-			description = description .. BLIZZARD_STORE_TOKEN_CURRENT_MARKET_PRICE:format(GetSecureMoneyString(price));
+			description = description .. string.format(BLIZZARD_STORE_TOKEN_CURRENT_MARKET_PRICE, GetSecureMoneyString(price));
 		else
-			description = description .. BLIZZARD_STORE_TOKEN_CURRENT_MARKET_PRICE:format(TOKEN_MARKET_PRICE_NOT_AVAILABLE);
+			description = description .. string.format(BLIZZARD_STORE_TOKEN_CURRENT_MARKET_PRICE, TOKEN_MARKET_PRICE_NOT_AVAILABLE);
 		end
 	end
 	StoreTooltip.Description:SetText(description);
@@ -3109,7 +3106,7 @@ function StoreTooltip_Show(name, description, isToken)
 	self:SetHeight(buffer*bufferCount + nheight + dheight);
 	local parent = self:GetParent();
 	local card = parent.ProductCards[1];
-	local modelFrameLevel = card.Model:GetFrameLevel();
+	local modelFrameLevel = card.ModelScene:GetFrameLevel();
 	self:SetFrameLevel(modelFrameLevel+2);
 end
 
@@ -3290,13 +3287,13 @@ function VASCharacterSelectionCharacterSelector_Callback(value)
 	if (level == 0) then
 		level = 1;
 	end
-	frame.CharacterSelector.Text:SetText(VAS_CHARACTER_SELECTION_DESCRIPTION:format(RAID_CLASS_COLORS[character.classFileName].colorStr, character.name, level, character.className));
+	frame.CharacterSelector.Text:SetText(string.format(VAS_CHARACTER_SELECTION_DESCRIPTION, RAID_CLASS_COLORS[character.classFileName].colorStr, character.name, level, character.className));
 	frame.SelectedCharacterFrame:Show();
 	frame.ClassIcon:SetTexCoord(unpack(CLASS_ICON_TCOORDS[character.classFileName]));
 	frame.ClassIcon:Show();
 	frame.SelectedCharacterName:SetText(character.name);
 	frame.SelectedCharacterName:Show();
-	frame.SelectedCharacterDescription:SetText(VAS_SELECTED_CHARACTER_DESCRIPTION:format(level, character.raceName, character.className));
+	frame.SelectedCharacterDescription:SetText(string.format(VAS_SELECTED_CHARACTER_DESCRIPTION, level, character.raceName, character.className));
 	frame.SelectedCharacterDescription:Show();
 	frame.ValidationDescription:SetFontObject("GameFontBlack");
 	frame.ValidationDescription:SetTextColor(0, 0, 0);
@@ -3311,8 +3308,23 @@ function VASCharacterSelectionCharacterSelector_Callback(value)
 		frame.ValidationDescription:ClearAllPoints();
 		frame.ValidationDescription:SetPoint("TOPLEFT", bottomWidget, "BOTTOMLEFT", -5, -6);
 	elseif (VASServiceType == LE_VAS_SERVICE_CHARACTER_TRANSFER) then
-		frame.DestinationRealmSelector:Show();
-		bottomWidget = frame.DestinationRealmSelector;
+		frame.TransferRealmCheckbox:Show();
+		frame.TransferAccountCheckbox:Show();
+		frame.TransferFactionCheckbox:Show();
+		frame.TransferRealmCheckbox:SetChecked(false);
+		frame.TransferRealmEditbox:SetText("");
+		frame.TransferBattlenetAccountEditbox:SetText("");
+		frame.TransferAccountCheckbox:SetChecked(false);
+		frame.TransferAccountDropDown.Text:SetText(BLIZZARD_STORE_VAS_SELECT_ACCOUNT);
+		frame.TransferFactionCheckbox:SetChecked(false);
+		local newFaction;
+		if (character.faction == 0) then
+			newFaction = FACTION_ALLIANCE;
+		elseif (character.faction == 1) then
+			newFaction = FACTION_HORDE;
+		end
+		frame.TransferFactionCheckbox.Label:SetText(string.format(BLIZZARD_STORE_VAS_TRANSFER_FACTION_BUNDLE, newFaction, "1.00 XTS"));
+		bottomWidget = frame.TransferFactionCheckbox;
 		frame.ContinueButton:Disable();
 		frame.ValidationDescription:ClearAllPoints();
 		frame.ValidationDescription:SetPoint("TOPLEFT", bottomWidget, "BOTTOMLEFT", -5, -6);
@@ -3383,11 +3395,171 @@ function VASCharacterSelectionCharacterSelector_Callback(value)
 	end
 end
 
-function VASCharacterSelectionDestinationRealmSelector_Callback(value)
-	SelectedDestinationRealm = value;
+function VASRealmList_BuildAutoCompleteList()
+	local realms = C_PurchaseAPI.GetVASRealmList();
+
+	local infoTable = {};
+	for i = 1, #realms do
+		local pvp = realms[i].pvp;
+		local rp = realms[i].rp;
+		local name = realms[i].name;
+		RealmRpPvpMap[name] = { rp=rp, pvp=pvp };
+		infoTable[i] = name;
+		DestinationRealmMapping[name] = realms[i].addr;
+	end
+
+	table.wipe(RealmAutoCompleteIndexByKey);
+
+	local lastSeenKey;
+	for i = 1, #infoTable do
+		local value = infoTable[i];
+		local key = string.lower(string.sub(value, 1, 1));
+		if (lastSeenKey ~= key) then
+			RealmAutoCompleteIndexByKey[key] = { s = i, e = nil };
+			if (lastSeenKey) then
+				RealmAutoCompleteIndexByKey[lastSeenKey].e = i - 1;
+			end
+		end
+		lastSeenKey = key;
+	end
+	RealmAutoCompleteIndexByKey[lastSeenKey].e = #infoTable;
+	RealmAutoCompleteList = infoTable;
+end
+
+function tInvertLower(tbl)
+	local inverted = {};
+	for k, v in pairs(tbl) do
+		inverted[string.lower(v)] = k;
+	end
+	return inverted;
+end
+
+function VASRealmList_GetAutoCompleteEntries(text, cursorPosition)
+	if (tInvertLower(RealmAutoCompleteList)[string.lower(text)]) then
+		return {};
+	end
+	local key = string.lower(string.sub(text, 1, 1));
+	local entries = {};
+	if (RealmAutoCompleteIndexByKey[key]) then
+		local s = RealmAutoCompleteIndexByKey[key].s;
+		local e = RealmAutoCompleteIndexByKey[key].e;
+		local check = string.lower(string.sub(text, 1, cursorPosition));
+		for i = s, e do
+			if (string.lower(string.sub(RealmAutoCompleteList[i], 1, cursorPosition)) == check) then
+				table.insert(entries, RealmAutoCompleteList[i]);
+			end
+		end
+	end
+	return entries;
+end
+
+function VASCharacterSelectionTransferRealmEditBoxAutoCompleteButton_OnClick(self)
 	local frame = StoreVASValidationFrame.CharacterSelectionFrame;
-	frame.DestinationRealmSelector.Text:SetText(DestinationRealmMapping[value]);
-	frame.ContinueButton:Enable();
+
+	frame.TransferRealmEditbox:SetText(self.info);
+	frame.TransferRealmAutoCompleteBox:Hide();
+end
+
+-- MT_TODO: Change this to lazy evaluation based on substrings anywhere in the string, and find a smaller font for the buttons so the dropdown doesnt look so strange.
+local VAS_AUTO_COMPLETE_MAX_ENTRIES = 10;
+function VASCharacterSelectionTransferRealmEditBox_UpdateAutoComplete(self, text, cursorPosition)
+	if (not RealmAutoCompleteList) then
+		VASRealmList_BuildAutoCompleteList();
+	end
+	local entries = VASRealmList_GetAutoCompleteEntries(text, cursorPosition);
+
+	local maxWidth = 0;
+	local shownButtons = 0;
+	local box = self:GetParent().TransferRealmAutoCompleteBox;
+	local hasMore = #entries > VAS_AUTO_COMPLETE_MAX_ENTRIES;
+	for i = 1, math.min(VAS_AUTO_COMPLETE_MAX_ENTRIES, #entries) do
+		local button = box.Buttons[i];
+		if (not button) then
+			button = CreateForbiddenFrame("Button", nil, box, "StoreAutoCompleteButtonTemplate");
+			button:SetPoint("TOP", box.Buttons[i-1], "BOTTOM");
+			button:SetScript("OnClick", VASCharacterSelectionTransferRealmEditBoxAutoCompleteButton_OnClick);
+		end
+		button.info = entries[i];
+		local rpPvpInfo = RealmRpPvpMap[entries[i]];
+		local tag = _G.VAS_PVE_PARENTHESES;
+		if (rpPvpInfo.pvp and rpPvpInfo.rp) then
+			tag = _G.VAS_RPPVP_PARENTHESES;
+		elseif (rpPvpInfo.pvp) then
+			tag = _G.VAS_PVP_PARENTHESES;
+		elseif (rpPvpInfo.rp) then
+			tag = _G.VAS_RP_PARENTHESES;
+		end
+		button.Text:SetText(entries[i] .. " " .. tag);
+		local textWidth = button.Text:GetWidth();
+		button:SetWidth(textWidth);
+		maxWidth = math.max(maxWidth, textWidth);
+		button:Show();
+		shownButtons = shownButtons + 1;
+	end
+
+	if (hasMore) then
+		local index = VAS_AUTO_COMPLETE_MAX_ENTRIES+1;
+		local button = box.Buttons[index];
+		if (not button) then
+			button = CreateForbiddenFrame("Button", nil, box, "StoreAutoCompleteButtonTemplate");
+			button:SetPoint("TOP", box.Buttons[index-1], "BOTTOM");
+		end
+		button.Text:SetText(string.format(BLIZZARD_STORE_VAS_REALMS_AND_MORE, #entries - VAS_AUTO_COMPLETE_MAX_ENTRIES));
+		local textWidth = button.Text:GetWidth();
+		button:SetWidth(textWidth);
+		maxWidth = math.max(maxWidth, textWidth);
+		button:Show();
+		button.Text:SetFontObject("GameFontDisableSmall2");
+		shownButtons = shownButtons + 1;
+	else
+		for i = #entries + 1, #box.Buttons do
+			box.Buttons[i]:Hide();
+		end
+	end
+
+	if (#entries > 0) then
+		box:SetWidth(36 + maxWidth);
+		box:SetHeight(22 + (shownButtons * box.Buttons[1]:GetHeight()));
+		box:Show();
+	else
+		box:Hide();
+	end
+end
+
+function TransferRealmCheckbox_OnClick(self)
+	if (not self:GetChecked()) then
+		self:GetParent().TransferRealmEditbox:SetText("");
+	end
+	self:GetParent().TransferRealmEditbox:SetShown(self:GetChecked());
+	VASCharacterSelectionTransferGatherAndValidateData();
+end
+
+function VASCharacterSelectionTransferRealmEditBox_OnCursorChanged(self)
+	VASCharacterSelectionTransferRealmEditBox_UpdateAutoComplete(self, self:GetText(), self:GetCursorPosition());
+end
+
+function VASCharacterSelectionTransferRealmEditBox_OnTextChanged(self)
+	self.EmptyText:SetShown(not self:GetText() or self:GetText() == "");
+	VASCharacterSelectionTransferRealmEditBox_UpdateAutoComplete(self, self:GetText(), self:GetCursorPosition());
+
+	VASCharacterSelectionTransferGatherAndValidateData();
+end
+
+function TransferAccountCheckbox_OnClick(self)
+	if (not self:GetChecked()) then
+		SelectedDestinationWowAccount = nil;
+		self:GetParent().TransferBattlenetAccountEditbox:Hide();
+		self:GetParent().TransferBattlenetAccountEditbox:SetText("");
+		self:GetParent().TransferAccountDropDown.Text:SetText(BLIZZARD_STORE_VAS_SELECT_ACCOUNT);
+	end
+	self:GetParent().TransferAccountDropDown:SetShown(self:GetChecked());
+	VASCharacterSelectionTransferGatherAndValidateData();
+end
+
+function VASCharacterSelectionTransferBattlenetAccountEditbox_OnTextChanged(self)
+	self.EmptyText:SetShown(not self:GetText() or self:GetText() == "");
+
+	VASCharacterSelectionTransferGatherAndValidateData();
 end
 
 function VASCharacterSelectionRealmSelector_OnClick(self)
@@ -3429,7 +3601,7 @@ function VASCharacterSelectionCharacterSelector_OnClick(self)
 		if (level == 0) then
 			level = 1;
 		end
-		local str = VAS_CHARACTER_SELECTION_DESCRIPTION:format(RAID_CLASS_COLORS[character.classFileName].colorStr, character.name, level, character.className);
+		local str = string.format(VAS_CHARACTER_SELECTION_DESCRIPTION, RAID_CLASS_COLORS[character.classFileName].colorStr, character.name, level, character.className);
 		infoTable[#infoTable+1] = {text=str, value=i, checked=(SelectedCharacter == i)};
 	end
 
@@ -3454,7 +3626,7 @@ function VASCharacterSelectionContinueButton_OnClick(self)
 	local entryInfo = C_PurchaseAPI.GetEntryInfo(selectedEntryID);
 
 	if (not entryInfo.isVasService) then
-		-- Um, how did we get to thie frame if this wasnt a vas service?
+		-- How did we get to this frame if this wasnt a vas service?
 		return;
 	end
 
@@ -3473,8 +3645,17 @@ function VASCharacterSelectionContinueButton_OnClick(self)
 			return;
 		end
 	end
-
-	if ( C_PurchaseAPI.PurchaseVASProduct(entryInfo.productID, characters[SelectedCharacter].guid, NewCharacterName, SelectedDestinationRealm) ) then
+	local isBnet, accountName;
+	if ( VASServiceType == LE_VAS_SERVICE_CHARACTER_TRANSFER ) then
+		if (SelectedDestinationWowAccount == BLIZZARD_STORE_VAS_DIFFERENT_BNET) then
+			isBnet = true;
+			accountName = SelectedDestinationBnetAccount;
+		else
+			isBnet = false;
+			accountName = SelectedDestinationWowAccount;
+		end
+	end
+	if ( C_PurchaseAPI.PurchaseVASProduct(entryInfo.productID, characters[SelectedCharacter].guid, NewCharacterName, DestinationRealmMapping[SelectedDestinationRealm], CharacterTransferFactionChangeBundle, isBnet, accountName) ) then
 		WaitingOnConfirmation = true;
 		WaitingOnConfirmationTime = GetTime();
 		StoreFrame_UpdateActivePanel(StoreFrame);
@@ -3487,7 +3668,7 @@ function VASCharacterSelectionNewCharacterName_OnEnter(self)
 	StoreTooltip_Show("", VAS_NAME_CHANGE_TOOLTIP);
 end
 
-function VASCharacterSelectionDestinationRealmSelector_OnClick(self)
+function  VASCharacterSelectionTransferAccountDropDown_OnClick(self)
 	PlaySound("igMainMenuOptionCheckBoxOn");
 
 	if (self:GetParent().List:IsShown()) then
@@ -3495,16 +3676,77 @@ function VASCharacterSelectionDestinationRealmSelector_OnClick(self)
 		return;
 	end
 
-	local realms = C_PurchaseAPI.GetVASRealmList();
+	local gameAccounts = _G.C_Login.GetGameAccounts();
 	local infoTable = {};
-	DestinationRealmMapping = {};
-	for i = 1, #realms do
-		infoTable[#infoTable+1] = {text=realms[i].name, value=realms[i].addr, checked=(SelectedDestinationRealm == realms[i].addr)};
-		DestinationRealmMapping[realms[i].addr] = realms[i].name;
+	for i = 1, #gameAccounts do
+		infoTable[#infoTable+1] = {text=gameAccounts[i], value=gameAccounts[i], checked=(SelectedDestinationWowAccount == gameAccounts[i])};
 	end
 
-	StoreDropDown_SetDropdown(self:GetParent(), infoTable, VASCharacterSelectionDestinationRealmSelector_Callback);
+	infoTable[#infoTable+1] = {text=BLIZZARD_STORE_VAS_DIFFERENT_BNET, value=BLIZZARD_STORE_VAS_DIFFERENT_BNET, checked=(SelectedDestinationWowAccount == BLIZZARD_STORE_VAS_DIFFERENT_BNET)};
+	StoreDropDown_SetDropdown(self:GetParent(), infoTable, VASCharacterSelectionTransferAccountDropDown_Callback);
 end
+
+function VASCharacterSelectionTransferAccountDropDown_Callback(value)
+	local frame = StoreVASValidationFrame.CharacterSelectionFrame;
+	SelectedDestinationWowAccount = value;
+	frame.TransferAccountDropDown.Text:SetText(value);
+	frame.TransferBattlenetAccountEditbox:SetShown(value == BLIZZARD_STORE_VAS_DIFFERENT_BNET);
+	VASCharacterSelectionTransferGatherAndValidateData();
+end
+
+function TransferFactionCheckbox_OnClick(self)
+	CharacterTransferFactionChangeBundle = self:GetChecked();
+	VASCharacterSelectionTransferGatherAndValidateData();
+end
+
+function VASCharacterSelectionTransferCheckEditBoxes()
+	local frame = StoreVASValidationFrame.CharacterSelectionFrame;
+	local valid = false;
+	if (frame.TransferRealmCheckbox:GetChecked()) then
+		valid = frame.TransferRealmEditbox:GetText() and frame.TransferRealmEditbox:GetText() ~= "";
+	end
+	local checkAccount = frame.TransferAccountCheckbox:GetChecked() and SelectedDestinationWowAccount == BLIZZARD_STORE_VAS_DIFFERENT_BNET;
+	if (checkAccount) then
+		valid = frame.TransferBattlenetAccountEditbox:GetText() and frame.TransferBattlenetAccountEditbox:GetText() ~= "";
+	end
+	if (not frame.TransferRealmCheckbox:GetChecked() and not checkAccount) then
+		valid = true;
+	end
+	return valid;
+end
+
+function VASCharacterSelectionTransferGatherAndValidateData()
+	local noCheck = true;
+	local frame = StoreVASValidationFrame.CharacterSelectionFrame;
+	local button = frame.ContinueButton;
+	if (not VASCharacterSelectionTransferCheckEditBoxes()) then
+		button:Disable();
+		return;
+	end
+
+	button:Disable();
+	if (frame.TransferRealmCheckbox:GetChecked()) then
+		noCheck = false;
+		SelectedDestinationRealm = frame.TransferRealmEditbox:GetText();
+		if (not DestinationRealmMapping[SelectedDestinationRealm]) then
+			return;
+		end
+	end
+	if (frame.TransferAccountCheckbox:GetChecked()) then
+		noCheck = false;
+		-- MT_TODO:  If this is b.net, validate the @ sign
+		if (SelectedDestinationWowAccount == nil) then
+			return;
+		end
+	end
+
+	if (noCheck) then
+		return;
+	end
+
+	button:Enable();
+end
+
 ------------------------------------
 function ServicesLogoutPopup_OnLoad(self)
 	self.ConfirmButton:SetText(CHARACTER_UPGRADE_LOG_OUT_NOW);

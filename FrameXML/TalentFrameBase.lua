@@ -145,7 +145,7 @@ function TalentFrame_UpdateSpecInfoCache(cache, inspect, pet, talentGroup)
 	for i = 1, MAX_TALENT_TABS do
 		cache[i] = cache[i] or { };
 		if ( i <= numTabs ) then
-			local id, name, description, icon, background = GetSpecializationInfo(i, inspect, nil, nil, sex);
+			local id, name, description, icon = GetSpecializationInfo(i, inspect, nil, nil, sex);
 
 			-- cache the info we care about
 			cache[i].name = name;
@@ -165,7 +165,7 @@ function PVPTalentFrame_Update(self, talentUnit)
 	if ( not self.inspect ) then
 		if ( UnitLevel("player") < MAX_PLAYER_LEVEL_TABLE[LE_EXPANSION_LEVEL_CURRENT] ) then
 			self.XPBar:Hide();
-			self.NotAvailableYet:SetFormattedText(PVP_TALENTS_BECOME_AVAILABLE_AT_LEVEL, MAX_PLAYER_LEVEL_TABLE[GetExpansionLevel()]);
+			self.NotAvailableYet:SetFormattedText(PVP_TALENTS_BECOME_AVAILABLE_AT_LEVEL, 110);
 			self.NotAvailableYet:Show();
 		else
 			self.NotAvailableYet:Hide();

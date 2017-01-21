@@ -51,6 +51,10 @@ function QueueStatusMinimapButton_OnShow(self)
 	self.Eye:SetFrameLevel(self:GetFrameLevel() - 1);
 end
 
+function QueueStatusMinimapButton_OnHide(self)
+	QueueStatusFrame:Hide();
+end
+
 --Will play the sound numPingSounds times (or forever if nil)
 function QueueStatusMinimapButton_SetGlowLock(self, lock, enabled, numPingSounds)
 	self.glowLocks[lock] = enabled and (numPingSounds or -1);
@@ -397,7 +401,12 @@ function QueueStatusEntry_SetUpLFG(entry, category)
 			tank, healer, dps = nil, nil, nil;
 			totalTanks, totalHealers, totalDPS, tankNeeds, healerNeeds, dpsNeeds = nil, nil, nil, nil, nil, nil;
 		end
-		QueueStatusEntry_SetFullDisplay(entry, LFG_CATEGORY_NAMES[category], queuedTime, myWait, tank, healer, dps, totalTanks, totalHealers, totalDPS, tankNeeds, healerNeeds, dpsNeeds, subTitle, extraText);
+		
+		if ( category == LE_LFG_CATEGORY_WORLDPVP ) then
+			QueueStatusEntry_SetMinimalDisplay(entry, LFG_CATEGORY_NAMES[category], QUEUED_STATUS_IN_PROGRESS, subTitle, extraText);
+		else
+			QueueStatusEntry_SetFullDisplay(entry, LFG_CATEGORY_NAMES[category], queuedTime, myWait, tank, healer, dps, totalTanks, totalHealers, totalDPS, tankNeeds, healerNeeds, dpsNeeds, subTitle, extraText);
+		end
 	elseif ( mode == "proposal" ) then
 		QueueStatusEntry_SetMinimalDisplay(entry, LFG_CATEGORY_NAMES[category], QUEUED_STATUS_PROPOSAL, subTitle, extraText);
 	elseif ( mode == "listed" ) then
@@ -806,7 +815,7 @@ function QueueStatusDropDown_AddBattlefieldButtons(info, idx)
 		info.func = wrapFunc(AcceptBattlefieldPort);
 		info.arg1 = idx;
 		info.arg2 = false;
-		info.disabled = registeredMatch and IsInGroup() and not UnitIsGroupLeader("player") and asGroup;
+		info.disabled = IsInGroup() and not UnitIsGroupLeader("player");
 		UIDropDownMenu_AddButton(info);
 	elseif ( status == "locked" ) then
 		info.text = LEAVE_BATTLEGROUND;
@@ -846,10 +855,20 @@ function QueueStatusDropDown_AddBattlefieldButtons(info, idx)
 		end
 
 		if ( inArena ) then
+			info.text = SURRENDER_ARENA;
+			info.func = wrapFunc(ConfirmSurrenderArena);
+			info.arg1 = nil;
+			info.arg2 = nil;
+			if (not CanSurrenderArena()) then
+				info.disabled = true;
+			end
+			UIDropDownMenu_AddButton(info, UIDROPDOWNMENU_MENU_LEVEL);
+			info.disabled = false;
 			info.text = LEAVE_ARENA;
 		else
 			info.text = LEAVE_BATTLEGROUND;
 		end
+		
 		info.func = wrapFunc(ConfirmOrLeaveBattlefield);
 		info.arg1 = nil;
 		info.arg2 = nil;

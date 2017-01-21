@@ -420,18 +420,20 @@ function MoneyFrame_Update(frameName, money, forceShow)
 			silverButton:SetWidth(COIN_BUTTON_WIDTH);
 		end
 		
-		width = width + silverButton:GetWidth();
+		local silverWidth = silverButton:GetWidth();
 		goldButton:SetPoint("RIGHT", frameName.."SilverButton", "LEFT", spacing, 0);
 		if ( goldButton:IsShown() ) then
-			width = width - spacing;
+			silverWidth = silverWidth - spacing;
 		end
 		if ( info.showSmallerCoins ) then
 			showLowerDenominations = 1;
 		end
 		-- hide silver if not enough room
-		if ( maxDisplayWidth and width > maxDisplayWidth ) then
+		if ( maxDisplayWidth and (width + silverWidth) > maxDisplayWidth ) then
 			hideSilver = true;
 			frame.showTooltip = true;
+		else
+			width = width + silverWidth;
 		end
 	end
 	if ( hideSilver ) then
@@ -449,15 +451,17 @@ function MoneyFrame_Update(frameName, money, forceShow)
 			copperButton:SetWidth(COIN_BUTTON_WIDTH);
 		end
 		
-		width = width + copperButton:GetWidth();
+		local copperWidth = copperButton:GetWidth();
 		silverButton:SetPoint("RIGHT", frameName.."CopperButton", "LEFT", spacing, 0);
 		if ( silverButton:IsShown() or goldButton:IsShown() ) then
-			width = width - spacing;
+			copperWidth = copperWidth - spacing;
 		end
 		-- hide copper if not enough room
-		if ( maxDisplayWidth and width > maxDisplayWidth ) then
+		if ( maxDisplayWidth and (width + copperWidth) > maxDisplayWidth ) then
 			hideCopper = true;
 			frame.showTooltip = true;
+		else
+			width = width + copperWidth;
 		end
 	end
 	if ( hideCopper ) then
@@ -598,6 +602,8 @@ function SetMoneyFrameColor(frameName, color)
 			fontObject = NumberFontNormalRightYellow;
 		elseif ( color == "red" ) then
 			fontObject = NumberFontNormalRightRed;
+		elseif ( color == "gray" ) then
+			fontObject = NumberFontNormalRightGray;
 		else
 			fontObject = NumberFontNormalRight;
 		end
@@ -606,6 +612,8 @@ function SetMoneyFrameColor(frameName, color)
 			fontObject = NumberFontNormalLargeRightYellow;
 		elseif ( color == "red" ) then
 			fontObject = NumberFontNormalLargeRightRed;
+		elseif ( color == "gray" ) then
+			fontObject = NumberFontNormalLargeRightGray;
 		else
 			fontObject = NumberFontNormalLargeRight;
 		end
@@ -620,12 +628,18 @@ function SetMoneyFrameColor(frameName, color)
 	copperButton:SetNormalFontObject(fontObject);
 end
 
-function AltCurrencyFrame_Update(frameName, texture, cost)
+function AltCurrencyFrame_Update(frameName, texture, cost, canAfford)
 	local iconWidth;
 	local button = _G[frameName];
 	local buttonTexture = _G[frameName.."Texture"];
 	button:SetText(cost);
 	buttonTexture:SetTexture(texture);
+	local fontColor = HIGHLIGHT_FONT_COLOR;
+	if (canAfford == false) then
+		fontColor = DISABLED_FONT_COLOR;
+	end
+	button.Text:SetTextColor(fontColor.r, fontColor.g, fontColor.b);
+	buttonTexture:SetDesaturated(canAfford == false);
 	if ( button.pointType == HONOR_POINTS ) then
 		iconWidth = 24;
 		buttonTexture:SetPoint("LEFT", _G[frameName.."Text"], "RIGHT", -1, -6);

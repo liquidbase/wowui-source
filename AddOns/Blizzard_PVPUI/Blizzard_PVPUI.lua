@@ -14,29 +14,34 @@ local NO_ARENA_SEASON = 0;
 
 local RANDOM_BG_REWARD = "randombg";
 local SKIRMISH_REWARD = "skirmish";
-local BONUS_BG_REWARD = "bonusbg";
-local ARENA_REWARD = "arena";
+local RATED_BG_REWARD = "ratedbg";
+local ARENA_2V2_REWARD = "arena2v2";
+local ARENA_3V3_REWARD = "arena3v3";
 
 local REWARDS_AT_MAX_LEVEL = {
 	[RANDOM_BG_REWARD] = {
-		["Horde"] = 141901,
-		["Alliance"] = 141899,
+		["FirstWin"] = 143680, 
+		["NthWin"] = 138880,
 	},
 	[SKIRMISH_REWARD] = {
-		["Horde"] = 141902,
-		["Alliance"] = 141903,
+		["FirstWin"] = 143713,
+		["NthWin"] = 138864,
 	},
-	[BONUS_BG_REWARD] = {
-		["Horde"] = 141905,
-		["Alliance"] = 141904,
+	[RATED_BG_REWARD] = {
+		["FirstWin"] = 143716,
+		["NthWin"] = 138881,
 	},
-	[ARENA_REWARD] = {
-		["Horde"] = 141906,
-		["Alliance"] = 141907,
+	[ARENA_2V2_REWARD] = {
+		["FirstWin"] = 143714,
+		["NthWin"] = 138865,
 	},
+	[ARENA_3V3_REWARD] = {
+		["FirstWin"] = 143715,
+		["NthWin"] = 143677,
+	}
 }
 
-function GetMaxLevelReward(bracketType)
+function GetMaxLevelReward(bracketType, hasFirstWin)
 	local factionGroup = UnitFactionGroup("player");
 	if (UnitLevel("player") < MAX_PLAYER_LEVEL_TABLE[LE_EXPANSION_LEVEL_CURRENT]) then
 		return nil;
@@ -45,26 +50,21 @@ function GetMaxLevelReward(bracketType)
 	
 	local id;
 
+	local key = hasFirstWin and "NthWin" or "FirstWin";
+
+	local ARENA_2V2_ID = 1;
+	local ARENA_3V3_ID = 2;
+	local RATED_BG_ID = 4;
 	if (bracketType == RANDOM_BATTLEGROUNDS) then
-		id = REWARDS_AT_MAX_LEVEL[RANDOM_BG_REWARD][factionGroup];
+		id = REWARDS_AT_MAX_LEVEL[RANDOM_BG_REWARD][key];
 	elseif (bracketType == SKIRMISH) then
-		id = REWARDS_AT_MAX_LEVEL[SKIRMISH_REWARD][factionGroup];
-	else
-		local RATED_BG_ID = 4;
-		local numCompleted, total = GetWeeklyPVPRewardInfo(bracketType);
-		if (numCompleted and numCompleted < total) then
-			if (bracketType == RATED_BG_ID) then
-				id = REWARDS_AT_MAX_LEVEL[BONUS_BG_REWARD][factionGroup];
-			else
-				id = REWARDS_AT_MAX_LEVEL[ARENA_REWARD][factionGroup];
-			end
-		else
-			if (bracketType == RATED_BG_ID) then
-				id = REWARDS_AT_MAX_LEVEL[RANDOM_BG_REWARD][factionGroup];
-			else
-				id = REWARDS_AT_MAX_LEVEL[SKIRMISH_REWARD][factionGroup];
-			end
-		end
+		id = REWARDS_AT_MAX_LEVEL[SKIRMISH_REWARD][key];
+	elseif (bracketType == ARENA_2V2_ID) then
+		id = REWARDS_AT_MAX_LEVEL[ARENA_2V2_REWARD][key];
+	elseif (bracketType == ARENA_3V3_ID) then
+		id = REWARDS_AT_MAX_LEVEL[ARENA_3V3_REWARD][key];
+	elseif (bracketType == RATED_BG_ID) then
+		id = REWARDS_AT_MAX_LEVEL[RATED_BG_REWARD][key];
 	end
 
 	if (not id) then
@@ -76,7 +76,7 @@ function GetMaxLevelReward(bracketType)
 	if (not name) then
 		PVPUIFrame_AddItemWait(id);
 	end
-	return { { id, name, texture, 1 } };
+	return { { id=id, name=name, texture=texture, quantity=1 } };
 end
 
 ---------------------------------------------------------------
@@ -93,6 +93,8 @@ function PVPUIFrame_OnLoad(self)
 	else
 		HonorFrame.BonusFrame.WorldBattlesTexture:SetAtlas("pvpqueue-bg-alliance", true)
 	end
+
+	RequestPVPRewards();
 
 	RequestRandomBattlegroundInstanceInfo();
 
@@ -117,6 +119,7 @@ function PVPUIFrame_OnShow(self)
 	end
 	UpdateMicroButtons();
 	PlaySound("igCharacterInfoOpen");
+	RequestPVPRewards();
 
 	PVPUIFrame_UpdateSelectedRoles();
 	PVPUIFrame_UpdateRolesChangeable();
@@ -371,11 +374,8 @@ function HonorFrame_OnLoad(self)
 	HybridScrollFrame_CreateButtons(self.SpecificFrame, "PVPSpecificBattlegroundButtonTemplate", -2, -1);
 
 	-- min level for bonus frame
-	local _, minLevel;
+	local _;
 	_, _, _, _, _, _, _, MIN_BONUS_HONOR_LEVEL = GetRandomBGInfo();
-	_, _, _, _, _, _, _, _, _, minLevel = GetHolidayBGInfo();
-	minLevel = minLevel and minLevel or MIN_BONUS_HONOR_LEVEL;
-	MIN_BONUS_HONOR_LEVEL = min(MIN_BONUS_HONOR_LEVEL, minLevel);
 
 	UIDropDownMenu_SetWidth(HonorFrameTypeDropDown, 160);
 	UIDropDownMenu_Initialize(HonorFrameTypeDropDown, HonorFrameTypeDropDown_Initialize);
@@ -547,6 +547,8 @@ function HonorFrame_Queue()
 		elseif (HonorFrame.BonusFrame.selectedButton.queueID) then
 			ClearAllLFGDungeons(LE_LFG_CATEGORY_WORLDPVP);
 			JoinSingleLFG(LE_LFG_CATEGORY_WORLDPVP, HonorFrame.BonusFrame.selectedButton.queueID);
+		elseif (HonorFrame.BonusFrame.selectedButton.isBrawl) then
+			C_PvP.JoinBrawl();
 		else
 			JoinBattlefield(HonorFrame.BonusFrame.selectedButton.bgID, isParty);
 		end
@@ -740,6 +742,45 @@ end
 
 -------- Bonus BG Frame --------
 
+BONUS_BUTTON_TOOLTIPS = {
+	RandomBG = {
+		tooltipKey = "RANDOM_BG",
+	},
+	Skirmish = {
+		tooltipKey = "SKIRMISH",
+	},
+	Ashran = {
+		tooltipKey = "ASHRAN",
+	},
+	Brawl = {
+		func = function(self)
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+			GameTooltip:SetPvpBrawl();
+		end,
+	}
+}
+
+function PVPBonusButtonTemplate_OnEnter(self)
+	if (not self.tooltipTableKey) then
+		return;
+	end
+
+	local tooltipTbl = BONUS_BUTTON_TOOLTIPS[self.tooltipTableKey];
+
+	if (not tooltipTbl) then
+		return;
+	end
+
+	if (tooltipTbl.func) then
+		tooltipTbl.func(self);
+	else
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+		GameTooltip:SetText(_G["BONUS_BUTTON_"..tooltipTbl.tooltipKey.."_TITLE"], 1, 1, 1);
+		GameTooltip:AddLine(_G["BONUS_BUTTON_"..tooltipTbl.tooltipKey.."_DESC"], nil, nil, nil, true);
+		GameTooltip:Show();
+	end	
+end
+
 function HonorFrameBonusFrame_OnShow(self)
 	self.updateTime = 0;
 	HonorFrameBonusFrame_Update();
@@ -747,70 +788,131 @@ function HonorFrameBonusFrame_OnShow(self)
 
 	RequestLFDPlayerLockInfo();
 	RequestLFDPartyLockInfo();
+	C_PvP.RequestBrawlInfo();
+	self:RegisterEvent("PVP_BRAWL_INFO_UPDATED");
+end
+
+function HonorFrameBonusFrame_OnHide(self)
+	self:UnregisterEvent("PVP_BRAWL_INFO_UPDATED");
+end
+
+function HonorFrameBonusFrame_OnEvent(self, event)
+	if (event == "PVP_BRAWL_INFO_UPDATED") then
+		HonorFrameBonusFrame_Update();
+	end
+end
+
+local function GetRewardValues(reward)
+	return reward.id, reward.name, reward.texture, reward.quantity;
 end
 
 function HonorFrameBonusFrame_Update()
 	local englishFaction = UnitFactionGroup("player");
 	local selectButton = nil;
 	-- random bg
-	local button = HonorFrame.BonusFrame.RandomBGButton;
-	local canQueue, battleGroundID, hasWon, winHonorAmount, winConquestAmount, lossHonorAmount, lossConquestAmount, minLevel, maxLevel = GetRandomBGInfo();
-	HonorFrameBonusFrame_SetButtonState(button, canQueue, minLevel);
-	if ( canQueue ) then
-		HonorFrame.BonusFrame.DiceButton:Show();
-		if ( not selectButton ) then
-			selectButton = button;
+	do
+		local button = HonorFrame.BonusFrame.RandomBGButton;
+		local canQueue, battleGroundID, hasWon, winHonorAmount, winConquestAmount, lossHonorAmount, lossConquestAmount, minLevel, maxLevel = GetRandomBGInfo();
+		HonorFrameBonusFrame_SetButtonState(button, canQueue, minLevel);
+		if ( canQueue ) then
+			HonorFrame.BonusFrame.DiceButton:Show();
+			if ( not selectButton ) then
+				selectButton = button;
+			end
+		else
+			HonorFrame.BonusFrame.DiceButton:Hide();
 		end
-	else
-		HonorFrame.BonusFrame.DiceButton:Hide();
-	end
-	HonorFrameBonusFrame_UpdateExcludedBattlegrounds();
-	button.canQueue = canQueue;
-	button.bgID = battleGroundID;
-	
-	local honor, rewards = GetRandomBGRewards();
+		HonorFrameBonusFrame_UpdateExcludedBattlegrounds();
+		button.canQueue = canQueue;
+		button.bgID = battleGroundID;
 
-	if (not rewards) then
-		rewards = GetMaxLevelReward(RANDOM_BATTLEGROUNDS);
-	end
+		local honor, experience, rewards = C_PvP.GetRandomBGRewards();
 
-	if (rewards and #rewards > 0) then
-		local id, name, texture, quantity = unpack(rewards[1]);
-		SetPortraitToTexture(button.Reward.Icon, texture);
-		button.Reward.honor = honor;
-		button.Reward.itemID = id;
-		button.Reward:Show();
-	else
-		button.Reward:Hide();
-	end
-    
+		if (not rewards) then
+			rewards = GetMaxLevelReward(RANDOM_BATTLEGROUNDS, hasWon);
+		end
+
+		if (rewards and #rewards > 0) then
+			local id, name, texture, quantity = GetRewardValues(rewards[1]);
+			SetPortraitToTexture(button.Reward.Icon, texture);
+			button.Reward.honor = honor;
+			button.Reward.experience = experience;
+			button.Reward.itemID = id;
+			button.Reward:Show();
+		else
+			button.Reward:Hide();
+		end
+    end
+
 	-- arena pvp
-	button = HonorFrame.BonusFrame.Arena1Button;
-	button.Contents.Title:SetText(SKIRMISH);
-	button.canQueue = true;
-	button.arenaID = 4;
-	
-	local honor, rewards = GetArenaSkirmishRewards();
+	do
+		local button = HonorFrame.BonusFrame.Arena1Button;
+		button.Contents.Title:SetText(SKIRMISH);
 
-	if (not rewards) then
-		rewards = GetMaxLevelReward(SKIRMISH);
-	end
+		local honor, experience, rewards = C_PvP.GetArenaSkirmishRewards();
+		local hasWon = C_PvP.HasArenaSkirmishWinToday();
 
-	if (rewards and #rewards > 0) then
-		local id, name, texture, quantity = unpack(rewards[1]);
-		SetPortraitToTexture(button.Reward.Icon, texture);
-		button.Reward.honor = honor;
-		button.Reward.itemID = id;
-		button.Reward:Show();
-	else
-		button.Reward:Hide();
+		if (not rewards) then
+			rewards = GetMaxLevelReward(SKIRMISH, hasWon);
+		end
+
+		if (rewards and #rewards > 0) then
+			local id, name, texture, quantity = GetRewardValues(rewards[1]);
+			SetPortraitToTexture(button.Reward.Icon, texture);
+			button.Reward.honor = honor;
+			button.Reward.experience = experience;
+			button.Reward.itemID = id;
+			button.Reward:Show();
+		else
+			button.Reward:Hide();
+		end
 	end
 
 	-- ashran
-	button = HonorFrame.BonusFrame.AshranButton;
-	button.Contents.Title:SetText(GetMapNameByID(ASHRAN_MAP_ID));
-	button.canQueue = IsLFGDungeonJoinable(ASHRAN_QUEUE_ID);
-	button.queueID = ASHRAN_QUEUE_ID;
+	do
+		local button = HonorFrame.BonusFrame.AshranButton;
+		button.Contents.Title:SetText(GetMapNameByID(ASHRAN_MAP_ID));
+		button.canQueue = IsLFGDungeonJoinable(ASHRAN_QUEUE_ID);
+	end
+
+	do
+		-- brawls
+		local button = HonorFrame.BonusFrame.BrawlButton;
+		local brawlInfo = C_PvP.GetBrawlInfo();
+		button.canQueue = brawlInfo.active;
+
+		if (brawlInfo.active) then
+			button:Enable();
+			button.Contents.Title:SetText(brawlInfo.name);
+			button.Contents.Title:SetFontObject("GameFontHighlightMedium")
+			local honor, experience, rewards = C_PvP.GetRandomBGRewards();
+
+			if (not rewards) then
+				rewards = GetMaxLevelReward(RANDOM_BATTLEGROUNDS, hasWon);
+			end
+
+			if (rewards and #rewards > 0) then
+				local id, name, texture, quantity = GetRewardValues(rewards[1]);
+				SetPortraitToTexture(button.Reward.Icon, texture);
+				button.Reward.honor = honor;
+				button.Reward.experience = experience;
+				button.Reward.itemID = id;
+				button.Reward:Show();
+			else
+				button.Reward:Hide();
+			end
+		else
+			local timeUntilNext = brawlInfo.timeLeftUntilNextChange;
+			if (timeUntilNext == 0) then
+				button.Contents.Title:SetText(BRAWL_CLOSED);
+			else
+				button.Contents.Title:SetText(BRAWL_CLOSED_NEW:format(SecondsToTime(timeUntilNext, false, false, 1)));
+			end
+			button.Contents.Title:SetFontObject("GameFontDisableMed3");
+			button.Reward:Hide();
+			button:Disable();
+		end
+	end
 
 	-- select a button if one isn't selected
 	if ( not HonorFrame.BonusFrame.selectedButton and selectButton ) then
@@ -892,12 +994,13 @@ function ConquestFrame_OnLoad(self)
 	CONQUEST_BUTTONS = {ConquestFrame.Arena2v2, ConquestFrame.Arena3v3, ConquestFrame.RatedBG};
 
 	RequestRatedInfo();
-	RequestPVPRewards();
 	RequestPVPOptionsEnabled();
 	
 	self:RegisterEvent("GROUP_ROSTER_UPDATE");
+	self:RegisterEvent("QUEST_LOG_UPDATE");
 	self:RegisterEvent("PVP_RATED_STATS_UPDATE");
 	self:RegisterEvent("PVP_REWARDS_UPDATE");
+	self:RegisterEvent("PVP_TYPES_ENABLED");
 	self:RegisterEvent("LFG_LIST_ACTIVE_ENTRY_UPDATE");
 	self:RegisterEvent("LFG_LIST_SEARCH_RESULT_UPDATED");
 end
@@ -905,14 +1008,22 @@ end
 function ConquestFrame_OnEvent(self, event, ...)
 	if ( event == "LFG_LIST_ACTIVE_ENTRY_UPDATE" or event == "LFG_LIST_SEARCH_RESULT_UPDATED" ) then
 		ConquestFrame_UpdateJoinButton(self);
-	else
+	elseif (event == "PVP_TYPES_ENABLED") then
+		local _, ratedBgs, ratedArenas = ...;
+		self.bgsEnabled = ratedBgs;
+		self.arenasEnabled = ratedArenas;
+		self.disabled = not ratedBgs and not ratedArenas;
 		ConquestFrame_Update(self);
+	elseif (self:IsVisible()) then
+		ConquestFrame_Update(self);
+		if (event == "QUEST_LOG_UPDATE" and self.activeWeeklyBonus) then
+			PVPRewardWeeklyBonus_OnEnter(self.activeWeeklyBonus);
+		end
 	end
 end
 
 function ConquestFrame_OnShow(self)
 	RequestRatedInfo();
-	RequestPVPRewards();
 	RequestPVPOptionsEnabled();
 	ConquestFrame_Update(self);
 end
@@ -920,38 +1031,53 @@ end
 function ConquestFrame_Update(self)
     PVPQueueFrame_CheckXPBarLockState(self);
 	if ( GetCurrentArenaSeason() == NO_ARENA_SEASON ) then
+		ConquestFrame.Disabled:Hide();
 		ConquestFrame.NoSeason:Show();
+	elseif ( self.disabled ) then
+		ConquestFrame.NoSeason:Hide();
+		ConquestFrame.Disabled:Show();
 	else
 		ConquestFrame.NoSeason:Hide();
+		ConquestFrame.Disabled:Hide();
 		
+		local firstAvailableButton = self.arenasEnabled and ConquestFrame.Arena2v2 or ConquestFrame.RatedBG;
+
 		for i = 1, RATED_BG_ID do
 			local button = CONQUEST_BUTTONS[i];
 			local bracketIndex = CONQUEST_BRACKET_INDEXES[i];
-			local rating, seasonBest, weeklyBest, seasonPlayed, seasonWon, weeklyPlayed, weeklyWon = GetPersonalRatedInfo(bracketIndex);
+			local rating, seasonBest, weeklyBest, seasonPlayed, seasonWon, weeklyPlayed, weeklyWon, lastWeeksBest, hasWon = GetPersonalRatedInfo(bracketIndex);
 			button.Wins:SetText(seasonWon);
 			button.CurrentRating:SetText(rating);
-			local honor, rewards;
+			button.bracketIndex = bracketIndex;
+
+			local honor, experience, rewards;
+
+			local enabled;
 
 			if (i == RATED_BG_ID) then
-				honor, rewards = GetRatedBGRewards();
+				enabled = self.bgsEnabled;
+				honor, experience, rewards = C_PvP.GetRatedBGRewards();
 			else
-				honor, rewards = GetArenaRewards();
+				enabled = self.arenasEnabled;
+				honor, experience, rewards = C_PvP.GetArenaRewards(CONQUEST_SIZES[i]);
 			end
 
 			if (not rewards) then
-				rewards = GetMaxLevelReward(CONQUEST_BRACKET_INDEXES[i]);
+				rewards = GetMaxLevelReward(CONQUEST_BRACKET_INDEXES[i], hasWon);
 			end
 
-			if (rewards and #rewards > 0) then
-				local id, name, texture, quantity = unpack(rewards[1]);
+			if (rewards and #rewards > 0 and enabled) then
+				local id, name, texture, quantity = GetRewardValues(rewards[1]);
 				SetPortraitToTexture(button.Reward.Icon, texture);
 				button.Reward.honor = honor;
+				button.Reward.experience = experience;
 				button.Reward.itemID = id;
 				button.Reward:Show();
 
-				local numCompleted, total = GetWeeklyPVPRewardInfo(bracketIndex);
-				if (numCompleted and numCompleted < total) then
+				local completed, itemLevel = GetWeeklyPVPRewardInfo(bracketIndex);
+				if (not completed) then
 					button.Reward.WeeklyBonus.bracketIndex = bracketIndex;
+					button.Reward.WeeklyBonus.index = i;
 					button.Reward.WeeklyBonus:Show();
 				else
 					button.Reward.WeeklyBonus:Hide();
@@ -959,11 +1085,25 @@ function ConquestFrame_Update(self)
 			else
 				button.Reward:Hide();
 			end
+			button:SetEnabled(enabled);
+			
+			if (not enabled) then
+				button.TeamSizeText:SetFontObject(GameFontDisableLarge);
+				button.Wins:SetFontObject(GameFontDisable);
+				button.CurrentRating:SetFontObject(GameFontDisable);
+			else
+				button.TeamSizeText:SetFontObject(GameFontHighlightLarge);
+				button.Wins:SetFontObject(GameFontNormal);
+				button.CurrentRating:SetFontObject(GameFontNormal);
+			end
+
+			if (not enabled and ConquestFrame.selectedButton == button) then
+				ConquestFrame_SelectButton(firstAvailableButton);
+			end
 		end
 		
 		if ( not ConquestFrame.selectedButton ) then
-			-- if nothing's selected select Arena 2v2 cuz why the heck not
-			ConquestFrame_SelectButton(ConquestFrame.Arena2v2);
+			ConquestFrame_SelectButton(firstAvailableButton);
 		else
 			ConquestFrame_UpdateJoinButton();
 		end
@@ -1086,7 +1226,7 @@ local CONQUEST_TOOLTIP_PADDING = 30 --counts both sides
 function ConquestFrameButton_OnEnter(self)
 	local tooltip = ConquestTooltip;
 	
-	local rating, seasonBest, weeklyBest, seasonPlayed, seasonWon, weeklyPlayed, weeklyWon = GetPersonalRatedInfo(self.id);
+	local rating, seasonBest, weeklyBest, seasonPlayed, seasonWon, weeklyPlayed, weeklyWon, lastWeeksBest = GetPersonalRatedInfo(self.bracketIndex);
 	
 	tooltip.Title:SetText(self.toolTipTitle);
 	
@@ -1114,22 +1254,39 @@ end
 function PVPRewardTemplate_OnEnter(self)
 	PVPRewardTooltip:ClearAllPoints();
 	PVPRewardTooltip:SetPoint("BOTTOMLEFT", self, "TOPRIGHT");
-	PVPRewardTooltip.Honor:SetText(string.format(REWARD_FOR_PVP_WIN_HONOR, self.honor));
+	if (self.experience > 0) then
+		PVPRewardTooltip.XP:SetText(PVP_REWARD_XP_FORMAT:format(BreakUpLargeNumbers(self.experience)));
+		PVPRewardTooltip.XP:Show();
+		PVPRewardTooltip.Honor:Hide();
+	else
+		PVPRewardTooltip.XP:Hide();
+		PVPRewardTooltip.Honor:SetText(REWARD_FOR_PVP_WIN_HONOR:format(BreakUpLargeNumbers(self.honor)));
+		PVPRewardTooltip.Honor:Show();
+	end
 	EmbeddedItemTooltip_SetItemByID(PVPRewardTooltip.ItemTooltip, self.itemID);
 	PVPRewardTooltip:Show();
 end
 
 function PVPRewardWeeklyBonus_OnEnter(self)
-	local numCompleted, total = GetWeeklyPVPRewardInfo(self.bracketIndex);
+	ConquestFrame.activeWeeklyBonus = self;
+	local completed, itemLevel, numWins, numWinsReq = GetWeeklyPVPRewardInfo(self.bracketIndex);
+	if (not completed and itemLevel) then
+		local rating, seasonBest, weeklyBest, seasonPlayed, seasonWon, weeklyPlayed, weeklyWon, lastWeeksBest = GetPersonalRatedInfo(self.bracketIndex);
 
-	if (numCompleted) then
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
-		GameTooltip:SetText(PVP_WEEKLY_BONUS);
-		GameTooltip:AddLine(string.format(PVP_WEEKLY_BONUS_DESCRIPTION, total), 1, 1, 1, true);
-		GameTooltip:AddLine(" ");
-		GameTooltip:AddLine(string.format(PVP_WEEKLY_BONUS_COMPLETED, numCompleted, total));
+		GameTooltip:SetText(PVP_WEEKLY_BONUS:format(CONQUEST_SIZE_STRINGS[self.index]));
+		GameTooltip:AddLine(string.format(PVP_WEEKLY_BONUS_DESCRIPTION, itemLevel, lastWeeksBest), 1, 1, 1, true);
+		if (numWinsReq > 0) then
+			GameTooltip:AddLine(" ");
+			GameTooltip:AddLine(string.format(PVP_WEEKLY_BONUS_GAMES_WON, numWins, numWinsReq));
+		end
 		GameTooltip:Show();
 	end
+end
+
+function PVPRewardWeeklyBonus_OnLeave(self)
+	GameTooltip:Hide();
+	ConquestFrame.activeWeeklyBonus = nil;
 end
 
 ---------------------------------------------------------------

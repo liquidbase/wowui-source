@@ -2,6 +2,7 @@ MERCHANT_ITEMS_PER_PAGE = 10;
 BUYBACK_ITEMS_PER_PAGE = 12;
 MAX_ITEM_COST = 3;
 MAX_MERCHANT_CURRENCIES = 6;
+local MAX_MONEY_DISPLAY_WIDTH = 120;
 
 function MerchantFrame_OnLoad(self)
 	self:RegisterEvent("MERCHANT_UPDATE");
@@ -123,6 +124,7 @@ function MerchantFrame_UpdateMerchantInfo()
 		local merchantAltCurrency = _G["MerchantItem"..i.."AltCurrencyFrame"];
 		if ( index <= numMerchantItems ) then
 			name, texture, price, stackCount, numAvailable, isUsable, extendedCost = GetMerchantItemInfo(index);
+			local canAfford = CanAffordMerchantItem(index);
 			_G["MerchantItem"..i.."Name"]:SetText(name);
 			SetItemButtonCount(itemButton, stackCount);
 			SetItemButtonStock(itemButton, numAvailable);
@@ -134,7 +136,7 @@ function MerchantFrame_UpdateMerchantInfo()
 				itemButton.name = name;
 				itemButton.link = GetMerchantItemLink(index);
 				itemButton.texture = texture;
-				MerchantFrame_UpdateAltCurrency(index, i);
+				MerchantFrame_UpdateAltCurrency(index, i, canAfford);
 				merchantAltCurrency:ClearAllPoints();
 				merchantAltCurrency:SetPoint("BOTTOMLEFT", "MerchantItem"..i.."NameFrame", "BOTTOMLEFT", 0, 31);
 				merchantMoney:Hide();
@@ -145,8 +147,14 @@ function MerchantFrame_UpdateMerchantInfo()
 				itemButton.name = name;
 				itemButton.link = GetMerchantItemLink(index);
 				itemButton.texture = texture;
-				MerchantFrame_UpdateAltCurrency(index, i);
+				local altCurrencyWidth = MerchantFrame_UpdateAltCurrency(index, i, canAfford);
+				MoneyFrame_SetMaxDisplayWidth(merchantMoney, MAX_MONEY_DISPLAY_WIDTH - altCurrencyWidth);
 				MoneyFrame_Update(merchantMoney:GetName(), price);
+				local color;
+				if (canAfford == false) then
+					color = "gray";
+				end
+				SetMoneyFrameColor(merchantMoney:GetName(), color);
 				merchantAltCurrency:ClearAllPoints();
 				merchantAltCurrency:SetPoint("LEFT", merchantMoney:GetName(), "RIGHT", -14, 0);
 				merchantAltCurrency:Show();
@@ -157,12 +165,20 @@ function MerchantFrame_UpdateMerchantInfo()
 				itemButton.name = name;
 				itemButton.link = GetMerchantItemLink(index);
 				itemButton.texture = texture;
+				MoneyFrame_SetMaxDisplayWidth(merchantMoney, MAX_MONEY_DISPLAY_WIDTH);
 				MoneyFrame_Update(merchantMoney:GetName(), price);
+				local color;
+				if (canAfford == false) then
+					color = "gray";
+				end
+				SetMoneyFrameColor(merchantMoney:GetName(), color);
 				merchantAltCurrency:Hide();
 				merchantMoney:Show();
 			end
 
 			local merchantItemID = GetMerchantItemID(index);
+
+			SetItemButtonQuality(itemButton, select(3, GetItemInfo(merchantItemID)), merchantItemID);
 
 			local isHeirloom = merchantItemID and C_Heirloom.IsItemHeirloom(merchantItemID);
 			local isKnownHeirloom = isHeirloom and C_Heirloom.PlayerHasHeirloom(merchantItemID);
@@ -278,37 +294,40 @@ function MerchantFrame_UpdateMerchantInfo()
 	MerchantItem9:SetPoint("TOPLEFT", "MerchantItem7", "BOTTOMLEFT", 0, -8);
 end
 
-function MerchantFrame_UpdateAltCurrency(index, i)
-	local itemTexture, itemValue, button;
+function MerchantFrame_UpdateAltCurrency(index, indexOnPage, canAfford)
 	local itemCount = GetMerchantItemCostInfo(index);
-	local frameName = "MerchantItem"..i.."AltCurrencyFrame";
+	local frameName = "MerchantItem"..indexOnPage.."AltCurrencyFrame";
+	local usedCurrencies = 0;
+	local width = 0;
 
 	-- update Alt Currency Frame with itemValues
 	if ( itemCount > 0 ) then
 		for i=1, MAX_ITEM_COST, 1 do
-			button = _G[frameName.."Item"..i];
-			button.index = index;
-			button.item = i;
-
-			itemTexture, itemValue, button.itemLink = GetMerchantItemCostItem(index, i);
-			
-			AltCurrencyFrame_Update(frameName.."Item"..i, itemTexture, itemValue);
-			-- Anchor items based on how many item costs there are.
-
-			if ( i > 1 ) then
-				button:SetPoint("LEFT", frameName.."Item"..i-1, "RIGHT", 4, 0);
-			end
-			if ( not itemTexture ) then
-				button:Hide();
-			else
+			local itemTexture, itemValue, itemLink = GetMerchantItemCostItem(index, i);
+			if ( itemTexture ) then
+				usedCurrencies = usedCurrencies + 1;
+				local button = _G[frameName.."Item"..usedCurrencies];
+				button.index = index;
+				button.item = i;
+				button.itemLink = itemLink;
+				AltCurrencyFrame_Update(frameName.."Item"..usedCurrencies, itemTexture, itemValue, canAfford);
+				width = width + button:GetWidth();
+				if ( usedCurrencies > 1 ) then
+					-- button spacing;
+					width = width + 4;
+				end
 				button:Show();
 			end
+		end
+		for i = usedCurrencies + 1, MAX_ITEM_COST do
+			_G[frameName.."Item"..i]:Hide();
 		end
 	else
 		for i=1, MAX_ITEM_COST, 1 do
 			_G[frameName.."Item"..i]:Hide();
 		end
 	end
+	return width;
 end
 
 function MerchantFrame_UpdateBuybackInfo()

@@ -67,8 +67,10 @@ retain("IsGMClient");
 retain("IsOnGlueScreen");
 retain("math");
 retain("table");
+retain("string");
 retain("pairs");
 retain("ipairs");
+retain("next");
 retain("select");
 retain("unpack");
 retain("tostring");
@@ -77,6 +79,8 @@ retain("date");
 retain("time");
 retain("type");
 retain("wipe");
+retain("error");
+retain("assert");
 retain("LoadURLIndex");
 retain("GetContainerNumFreeSlots");
 retain("GetCursorPosition");
@@ -89,12 +93,25 @@ retain("RAID_CLASS_COLORS");
 retain("CLASS_ICON_TCOORDS");
 retain("C_PetJournal");
 retain("C_Timer");
+retain("C_ModelInfo");
 retain("IsModifiedClick");
 retain("GetTime");
 retain("UnitAffectingCombat");
 retain("GetCVar");
 retain("GMError");
 retain("GetMouseFocus");
+retain("LOCALE_enGB");
+retain("CreateFrame");
+retain("Lerp");
+retain("Clamp");
+retain("PercentageBetween");
+retain("Saturate");
+retain("GetCursorDelta");
+retain("GetScaledCursorDelta");
+retain("Vector3D_Add");
+retain("Vector3D_ScaleBy");
+retain("Vector3D_CalculateNormalFromYawPitch");
+retain("DeltaLerp");
 
 --For auth challenge
 take("C_AuthChallenge");
@@ -104,6 +121,9 @@ retain("GetBindingFromClick");
 --For character services
 take("C_SharedCharacterServices");
 retain("C_ClassTrial");
+
+--For secure transfer
+take("C_SecureTransfer");
 
 --GlobalStrings
 retain("BLIZZARD_STORE");
@@ -211,7 +231,6 @@ take("BLIZZARD_STORE_BEING_PROCESSED_CHECK_BACK_LATER");
 take("BLIZZARD_STORE_YOU_ALREADY_OWN_THIS");
 take("BLIZZARD_STORE_TOKEN_CURRENT_MARKET_PRICE");
 take("BLIZZARD_STORE_TOKEN_DESC_30_DAYS");
-take("BLIZZARD_STORE_TOKEN_DESC_2700_MINUTES");
 take("BLIZZARD_STORE_LOG_OUT_TO_PURCHASE_THIS_PRODUCT");
 take("BLIZZARD_STORE_PRODUCT_IS_READY");
 take("BLIZZARD_STORE_VAS_SERVICE_READY_DESCRIPTION");
@@ -309,6 +328,14 @@ take("TOKEN_REDEEM_GAME_TIME_DESCRIPTION_MINUTES");
 take("TOKEN_TRANSACTION_IN_PROGRESS");
 take("TOKEN_YOU_WILL_BE_LOGGED_OUT");
 take("TOKEN_REDEMPTION_UNAVAILABLE");
+take("TOKEN_COMPLETE_BALANCE_DESCRIPTION")
+take("TOKEN_CONFIRM_BALANCE_DESCRIPTION")
+take("TOKEN_REDEEM_BALANCE_BUTTON_LABEL")
+take("TOKEN_REDEEM_BALANCE_DESCRIPTION")
+take("TOKEN_REDEEM_BALANCE_CONFIRMATION_DESCRIPTION")
+take("TOKEN_REDEEM_BALANCE_ERROR_CAP_FORMAT")
+take("TOKEN_REDEEM_BALANCE_FORMAT")
+take("TOKEN_REDEEM_BALANCE_TITLE")
 retain("TOKEN_MARKET_PRICE_NOT_AVAILABLE");
 
 retain("GOLD_AMOUNT_SYMBOL");
@@ -321,6 +348,7 @@ retain("COPPER_AMOUNT_SYMBOL");
 retain("COPPER_AMOUNT_TEXTURE");
 retain("COPPER_AMOUNT_TEXTURE_STRING");
 retain("SHORTDATE");
+retain("SHORTDATE_EU");
 retain("AUCTION_TIME_LEFT1_DETAIL");
 retain("AUCTION_TIME_LEFT2_DETAIL");
 retain("AUCTION_TIME_LEFT3_DETAIL");
@@ -352,6 +380,10 @@ take("BLIZZARD_CHALLENGE_DENIED_DESCRIPTION");
 take("BLIZZARD_CHALLENGE_ERROR_TITLE");
 take("BLIZZARD_CHALLENGE_ERROR_DESCRIPTION");
 take("BLIZZARD_CHALLENGE_SCREEN_EXPLANATION");
+
+take("SEND_ITEMS_TO_STRANGER_WARNING");
+take("SEND_MONEY_TO_STRANGER_WARNING");
+take("TRADE_ACCEPT_CONFIRMATION");
 
 --Lua enums
 take("LE_STORE_ERROR_INVALID_PAYMENT_METHOD");
@@ -389,11 +421,12 @@ take("LE_VAS_ERROR_BATTLEPAY_DELIVERY_PENDING");
 take("LE_VAS_ERROR_HAS_WOW_TOKEN");
 take("LE_VAS_ERROR_CHAR_LOCKED");
 take("LE_VAS_ERROR_LAST_SAVE_TOO_RECENT");
-retain("LE_CONSUMABLE_TOKEN_REDEEM_FOR_SUB_AMOUNT_30_DAYS");
-retain("LE_CONSUMABLE_TOKEN_REDEEM_FOR_SUB_AMOUNT_2700_MINUTES");
 retain("LE_TOKEN_RESULT_SUCCESS");
 retain("LE_TOKEN_RESULT_ERROR_OTHER");
 retain("LE_TOKEN_RESULT_ERROR_DISABLED");
+take("LE_TOKEN_RESULT_ERROR_BALANCE_NEAR_CAP");
+take("LE_TOKEN_REDEEM_TYPE_GAME_TIME");
+take("LE_TOKEN_REDEEM_TYPE_BALANCE");
 take("LE_VAS_PURCHASE_STATE_INVALID");
 take("LE_VAS_PURCHASE_STATE_PRE_PURCHASE");
 take("LE_VAS_PURCHASE_STATE_PAYMENT_PENDING");
@@ -404,3 +437,4 @@ take("LE_VAS_PURCHASE_STATE_PROCESSING_COMPLETE");
 take("LE_BATTLEPAY_PRODUCT_ITEM_LEVEL_90_CHARACTER_UPGRADE");
 take("LE_BATTLEPAY_PRODUCT_ITEM_LEVEL_100_CHARACTER_UPGRADE");
 take("LE_BATTLEPAY_PRODUCT_ITEM_7_0_BOX_LEVEL");
+retain("LE_MODEL_BLEND_OPERATION_NONE");

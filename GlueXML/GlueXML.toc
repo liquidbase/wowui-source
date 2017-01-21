@@ -15,16 +15,23 @@ GlueDropDownMenu.xml
 ..\SharedXML\C_TimerAugment.lua
 
 ..\SharedXML\Util.lua
+..\SharedXML\Pools.lua
 ..\SharedXML\LayoutFrame.xml
 ..\SharedXML\HybridScrollFrame.lua
 ..\SharedXML\HybridScrollFrame.xml
-..\SharedXML\ModelFrames.xml
-..\SharedXML\ModelPreviewFrame.xml
-## IME.xml needs to be loaded after GlueFonts.xml
-..\SharedXML\IME.xml
+..\SharedXML\Vector2D.lua
+..\SharedXML\Vector3D.lua
+..\SharedXML\Spline.lua
+..\SharedXML\ModelSceneTemplates.xml
+..\SharedXML\ModelSceneMixin.xml
+..\SharedXML\ModelSceneActorMixin.xml
 
 ##New stuff!!!
 GlueParent.xml
+## These SharedXML files need to be loaded after GlueParent.xml
+..\SharedXML\IME.xml
+..\SharedXML\ModelFrames.xml
+..\SharedXML\ModelPreviewFrame.xml
 GlueDialog.xml
 GlueTooltip.xml
 ..\SharedXML\AddonList.xml

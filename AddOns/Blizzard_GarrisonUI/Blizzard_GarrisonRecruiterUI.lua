@@ -271,7 +271,7 @@ function GarrisonRecruitSelectFrame_OnLoad(self)
 end
 
 function GarrisonRecruitSelectFrame_OnEvent(self, event, ...)
-	GarrisonFollowerList_OnEvent(self.FollowerList, event, ...);
+	self.FollowerList:OnEvent(event, ...);
 	if(event == "GARRISON_RECRUIT_FOLLOWER_RESULT")then
 		-- post event for recruiting follower
 		HideUIPanel(GarrisonRecruitSelectFrame);
@@ -309,8 +309,7 @@ function GarrisonRecruitSelectFrame_UpdateRecruits( waiting )
 		if(follower)then
 			frame:Show();
 			frame.Name:SetText(follower.name);
-			frame.PortraitFrame:SetLevel(follower.level);
-			SetPortraitTexture(frame.PortraitFrame.Portrait, follower.displayID);
+			frame.PortraitFrame:SetupPortrait(follower);
 			local displayInfo = follower.displayIDs and follower.displayIDs[1];
 			GarrisonMission_SetFollowerModel(frame.Model, follower.followerID, displayInfo and displayInfo.id, displayInfo and displayInfo.showWeapon);
 			frame.Model:SetHeightFactor(follower.displayHeight or 0.5);
@@ -318,7 +317,7 @@ function GarrisonRecruitSelectFrame_UpdateRecruits( waiting )
 			frame.Model:Show();
 			frame.Class:SetAtlas(follower.classAtlas);
 			
-			local color = ITEM_QUALITY_COLORS[follower.quality];
+			local color = FOLLOWER_QUALITY_COLORS[follower.quality];
 			frame.Name:SetVertexColor(color.r, color.g, color.b);
 			frame.PortraitFrame:SetQuality(follower.quality);
 
@@ -402,7 +401,7 @@ function GarrisonRecruiterFrame_HireRecruit(self)
 	local followerIndex = self:GetParent():GetID();
 	local followers = C_Garrison.GetAvailableRecruits();
 	local followerName = followers[followerIndex].name;
-	local color = ITEM_QUALITY_COLORS[followers[followerIndex].quality].hex;
+	local color = FOLLOWER_QUALITY_COLORS[followers[followerIndex].quality].hex;
 	StaticPopup_Show("CONFIRM_RECRUIT_FOLLOWER", color..followerName..FONT_COLOR_CODE_CLOSE, nil, followerIndex);
 end
 

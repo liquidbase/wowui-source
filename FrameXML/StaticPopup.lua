@@ -10,7 +10,7 @@ StaticPopupDialogs["CONFIRM_OVERWRITE_EQUIPMENT_SET"] = {
 	text = CONFIRM_OVERWRITE_EQUIPMENT_SET,
 	button1 = YES,
 	button2 = NO,
-	OnAccept = function (self) SaveEquipmentSet(self.data, self.selectedIcon); GearManagerDialogPopup:Hide(); end,
+	OnAccept = function (self) C_EquipmentSet.SaveEquipmentSet(self.data, self.selectedIcon); GearManagerDialogPopup:Hide(); end,
 	OnCancel = function (self) end,
 	OnHide = function (self) self.data = nil; self.selectedIcon = nil; end,
 	hideOnEscape = 1,
@@ -23,7 +23,7 @@ StaticPopupDialogs["CONFIRM_SAVE_EQUIPMENT_SET"] = {
 	text = CONFIRM_SAVE_EQUIPMENT_SET,
 	button1 = YES,
 	button2 = NO,
-	OnAccept = function (self) SaveEquipmentSet(self.data); end,
+	OnAccept = function (self) C_EquipmentSet.SaveEquipmentSet(self.data); end,
 	OnCancel = function (self) end,
 	OnHide = function (self) self.data = nil; end,
 	hideOnEscape = 1,
@@ -79,7 +79,7 @@ StaticPopupDialogs["CONFIRM_DELETE_EQUIPMENT_SET"] = {
 	text = CONFIRM_DELETE_EQUIPMENT_SET,
 	button1 = YES,
 	button2 = NO,
-	OnAccept = function (self) DeleteEquipmentSet(self.data); end,
+	OnAccept = function (self) C_EquipmentSet.DeleteEquipmentSet(self.data); end,
 	OnCancel = function (self) end,
 	hideOnEscape = 1,
 	timeout = 0,
@@ -946,26 +946,6 @@ StaticPopupDialogs["DELETE_MONEY"] = {
 	hideOnEscape = 1
 };
 
-StaticPopupDialogs["SEND_MONEY"] = {
-	text = SEND_MONEY_CONFIRMATION,
-	button1 = ACCEPT,
-	button2 = CANCEL,
-	OnAccept = function(self)
-		if ( SetSendMailMoney(MoneyInputFrame_GetCopper(SendMailMoney)) ) then
-			SendMailFrame_SendMail();
-		end
-	end,
-	OnCancel = function(self)
-		SendMailMailButton:Enable();
-	end,
-	OnShow = function(self)
-		MoneyFrame_Update(self.moneyFrame, MoneyInputFrame_GetCopper(SendMailMoney));
-	end,
-	hasMoneyFrame = 1,
-	timeout = 0,
-	hideOnEscape = 1
-};
-
 StaticPopupDialogs["CONFIRM_REPORT_SPAM_CHAT"] = {
 	text = REPORT_SPAM_CONFIRMATION,
 	button1 = ACCEPT,
@@ -1360,12 +1340,23 @@ StaticPopupDialogs["DEATH"] = {
 		end
 
 		local b1_enabled = self.button1:IsEnabled();
-		local encounterInProgress = IsEncounterInProgress();
-		self.button1:SetEnabled(not encounterInProgress and not HasNoReleaseAura());
+		local encounterSupressRelease = IsEncounterSuppressingRelease();
+		if ( encounterSupressRelease ) then
+			self.button1:SetEnabled(false);
+			self.button1:SetText(DEATH_RELEASE);
+		else
+			local hasNoReleaseAura, noReleaseDuration = HasNoReleaseAura();
+			self.button1:SetEnabled(not hasNoReleaseAura);
+			if ( hasNoReleaseAura ) then
+				self.button1:SetText(math.floor(noReleaseDuration));
+			else
+				self.button1:SetText(DEATH_RELEASE);
+			end
+		end
 
 		if ( b1_enabled ~= self.button1:IsEnabled() ) then
 			if ( b1_enabled ) then
-				if ( encounterInProgress ) then
+				if ( encounterSupressRelease ) then
 					self.text:SetText(CAN_NOT_RELEASE_IN_COMBAT);
 				else
 					self.text:SetText(CAN_NOT_RELEASE_RIGHT_NOW);
@@ -1525,7 +1516,7 @@ StaticPopupDialogs["TRADE"] = {
 	hideOnEscape = 1
 };
 StaticPopupDialogs["PARTY_INVITE"] = {
-	text = INVITATION,
+	text = "%s",
 	button1 = ACCEPT,
 	button2 = DECLINE,
 	sound = "igPlayerInvite",
@@ -1547,32 +1538,74 @@ StaticPopupDialogs["PARTY_INVITE"] = {
 	end,
 	timeout = STATICPOPUP_TIMEOUT,
 	whileDead = 1,
-	hideOnEscape = 1
 };
-StaticPopupDialogs["PARTY_INVITE_XREALM"] = {
-	text = INVITATION_XREALM,
+StaticPopupDialogs["GROUP_INVITE_CONFIRMATION"] = {
+	text = "%s", --Filled out dynamically
 	button1 = ACCEPT,
 	button2 = DECLINE,
 	sound = "igPlayerInvite",
-	OnShow = function(self)
-		self.inviteAccepted = nil;
-	end,
 	OnAccept = function(self)
-		AcceptGroup();
-		self.inviteAccepted = 1;
+		RespondToInviteConfirmation(self.data, true);
 	end,
 	OnCancel = function(self)
-		DeclineGroup();
+		RespondToInviteConfirmation(self.data, false);
 	end,
 	OnHide = function(self)
-		if ( not self.inviteAccepted ) then
-			DeclineGroup();
-			self:Hide();
+		UpdateInviteConfirmationDialogs();
+	end,
+	OnUpdate = function(self)
+		if ( not self.linkRegion or not self.nextUpdateTime ) then
+			return;
+		end
+
+		local timeNow = GetTime();
+		if ( self.nextUpdateTime > timeNow ) then
+			return;
+		end
+
+		local _, _, guid, _, _, level, spec, itemLevel = GetInviteConfirmationInfo(self.data);
+		local className, classFilename, _, _, gender, characterName, _ = GetPlayerInfoByGUID(guid);
+
+		GameTooltip:SetOwner(self.linkRegion);
+
+		if ( className ) then
+			self.nextUpdateTime = nil; -- The tooltip will be created with valid data, no more updates necessary.
+
+			local _, _, _, colorCode = GetClassColor(classFilename);
+			GameTooltip:SetText(WrapTextInColorCode(characterName, colorCode));
+
+			local _, specName = GetSpecializationInfoByID(spec, gender);
+			local characterLine = CHARACTER_LINK_CLASS_LEVEL_SPEC_TOOLTIP:format(level, className, specName);
+			local itemLevelLine = CHARACTER_LINK_ITEM_LEVEL_TOOLTIP:format(itemLevel);
+
+			GameTooltip:AddLine(characterLine, HIGHLIGHT_FONT_COLOR:GetRGB());
+			GameTooltip:AddLine(itemLevelLine, HIGHLIGHT_FONT_COLOR:GetRGB());
+		else
+			self.nextUpdateTime = timeNow + .5;
+			GameTooltip:SetText(RETRIEVING_DATA, RED_FONT_COLOR:GetRGB());
+		end
+
+		GameTooltip:Show();
+	end,
+	OnHyperlinkClick = function(self, link, text, button)
+		-- Only allowing left button for now.
+		if ( button == "LeftButton" ) then
+			SetItemRef(link, text, button);
 		end
 	end,
-	timeout = STATICPOPUP_TIMEOUT,
+	OnHyperlinkEnter = function(self, link, text, region, boundsLeft, boundsBottom, boundsWidth, boundsHeight)
+		self.linkRegion = region;
+		self.linkText = text;
+		self.nextUpdateTime = GetTime();
+		StaticPopupDialogs["GROUP_INVITE_CONFIRMATION"].OnUpdate(self);
+	end,
+	OnHyperlinkLeave = function(self)
+		self.linkRegion = nil;
+		self.linkText = nil;
+		self.nextUpdateTime = nil;
+		GameTooltip:Hide();
+	end,
 	whileDead = 1,
-	hideOnEscape = 1
 };
 StaticPopupDialogs["CHAT_CHANNEL_INVITE"] = {
 	text = CHAT_INVITE_NOTICE_POPUP,
@@ -2627,6 +2660,18 @@ StaticPopupDialogs["BIND_ENCHANT"] = {
 	showAlert = 1,
 	hideOnEscape = 1
 };
+StaticPopupDialogs["ACTION_WILL_BIND_ITEM"] = {
+	text = ACTION_WILL_BIND_ITEM,
+	button1 = OKAY,
+	button2 = CANCEL,
+	OnAccept = function(self)
+		ActionBindsItem();
+	end,
+	timeout = 0,
+	exclusive = 1,
+	showAlert = 1,
+	hideOnEscape = 1
+};
 StaticPopupDialogs["REPLACE_ENCHANT"] = {
 	text = REPLACE_ENCHANT,
 	button1 = YES,
@@ -3446,6 +3491,21 @@ StaticPopupDialogs["CONFIRM_LEAVE_BATTLEFIELD"] = {
 	showAlert = 1,
 }
 
+StaticPopupDialogs["CONFIRM_SURRENDER_ARENA"] = {
+	text = CONFIRM_SURRENDER_ARENA,
+	button1 = YES,
+	button2 = CANCEL,
+	OnShow = function(self)
+		self.text:SetText(CONFIRM_SURRENDER_ARENA);
+	end,
+	OnAccept = function(self, data)
+		SurrenderArena();
+	end,
+	whileDead = 1,
+	hideOnEscape = 1,
+	showAlert = 1,
+}
+
 StaticPopupDialogs["SAVED_VARIABLES_TOO_LARGE"] = {
 	text = SAVED_VARIABLES_TOO_LARGE,
 	button1 = OKAY,
@@ -3620,7 +3680,6 @@ StaticPopupDialogs["CONFIRM_UNLOCK_TRIAL_CHARACTER"] = {
 	OnCancel = function()
 		ClassTrialThanksForPlayingDialog:ShowThanks();
 	end,
-	hideOnEscape = 0,
 	timeout = 0,
 	whileDead = 1,
 }
@@ -3631,6 +3690,42 @@ StaticPopupDialogs["QUEST_IGNORE_TUTORIAL"] = {
 	hideOnEscape = 1,
 	timeout = 0,
 	whileDead = 1,
+}
+
+StaticPopupDialogs["DANGEROUS_SCRIPTS_WARNING"] = {
+	text = DANGEROUS_SCRIPTS_WARNING,
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function()
+		SetAllowDangerousScripts(true);
+	end,
+	exclusive = 1,
+	whileDead = 1,
+	showAlert = 1,
+}
+
+StaticPopupDialogs["EXPERIMENTAL_CVAR_WARNING"] = {
+	text = EXPERIMENTAL_FEATURE_TURNED_ON_WARNING,
+	button1 = ACCEPT,
+	button2 = DISABLE,
+	OnCancel = function()
+		ResetTestCvars();
+	end,
+	exclusive = 1,
+	whileDead = 1,
+	showAlert = 1,
+}
+
+StaticPopupDialogs["PREMADE_GROUP_SEARCH_DELIST_WARNING"] = {
+	text = PREMADE_GROUP_SEARCH_DELIST_WARNING_TEXT,
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self)
+		LFGListFrame_BeginFindQuestGroup(LFGListFrame, self.data);
+	end,
+	whileDead = 1,
+	showAlert = 1,
+	hideOnEscape = 1,
 }
 
 function StaticPopup_FindVisible(which, data)
@@ -4228,6 +4323,31 @@ function StaticPopup_OnHide(self)
 	end
 end
 
+local function StaticPopup_CallInfoHandler(dialog, handlerName, ...)
+	if ( dialog:IsShown() ) then
+		local which = dialog.which;
+		local info = StaticPopupDialogs[which];
+		if ( info ) then
+			local handler = info[handlerName];
+			if ( handler ) then
+				handler(dialog, ...);
+			end
+		end
+	end
+end
+
+function StaticPopup_OnHyperlinkClick(self, ...)
+	StaticPopup_CallInfoHandler(self, "OnHyperlinkClick", ...);
+end
+
+function StaticPopup_OnHyperlinkEnter(self, ...)
+	StaticPopup_CallInfoHandler(self, "OnHyperlinkEnter", ...);
+end
+
+function StaticPopup_OnHyperlinkLeave(self, ...)
+	StaticPopup_CallInfoHandler(self, "OnHyperlinkLeave", ...);
+end
+
 function StaticPopup_OnClick(dialog, index)
 	if ( not dialog:IsShown() ) then
 		return;
@@ -4425,7 +4545,7 @@ function StaticPopupItemFrame_OnEvent(self, event, ...)
 			local data = self:GetParent().data;
 			StaticPopupItemFrame_RetrieveInfo(self, data);
 			StaticPopupItemFrame_DisplayInfo(self, data.link, data.name, data.color, data.texture, data.count);
-		end	
+		end
 	end
 end
 

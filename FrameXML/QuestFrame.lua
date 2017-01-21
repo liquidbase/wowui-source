@@ -22,10 +22,13 @@ function QuestFrame_OnLoad(self)
 	self:RegisterEvent("LEARNED_SPELL_IN_TAB");
 	self:RegisterEvent("QUEST_IGNORED");
 
-	-- Unignore is the longest button text on the right side
-	local buttonWidth = max(QuestFrameDetailPanel.UnignoreButton:GetFontString():GetStringWidth() + 30, MIN_RIGHT_BUTTON_WIDTH);
-	QuestFrameGoodbyeButton:SetWidth(buttonWidth);
-	QuestFrameDeclineButton:SetWidth(buttonWidth);
+	local buttonWidth;
+	buttonWidth = max(QuestFrameDetailPanel.IgnoreButton:GetFontString():GetStringWidth() + 30, MIN_RIGHT_BUTTON_WIDTH);
+	QuestFrameDetailPanel.IgnoreButton:SetWidth(buttonWidth);
+	QuestFrameProgressPanel.IgnoreButton:SetWidth(buttonWidth);
+	buttonWidth = max(QuestFrameDetailPanel.UnignoreButton:GetFontString():GetStringWidth() + 30, MIN_RIGHT_BUTTON_WIDTH);
+	QuestFrameDetailPanel.UnignoreButton:SetWidth(buttonWidth);
+	QuestFrameProgressPanel.UnignoreButton:SetWidth(buttonWidth);
 end
 
 function QuestFrame_OnEvent(self, event, ...)
@@ -270,7 +273,7 @@ function QuestFrameProgressItems_Update()
 		end
 
 		-- Show the "Required Items" text if needed.
-		if (actualNumRequiredItems ~= 0) then
+		if (actualNumRequiredItems + numRequiredCurrencies > 0) then
 			QuestProgressRequiredItemsText:Show();
 		else
 			QuestProgressRequiredItemsText:Hide();
