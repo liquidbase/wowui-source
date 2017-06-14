@@ -7,20 +7,6 @@ local ContributionCollectorLua =
 	Functions =
 	{
 		{
-			Name = "CanContribute",
-			Type = "Function",
-
-			Arguments =
-			{
-				{ Name = "contributionID", Type = "number", Nilable = false },
-			},
-
-			Returns =
-			{
-				{ Name = "isActive", Type = "bool", Nilable = false },
-			},
-		},
-		{
 			Name = "Close",
 			Type = "Function",
 		},
@@ -68,6 +54,20 @@ local ContributionCollectorLua =
 			Returns =
 			{
 				{ Name = "spellID", Type = "number", Nilable = false, StrideIndex = 1 },
+			},
+		},
+		{
+			Name = "GetContributionResult",
+			Type = "Function",
+
+			Arguments =
+			{
+				{ Name = "contributionID", Type = "number", Nilable = false },
+			},
+
+			Returns =
+			{
+				{ Name = "result", Type = "ContributionResult", Nilable = false },
 			},
 		},
 		{
@@ -166,8 +166,9 @@ local ContributionCollectorLua =
 
 			Returns =
 			{
-				{ Name = "contributionState", Type = "number", Nilable = false },
+				{ Name = "contributionState", Type = "ContributionState", Nilable = false, Default = "None" },
 				{ Name = "contributionPercentageComplete", Type = "number", Nilable = false },
+				{ Name = "timeOfNextStateChange", Type = "number", Nilable = true },
 			},
 		},
 		{
@@ -198,24 +199,47 @@ local ContributionCollectorLua =
 				{ Name = "awaitingData", Type = "bool", Nilable = false },
 			},
 		},
-		{
-			Name = "IsBuffActive",
-			Type = "Function",
+	},
 
-			Arguments =
-			{
-				{ Name = "contributionID", Type = "number", Nilable = false },
-			},
-
-			Returns =
-			{
-				{ Name = "isActive", Type = "bool", Nilable = false },
-			},
-		},
+	Events =
+	{
 	},
 
 	Tables =
 	{
+		{
+			Name = "ContributionState",
+			Type = "Enumeration",
+			NumValues = 5,
+			MinValue = 0,
+			MaxValue = 4,
+			Fields =
+			{
+				{ Name = "None", Type = "ContributionState", EnumValue = 0 },
+				{ Name = "Building", Type = "ContributionState", EnumValue = 1 },
+				{ Name = "Active", Type = "ContributionState", EnumValue = 2 },
+				{ Name = "UnderAttack", Type = "ContributionState", EnumValue = 3 },
+				{ Name = "Destroyed", Type = "ContributionState", EnumValue = 4 },
+			},
+		},
+		{
+			Name = "ContributionResult",
+			Type = "Enumeration",
+			NumValues = 8,
+			MinValue = 0,
+			MaxValue = 7,
+			Fields =
+			{
+				{ Name = "Success", Type = "ContributionResult", EnumValue = 0 },
+				{ Name = "MustBeNearNpc", Type = "ContributionResult", EnumValue = 1 },
+				{ Name = "IncorrectState", Type = "ContributionResult", EnumValue = 2 },
+				{ Name = "InvalidID", Type = "ContributionResult", EnumValue = 3 },
+				{ Name = "QuestDataMissing", Type = "ContributionResult", EnumValue = 4 },
+				{ Name = "FailedConditionCheck", Type = "ContributionResult", EnumValue = 5 },
+				{ Name = "UnableToCompleteTurnIn", Type = "ContributionResult", EnumValue = 6 },
+				{ Name = "InternalError", Type = "ContributionResult", EnumValue = 7 },
+			},
+		},
 	},
 };
 

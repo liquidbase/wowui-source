@@ -587,13 +587,13 @@ function PanelTemplates_ResizeTabsToFit(frame, maxWidthForAllTabs)
 	end
 
 	local currentTab = GetTabByIndex(frame, selectedIndex);
-	PanelTemplates_TabResize(currentTab);
+	PanelTemplates_TabResize(currentTab, 0);
 	local availableWidth = maxWidthForAllTabs - currentTab:GetWidth();
 	local widthPerTab = availableWidth / (frame.numTabs - 1);
 	for i = 1, frame.numTabs do
 		if ( i ~= selectedIndex ) then
 			local tab = GetTabByIndex(frame, i);
-			PanelTemplates_TabResize(tab, _, widthPerTab);
+			PanelTemplates_TabResize(tab, 0, widthPerTab);
 		end
 	end
 end
@@ -736,6 +736,25 @@ function ScrollingEdit_OnUpdate(self, elapsed, scrollFrame)
 	end
 end
 
+function ScrollingEdit_OnTextChanged(self, scrollFrame)
+	-- force an update when the text changes
+	self.handleCursorChange = true;
+	ScrollingEdit_OnUpdate(self, 0, scrollFrame);
+end
+
+function ScrollingEdit_OnLoad(self)
+	ScrollingEdit_SetCursorOffsets(self, 0, 0);
+end
+
+function ScrollingEdit_SetCursorOffsets(self, offset, height)
+	self.cursorOffset = offset;
+	self.cursorHeight = height;
+end
+
+function ScrollingEdit_OnCursorChanged(self, x, y, w, h)
+	ScrollingEdit_SetCursorOffsets(self, y, h);
+	self.handleCursorChange = true;
+end
 
 NumericInputSpinnerMixin = {};
 

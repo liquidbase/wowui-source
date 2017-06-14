@@ -281,10 +281,6 @@ function UIParent_OnLoad(self)
 	self:RegisterEvent("ENABLE_TAXI_BENCHMARK");
 	self:RegisterEvent("DISABLE_TAXI_BENCHMARK");
 
-	-- Push to talk
-	self:RegisterEvent("VOICE_PUSH_TO_TALK_START");
-	self:RegisterEvent("VOICE_PUSH_TO_TALK_STOP");
-
 	-- Events for BarberShop Handling
 	self:RegisterEvent("BARBER_SHOP_OPEN");
 	self:RegisterEvent("BARBER_SHOP_CLOSE");
@@ -390,9 +386,13 @@ function UIParent_OnLoad(self)
 
 	-- Invite confirmations
 	self:RegisterEvent("GROUP_INVITE_CONFIRMATION");
-	
+
 	-- Event(s) for the ArtifactUI
 	self:RegisterEvent("ARTIFACT_ENDGAME_REFUND");
+
+	-- Event(s) for PVP
+	self:RegisterEvent("UPDATE_BATTLEFIELD_STATUS");
+	self:RegisterEvent("PVP_BRAWL_INFO_UPDATED");
 end
 
 function UIParent_OnShow(self)
@@ -441,6 +441,10 @@ end
 
 function CombatLog_LoadUI()
 	UIParentLoadAddOn("Blizzard_CombatLog");
+end
+
+function Commentator_LoadUI()
+	UIParentLoadAddOn("Blizzard_Commentator");
 end
 
 function GuildBankFrame_LoadUI()
@@ -815,16 +819,23 @@ function ToggleRaidBrowser()
 	else
 		ShowUIPanel(RaidBrowserFrame);
 	end
-
 end
 
-function ToggleEncounterJournal()
-	if (IsKioskModeEnabled()) then
-		return;
+function CanShowEncounterJournal()
+	if ( IsKioskModeEnabled() ) then
+		return false;
 	end
 
 	if ( not C_AdventureJournal.CanBeShown() ) then
-		return;
+		return false;
+	end
+
+	return true;
+end
+
+function ToggleEncounterJournal()
+	if ( not CanShowEncounterJournal() ) then
+		return false;
 	end
 
 	if ( not EncounterJournal ) then
@@ -832,7 +843,9 @@ function ToggleEncounterJournal()
 	end
 	if ( EncounterJournal ) then
 		ToggleFrame(EncounterJournal);
+		return true;
 	end
+	return false;
 end
 
 
@@ -919,6 +932,35 @@ function InspectUnit(unit)
 	end
 end
 
+local function PlayBattlefieldBanner(self)
+	-- battlefields
+	if ( not self.battlefieldBannerShown ) then
+		local bannerName, bannerDescription;
+
+		if (C_PvP.IsInBrawl()) then
+			local brawlInfo = C_PvP.GetBrawlInfo();
+			if (brawlInfo) then
+				bannerName = brawlInfo.name;
+				bannerDescription = brawlInfo.shortDescription;
+			end
+		else
+		    for i=1, GetMaxBattlefieldID() do
+			    local status, mapName, _, _, _, _, _, _, _, shortDescription, _ = GetBattlefieldStatus(i);
+			    if ( status and status == "active" ) then
+				    bannerName = mapName;
+				    bannerDescription = shortDescription;
+				    break;
+			    end
+		    end
+		end
+
+		if ( bannerName ) then
+			UIParentLoadAddOn("Blizzard_PVPUI");
+			C_Timer.After(1, function() TopBannerManager_Show(PvPObjectiveBannerFrame, { name=bannerName, description=bannerDescription }); end);
+			self.battlefieldBannerShown = true;
+		end
+	end
+end
 
 -- UIParent_OnEvent --
 function UIParent_OnEvent(self, event, ...)
@@ -1201,6 +1243,10 @@ function UIParent_OnEvent(self, event, ...)
 		if ( instanceType == "arena" or instanceType == "pvp") then
 			Arena_LoadUI();
 		end
+		if ( C_Commentator.IsSpectating() ) then
+			Commentator_LoadUI();
+		end
+		
 		if ( UnitIsGhost("player") ) then
 			GhostFrame:Show();
 		else
@@ -1220,7 +1266,7 @@ function UIParent_OnEvent(self, event, ...)
 
 		for i, spellConfirmation in ipairs(spellConfirmations) do
 			if spellConfirmation.spellID then
-				if confirmType == LE_SPELL_CONFIRMATION_PROMPT_TYPE_STATIC_TEXT then
+				if spellConfirmation.confirmType == LE_SPELL_CONFIRMATION_PROMPT_TYPE_STATIC_TEXT then
 					StaticPopup_Show("SPELL_CONFIRMATION_PROMPT", spellConfirmation.text, spellConfirmation.duration, spellConfirmation.spellID);
 				elseif spellConfirmation.confirmType == LE_SPELL_CONFIRMATION_PROMPT_TYPE_SIMPLE_WARNING then
 					StaticPopup_Show("SPELL_CONFIRMATION_WARNING", spellConfirmation.text, nil, spellConfirmation.spellID);
@@ -1238,9 +1284,13 @@ function UIParent_OnEvent(self, event, ...)
 		end
 		OrderHall_CheckCommandBar();
 
+		self.battlefieldBannerShown = nil;
+
 		NPETutorial_AttemptToBegin(event);
 		ClassTrial_AttemptLoad();
 		BoostTutorial_AttemptLoad();
+	elseif ( event == "UPDATE_BATTLEFIELD_STATUS" or event == "PVP_BRAWL_INFO_UPDATED" ) then
+		PlayBattlefieldBanner(self);
 	elseif ( event == "GROUP_ROSTER_UPDATE" ) then
 		-- Hide/Show party member frames
 		RaidOptionsFrame_UpdatePartyFrames();
@@ -1531,7 +1581,7 @@ function UIParent_OnEvent(self, event, ...)
 		local numRefunded, refundedTier, bagOrInventorySlot = ...;
 		ArtifactFrame_LoadUI();
 		ArtifactFrame:OnTraitsRefunded(numRefunded, refundedTier);
-		
+
 	elseif ( event == "ADVENTURE_MAP_OPEN" ) then
 		OrderHall_LoadUI();
 		ShowUIPanel(OrderHallMissionFrame);
@@ -1599,24 +1649,6 @@ function UIParent_OnEvent(self, event, ...)
 		end
 		local info = ChatTypeInfo["SYSTEM"];
 		DEFAULT_CHAT_FRAME:AddMessage(BENCHMARK_TAXI_MODE_OFF, info.r, info.g, info.b, info.id);
-
-	-- Push to talk
-	elseif ( event == "VOICE_PUSH_TO_TALK_START" and GetVoiceCurrentSessionID() ) then
-		if ( GetCVarBool("PushToTalkSound") ) then
-			PlaySound("VoiceChatOn");
-		end
-		-- Animate the player frame speaker even if not broadcasting
-		if  ( GetCVar("VoiceChatMode") == "0" ) then
-			UIFrameFadeIn(PlayerSpeakerFrame, 0.2, PlayerSpeakerFrame:GetAlpha(), 1);
-		end
-	elseif ( event == "VOICE_PUSH_TO_TALK_STOP" ) then
-		if ( GetCVarBool("PushToTalkSound") and GetVoiceCurrentSessionID() ) then
-			PlaySound("VoiceChatOff");
-		end
-		-- Stop Animation
-		if  ( GetCVar("VoiceChatMode") == "0" and PlayerSpeakerFrame:GetAlpha() > 0 ) then
-			UIFrameFadeOut(PlayerSpeakerFrame, 0.2, PlayerSpeakerFrame:GetAlpha(), 0);
-		end
 	elseif ( event == "LEVEL_GRANT_PROPOSED" ) then
 		StaticPopup_Show("LEVEL_GRANT_PROPOSED", arg1);
 	elseif ( event == "CHAT_MSG_WHISPER" and arg6 == "GM" ) then	--GMChatUI
@@ -1768,23 +1800,7 @@ function UIParent_OnEvent(self, event, ...)
 			QuestChoiceFrame_Show();
 		end
 	elseif ( event == "LUA_WARNING" ) then
-		local warnType, message = ...;
-		LoadAddOn("Blizzard_DebugTools");
-		local loaded = IsAddOnLoaded("Blizzard_DebugTools");
-
-		local cvarName = "scriptWarnings";
-		if ( warnType == LUA_WARNING_TREAT_AS_ERROR ) then
-			cvarName = "scriptErrors";
-		end
-
-		if ( GetCVarBool(cvarName) ) then
-			if ( loaded ) then
-				ScriptErrorsFrame_OnError(message, warnType);
-			end
-		elseif ( loaded ) then
-			local HIDE_ERROR_FRAME = true;
-			ScriptErrorsFrame_OnError(message, warnType, HIDE_ERROR_FRAME);
-		end
+		HandleLuaWarning(...);
 	elseif ( event == "GARRISON_ARCHITECT_OPENED") then
 		if (not GarrisonBuildingFrame) then
 			Garrison_LoadUI();
@@ -1985,7 +2001,7 @@ UIPARENT_MANAGED_FRAME_POSITIONS = {
 	["CastingBarFrame"] = {baseY = true, yOffset = 40, bottomEither = actionBarOffset, overrideActionBar = overrideActionBarTop, petBattleFrame = petBattleTop, bonusActionBar = 1, pet = 1, watchBar = 1, tutorialAlert = 1, playerPowerBarAlt = 1, extraActionBarFrame = 1, ZoneAbilityFrame = 1, talkingHeadFrame = 1, classResourceOverlayFrame = 1, classResourceOverlayOffset = 1};
 	["ClassResourceOverlayParentFrame"] = {baseY = true, yOffset = 0, bottomEither = actionBarOffset, overrideActionBar = overrideActionBarTop, petBattleFrame = petBattleTop, bonusActionBar = 1, pet = 1, watchBar = 1, tutorialAlert = 1, playerPowerBarAlt = 1, extraActionBarFrame = 1, ZoneAbilityFrame = 1 };
 	["PlayerPowerBarAlt"] = UIPARENT_ALTERNATE_FRAME_POSITIONS["PlayerPowerBarAlt_Bottom"];
-	["ExtraActionBarFrame"] = {baseY = true, yOffset = 40, bottomEither = actionBarOffset, overrideActionBar = overrideActionBarTop, petBattleFrame = petBattleTop, bonusActionBar = 1, pet = 1, watchBar = 1, tutorialAlert = 1};
+	["ExtraActionBarFrame"] = {baseY = true, yOffset = 0, bottomEither = actionBarOffset, overrideActionBar = overrideActionBarTop, petBattleFrame = petBattleTop, bonusActionBar = 1, pet = 1, watchBar = 1, tutorialAlert = 1};
 	["ZoneAbilityFrame"] = {baseY = true, yOffset = 100, bottomEither = actionBarOffset, overrideActionBar = overrideActionBarTop, petBattleFrame = petBattleTop, bonusActionBar = 1, pet = 1, watchBar = 1, tutorialAlert = 1, extraActionBarFrame = 1};
 	["ChatFrame1"] = {baseY = true, yOffset = 40, bottomLeft = actionBarOffset-8, justBottomRightAndStance = actionBarOffset, overrideActionBar = overrideActionBarTop, petBattleFrame = petBattleTop, bonusActionBar = 1, pet = 1, watchBar = 1, maxLevel = 1, point = "BOTTOMLEFT", rpoint = "BOTTOMLEFT", xOffset = 32};
 	["ChatFrame2"] = {baseY = true, yOffset = 40, bottomRight = actionBarOffset-8, overrideActionBar = overrideActionBarTop, petBattleFrame = petBattleTop, bonusActionBar = 1, rightLeft = -2*actionBarOffset, rightRight = -actionBarOffset, watchBar = 1, maxLevel = 1, point = "BOTTOMRIGHT", rpoint = "BOTTOMRIGHT", xOffset = -32};
@@ -2852,10 +2868,10 @@ function FramePositionDelegate:UIParentManageFramePositions()
 		local numArenaOpponents = GetNumArenaOpponents();
 		if ( ArenaEnemyFrames and ArenaEnemyFrames:IsShown() and (numArenaOpponents > 0) ) then
 			ObjectiveTrackerFrame:ClearAllPoints();
-			ObjectiveTrackerFrame:SetPoint("TOPRIGHT", "ArenaEnemyFrame"..numArenaOpponents, "BOTTOMRIGHT", 2, -35);
+			ObjectiveTrackerFrame:SetPoint("TOPRIGHT", ArenaEnemyFrames_GetBestAnchorUnitFrameForOppponent(numArenaOpponents), "BOTTOMRIGHT", 2, -35);
 		elseif ( ArenaPrepFrames and ArenaPrepFrames:IsShown() and (numArenaOpponents > 0) ) then
 			ObjectiveTrackerFrame:ClearAllPoints();
-			ObjectiveTrackerFrame:SetPoint("TOPRIGHT", "ArenaPrepFrame"..numArenaOpponents, "BOTTOMRIGHT", 2, -35);
+			ObjectiveTrackerFrame:SetPoint("TOPRIGHT", ArenaPrepFrames_GetBestAnchorUnitFrameForOppponent(numArenaOpponents), "BOTTOMRIGHT", 2, -35);
 		else
 			-- We're using Simple Quest Tracking, automagically size and position!
 			ObjectiveTrackerFrame:ClearAllPoints();
@@ -3690,6 +3706,8 @@ function ToggleGameMenu()
 	if ( not UIParent:IsShown() ) then
 		UIParent:Show();
 		SetUIVisibility(true);
+	elseif ( C_Commentator.IsSpectating() and IsFrameLockActive("COMMENTATOR_SPECTATING_MODE") ) then
+		PvPCommentator:SetFrameLock(false);
 	elseif ( ModelPreviewFrame:IsShown() ) then
 		ModelPreviewFrame:Hide();
 	elseif ( StoreFrame_EscapePressed and StoreFrame_EscapePressed() ) then
@@ -4030,7 +4048,7 @@ function UpdateInviteConfirmationDialogs()
 end
 
 function UnitHasMana(unit)
-	if ( UnitPowerMax(unit, SPELL_POWER_MANA) > 0 ) then
+	if ( UnitPowerMax(unit, Enum.PowerType.Mana) > 0 ) then
 		return 1;
 	end
 	return nil;
@@ -4477,6 +4495,10 @@ function GMError(...)
 	end
 end
 
+function OnExcessiveErrors()
+	StaticPopup_Show("TOO_MANY_LUA_ERRORS");
+end
+
 function SetLargeGuildTabardTextures(unit, emblemTexture, backgroundTexture, borderTexture, tabardData)
 	-- texure dimensions are 1024x1024, icon dimensions are 64x64
 	local emblemSize, columns, offset;
@@ -4831,17 +4853,46 @@ function nop()
 end
 
 function ShakeFrameRandom(frame, magnitude, duration, frequency)
+	if frequency <= 0 then
+		return;
+	end
+
+	local shake = {};
+	for i = 1, math.ceil(duration / frequency) do
+		local xVariation, yVariation = math.random(-magnitude, magnitude), math.random(-magnitude, magnitude);
+		shake[i] = { x = xVariation, y = yVariation };
+	end
+
+	ShakeFrame(frame, shake, duration, frequency);
+end
+
+function ShakeFrame(frame, shake, maximumDuration, frequency)
 	local point, relativeFrame, relativePoint, x, y = frame:GetPoint();
-	local shakeTime = 0;
-	local lastTime = GetTime();
+	local shakeIndex = 1;
+	local endTime = GetTime() + maximumDuration;
 	frame.shakeTicker = C_Timer.NewTicker(frequency, function()
-		frame:SetPoint(point, relativeFrame, relativePoint, x + math.random(-magnitude, magnitude), y + math.random(-magnitude, magnitude));
-		local newTime = GetTime();
-		shakeTime = shakeTime + (newTime - lastTime);
-		lastTime = newTime;
-		if shakeTime > duration then
+		local xVariation, yVariation = shake[shakeIndex].x, shake[shakeIndex].y;
+		frame:SetPoint(point, relativeFrame, relativePoint, x + xVariation, y + yVariation);
+		shakeIndex = shakeIndex + 1;
+		if shakeIndex > #shake or GetTime() >= endTime then
 			frame:SetPoint(point, relativeFrame, relativePoint, x, y);
 			frame.shakeTicker:Cancel();
 		end
 	end);
+end
+
+-- Currency Overflow --
+function WillCurrencyRewardOverflow(currencyID, rewardQuantity)
+	local name, quantity, icon, earnedThisWeek, weeklyMax, maxQuantity, discovered, rarity = GetCurrencyInfo(currencyID);
+	return maxQuantity > 0 and rewardQuantity + quantity > maxQuantity;
+end
+
+function GetColorForCurrencyReward(currencyID, rewardQuantity, defaultColor)
+	if WillCurrencyRewardOverflow(currencyID, rewardQuantity) then
+		return RED_FONT_COLOR;
+	elseif defaultColor then
+		return defaultColor;
+	else
+		return HIGHLIGHT_FONT_COLOR;
+	end
 end

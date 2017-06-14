@@ -3,7 +3,7 @@
 -------------------------------------------------------
 MAX_LFG_LIST_APPLICATIONS = 5;
 MAX_LFG_LIST_SEARCH_AUTOCOMPLETE_ENTRIES = 6;
-MAX_LFG_LIST_GROUP_DROPDOWN_ENTRIES = 10;
+MAX_LFG_LIST_GROUP_DROPDOWN_ENTRIES = 17;
 LFG_LIST_DELISTED_FONT_COLOR = {r=0.3, g=0.3, b=0.3};
 LFG_LIST_COMMENT_FONT_COLOR = {r=0.6, g=0.6, b=0.6};
 
@@ -318,9 +318,14 @@ end
 
 function LFGListFrame_CheckPendingQuestIDSearch(self)
 	local questID = LFGListFrame_GetPendingQuestIDSearch(self);
-	if questID then
+	if questID and not C_LFGList.GetActiveEntryInfo() then
 		LFGListFrame_SetPendingQuestIDSearch(self, nil);
-		LFGListFrame_BeginFindQuestGroup(self, questID);
+		
+		if issecure() then
+			LFGListFrame_BeginFindQuestGroup(self, questID);
+		else
+			StaticPopup_Show("PREMADE_GROUP_INSECURE_SEARCH", QuestUtils_GetQuestName(questID), nil, questID);
+		end
 	end
 end
 
@@ -339,9 +344,11 @@ function LFGListFrame_BeginFindQuestGroup(self, questID)
 		return;
 	end
 
-	if C_LFGList.GetActiveEntryInfo() then -- fix issue when you're not the leader
-		C_LFGList.RemoveListing();
-		LFGListFrame_SetPendingQuestIDSearch(self, questID);
+	if C_LFGList.GetActiveEntryInfo() then
+		if LFGListUtil_CanListGroup() then
+			C_LFGList.RemoveListing();
+			LFGListFrame_SetPendingQuestIDSearch(self, questID);
+		end
 		return;
 	end
 
@@ -349,7 +356,7 @@ function LFGListFrame_BeginFindQuestGroup(self, questID)
 
 	local panel = self.CategorySelection;
 	LFGListCategorySelection_SelectCategory(panel, categoryID, filters);
-	LFGListCategorySelection_StartFindGroup(panel, questName, questID);
+	LFGListCategorySelection_StartFindGroup(panel, questName);
 	LFGListEntryCreation_SetAutoCreateMode(panel:GetParent().EntryCreation, "quest", activityID, questID);
 end
 
@@ -543,7 +550,7 @@ function LFGListCategorySelectionFindGroupButton_OnClick(self)
 	LFGListCategorySelection_StartFindGroup(panel);
 end
 
-function LFGListCategorySelection_StartFindGroup(self, searchText, questID)
+function LFGListCategorySelection_StartFindGroup(self, searchText)
 	local baseFilters = self:GetParent().baseFilters;
 
 	local searchPanel = self:GetParent().SearchPanel;
@@ -1702,10 +1709,43 @@ function LFGListSearchPanel_SetCategory(self, categoryID, filters, preferredFilt
 	self.CategoryName:SetText(name);
 end
 
+local function Higher(value)
+	return value + 1;
+end
+
+local function Lower(value)
+	return value - 1;
+end
+
+local function GetTermsTable(term)
+	local termsTable = { term };
+	local higherTerm = term:gsub("(%d+)", Higher);
+	if higherTerm ~= term then
+		table.insert(termsTable, higherTerm);
+		table.insert(termsTable, (term:gsub("(%d+)", Lower)));
+	end
+	return { matches = termsTable };
+end
+
+function LFGListSearchPanel_ParseSearchTerms(searchText)
+	local termSet = {};
+	
+	for term in searchText:gmatch("%S+") do
+		termSet[term] = true;
+	end
+	
+	local separatedTerms = {};
+	for term in pairs(termSet) do
+		table.insert(separatedTerms, GetTermsTable(term));
+	end
+	
+	return separatedTerms;
+end
+
 function LFGListSearchPanel_DoSearch(self)
 	local searchText = self.SearchBox:GetText();
 	local languages = C_LFGList.GetLanguageSearchFilter();
-	C_LFGList.Search(self.categoryID, searchText, self.filters, self.preferredFilters, languages);
+	C_LFGList.Search(self.categoryID, LFGListSearchPanel_ParseSearchTerms(searchText), self.filters, self.preferredFilters, languages);
 	self.searching = true;
 	self.searchFailed = false;
 	self.selectedResult = nil;
@@ -2801,6 +2841,10 @@ function LFGListUtil_CanSearchForGroup()
 	return canSearch;
 end
 
+function LFGListUtil_CanListGroup()
+	return LFGListUtil_IsAppEmpowered();
+end
+
 function LFGListUtil_AppendStatistic(label, value, title, lastTitle)
 	if ( title ~= lastTitle ) then
 		GameTooltip:AddLine(" ");
@@ -3084,8 +3128,11 @@ function LFGListUtil_SetAutoAccept(autoAccept)
 	end
 end
 
-function LFGListUtil_SetSearchEntryTooltip(tooltip, resultID)
-	local id, activityID, name, comment, voiceChat, iLvl, honorLevel, age, numBNetFriends, numCharFriends, numGuildMates, isDelisted, leaderName, numMembers = C_LFGList.GetSearchResultInfo(resultID);
+LFG_LIST_UTIL_SUPPRESS_AUTO_ACCEPT_LINE = 1;
+LFG_LIST_UTIL_ALLOW_AUTO_ACCEPT_LINE = 2;
+
+function LFGListUtil_SetSearchEntryTooltip(tooltip, resultID, autoAcceptOption)
+	local id, activityID, name, comment, voiceChat, iLvl, honorLevel, age, numBNetFriends, numCharFriends, numGuildMates, isDelisted, leaderName, numMembers, isAutoAccept = C_LFGList.GetSearchResultInfo(resultID);
 	local activityName, shortName, categoryID, groupID, minItemLevel, filters, minLevel, maxPlayers, displayType, _, useHonorLevel = C_LFGList.GetActivityInfo(activityID);
 	local memberCounts = C_LFGList.GetSearchResultMemberCounts(resultID);
 	tooltip:SetText(name, 1, 1, 1, true);
@@ -3144,6 +3191,13 @@ function LFGListUtil_SetSearchEntryTooltip(tooltip, resultID)
 		end
 	end
 
+	autoAcceptOption = autoAcceptOption or LFG_LIST_UTIL_ALLOW_AUTO_ACCEPT_LINE;
+
+	if autoAcceptOption == LFG_LIST_UTIL_ALLOW_AUTO_ACCEPT_LINE and isAutoAccept then
+		tooltip:AddLine(" ");
+		tooltip:AddLine(LFG_LIST_TOOLTIP_AUTO_ACCEPT, LIGHTBLUE_FONT_COLOR:GetRGB());
+	end
+
 	if ( isDelisted ) then
 		tooltip:AddLine(" ");
 		tooltip:AddLine(LFG_LIST_ENTRY_DELISTED, RED_FONT_COLOR.r, RED_FONT_COLOR.g, RED_FONT_COLOR.b, true);
@@ -3189,8 +3243,10 @@ end
 
 function LFGListUtil_FindQuestGroup(questID)
 	if C_LFGList.GetActiveEntryInfo() then
-		if LFGListUtil_IsEntryEmpowered() then
+		if LFGListUtil_CanListGroup() then
 			StaticPopup_Show("PREMADE_GROUP_SEARCH_DELIST_WARNING", nil, nil, questID);
+		else
+			LFGListUtil_OpenBestWindow();
 		end
 	else
 		LFGListFrame_BeginFindQuestGroup(LFGListFrame, questID);

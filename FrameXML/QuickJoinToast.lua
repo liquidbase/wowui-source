@@ -32,6 +32,15 @@ function QuickJoinToastMixin:OnLoad()
 	end
 end
 
+function QuickJoinToastMixin:OnShow()
+	self:RegisterEvent("PVP_BRAWL_INFO_UPDATED");
+end
+
+function QuickJoinToastMixin:OnHide()
+	self:UnregisterEvent("PVP_BRAWL_INFO_UPDATED");
+	self:ClearCachedQueueData();
+end
+
 function QuickJoinToastMixin:OnEvent(event, ...)
 	if ( event == "SOCIAL_QUEUE_UPDATE" ) then
 		local guid, numAddedItems = ...;
@@ -50,6 +59,17 @@ function QuickJoinToastMixin:OnEvent(event, ...)
 		local guid = ...;
 		self:ProcessOrQueueUpdate(guid);
 		self:CheckShowToast();
+	elseif ( event == "PVP_BRAWL_INFO_UPDATED") then
+		if (self.displayedToast and self:HasCachedQueueData()) then
+			local updateQueues = false;
+			local text = self:GetCurrentText(updateQueues);
+			if (self.ToastToToastAnim:IsPlaying()) then
+				self.pendingText = text;
+				self.Toast2.Text:SetText(text);
+			else
+				self.Toast.Text:SetText(text);
+			end
+		end
 	end
 end
 
@@ -93,6 +113,7 @@ function QuickJoinToastMixin:ProcessUpdate(guid)
 	if ( group:GetPriority() > 0 ) then
 		if ( not self.groupsAwaitingDisplay[guid] ) then
 			self.groupsAwaitingDisplay[guid] = true;
+			GuildRoster();
 			group:DelayUntil(GetTime() + QUICK_JOIN_CONFIG.DELAY_DURATION);
 		end
 	else
@@ -247,13 +268,14 @@ function QuickJoinToastMixin:ShowToast(group, priority)
 	local queues = C_SocialQueue.GetGroupQueues(self.displayedToast.guid);
 	self.isLFGList = queues and queues[1] and queues[1].queueData.queueType == "lfglist";
 
+	local updateQueues = true;
 	if ( self.oldToast ) then
-		local text = self:GetCurrentText();
+		local text = self:GetCurrentText(updateQueues);
 		self.Toast2.Text:SetText(text);
 		self.pendingText = text;
 		self.ToastToToastAnim:Play();
 	else
-		self.Toast.Text:SetText(self:GetCurrentText());
+		self.Toast.Text:SetText(self:GetCurrentText(updateQueues));
 		self.FriendToToastAnim:Play();
 	end
 
@@ -350,7 +372,23 @@ local function GetExtraQueueCount(queues)
 	return extraQueueCount;
 end
 
-function QuickJoinToastMixin:GetCurrentText()
+function QuickJoinToastMixin:HasCachedQueueData()
+	return self.queues ~= nil;
+end
+
+function QuickJoinToastMixin:CachedQueueData()
+	return self.queues;
+end
+
+function QuickJoinToastMixin:SetCachedQueueData(queues)
+	self.queues = queues;
+end
+
+function QuickJoinToastMixin:ClearCachedQueueData()
+	self:SetCachedQueueData(nil);
+end
+
+function QuickJoinToastMixin:GetCurrentText(updateQueues)
 	local group = self.displayedToast;
 
 	local members = SocialQueueUtil_SortGroupMembers(C_SocialQueue.GetGroupMembers(group.guid));
@@ -361,7 +399,13 @@ function QuickJoinToastMixin:GetCurrentText()
 	end
 	playerName = color..playerName..FONT_COLOR_CODE_CLOSE;
 
-	local queues = group:GetNewQueues();
+	local queues;
+	if (updateQueues) then
+		queues = group:GetNewQueues();
+		self:SetCachedQueueData(queues);
+	else
+		queues = self:CachedQueueData();
+	end
 	local queueName = SocialQueueUtil_GetQueueName(queues[1].queueData);
 	local extraQueueCount = GetExtraQueueCount(queues);
 
@@ -519,7 +563,7 @@ function QuickJoinToast_GetPriorityFromQueue(queue)
 			return 0;
 		end
 
-		if ( typeid == TYPEID_RANDOM_DUNGEON ) then
+		if ( typeID == TYPEID_RANDOM_DUNGEON ) then
 			if ( GetRandomDungeonBestChoice() ~= lfgID ) then
 				return 1;
 			end

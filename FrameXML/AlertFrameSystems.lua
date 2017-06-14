@@ -186,7 +186,7 @@ function DungeonCompletionAlertFrame_SetUp(frame, rewardData)
 		frame.instanceName:SetPoint("TOP", 25, -44);
 	end
 
-	frame.dungeonTexture:SetTexture("Interface\\LFGFrame\\LFGIcon-"..rewardData.textureFilename);
+	frame.dungeonTexture:SetTexture(rewardData.iconTextureFile);
 	frame.rewardData = rewardData;
 end
 
@@ -244,7 +244,7 @@ function ScenarioAlertFrame_SetUp(frame, rewardData)
 
 	--Set up the text and icon
 	frame.dungeonName:SetText(rewardData.name);
-	frame.dungeonTexture:SetTexture("Interface\\LFGFrame\\LFGIcon-"..rewardData.textureFilename);
+	frame.dungeonTexture:SetTexture(rewardData.iconTextureFile);
 	frame.rewardData = rewardData;
 end
 
@@ -697,16 +697,16 @@ function StorePurchaseAlertFrame_OnClick(self, button, down)
 		return;
 	end
 
-	if (self.type == LE_STORE_DELIVERY_TYPE_ITEM) then
+	if (self.type == Enum.StoreDeliveryType.Item) then
 		local slot = SearchBagsForItem(self.payloadID);
 		if (slot >= 0) then
 			OpenBag(slot);
 		end
-	elseif (self.type == LE_STORE_DELIVERY_TYPE_MOUNT) then
+	elseif (self.type == Enum.StoreDeliveryType.Mount) then
 		ToggleCollectionsJournal(1);
-	elseif (self.type == LE_STORE_DELIVERY_TYPE_BATTLEPET) then
+	elseif (self.type == Enum.StoreDeliveryType.Battlepet) then
 		ToggleCollectionsJournal(2);
-	elseif (self.type == LE_STORE_DELIVERY_TYPE_COLLECTION) then
+	elseif (self.type == Enum.StoreDeliveryType.Collection) then
 		ToggleCollectionsJournal(5);
 	end
 end
@@ -933,7 +933,7 @@ NewRecipeLearnedAlertSystem = AlertFrame:AddQueuedAlertFrameSubSystem("NewRecipe
 
 -- [[WorldQuestCompleteAlertFrame ]] --
 function WorldQuestCompleteAlertFrame_GetIconForQuestID(questID)
-	local tagID, tagName, worldQuestType, rarity, isElite, tradeskillLineIndex, allowDisplayPastCritical = GetQuestTagInfo(questID);
+	local tagID, tagName, worldQuestType, rarity, isElite, tradeskillLineIndex, displayTimeLeft = GetQuestTagInfo(questID);
 
 	if ( worldQuestType == LE_QUEST_TAG_TYPE_PVP ) then
 		return "Interface\\Icons\\achievement_arena_2v2_1";
@@ -993,7 +993,7 @@ end
 
 -- [[LegendaryItemAlertFrame ]] --
 function LegendaryItemAlertFrame_SetUp(frame, itemLink)
-	itemName, itemHyperLink, itemRarity, _, _, _, _, _, _, itemTexture = GetItemInfo(itemLink);
+	local itemName, itemHyperLink, itemRarity, _, _, _, _, _, _, itemTexture = GetItemInfo(itemLink);
 	frame.Icon:SetTexture(itemTexture);
 	frame.ItemName:SetText(itemName);
 	local color = ITEM_QUALITY_COLORS[itemRarity];

@@ -489,6 +489,11 @@
 					<Anchors>
 						<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" x="8" y="-8"/>
 					</Anchors>
+					<Scripts>
+						<OnShow>
+							self:SetFrameLevel(self:GetParent():GetFrameLevel()+6);
+						</OnShow>
+					</Scripts>
 				</Button>
 			</Frames>
 			<Scripts>
@@ -2032,17 +2037,7 @@
 				<OnLoad function="StoreFrame_OnLoad" />
 				<OnEvent function="StoreFrame_OnEvent" />
 				<OnShow function="StoreFrame_OnShow" />
-				<OnHide>
-					self:SetAttribute("isshown", false);
-					-- TODO: Fix so will only hide if Store showed the preview frame
-					Outbound.HidePreviewFrame();
-					if ( not IsOnGlueScreen() ) then
-						Outbound.UpdateMicroButtons();
-					end
-
-					StoreVASValidationFrame:Hide();
-					PlaySound("UI_igStore_WindowClose_Button");
-				</OnHide>
+				<OnHide function="StoreFrame_OnHide" />
 				<OnAttributeChanged function="StoreFrame_OnAttributeChanged" />
 				<OnMouseWheel function="StoreFrame_OnMouseWheel" />
 			</Scripts>
@@ -2322,7 +2317,7 @@
 							end
 						</OnHyperlinkClick>
 					</Scripts>
-					<FontString inherits="GameFontBlackSmall" />
+					<FontString inherits="GameFontBlackSmall2" />
 				</SimpleHTML>
 				<Frame parentKey="CharacterSelectionFrame" useParentLevel="true">
 					<Anchors>
@@ -2333,7 +2328,7 @@
 						<Layer level="ARTWORK" textureSubLevel="1">
 							<Texture parentKey="SelectedCharacterFrame" atlas="vas-receipt-selectedcharbg" useatlassize="true">
 								<Anchors>
-									<Anchor point="TOP" x="0" y="-140" />
+									<Anchor point="TOP" x="0" y="-170" />
 								</Anchors>
 							</Texture>
 							<FontString parentKey="SelectedCharacterName" inherits="GameFontNormalHugeOutline2">
@@ -2341,7 +2336,8 @@
 									<Anchor point="TOPLEFT" relativeKey="$parent.SelectedCharacterFrame" relativePoint="TOPLEFT" x="72" y="-16"/>
 								</Anchors>
 							</FontString>
-							<FontString parentKey="SelectedCharacterDescription" inherits="GameFontHighlightSmall">
+							<FontString parentKey="SelectedCharacterDescription" inherits="GameFontHighlightSmall2" justifyH="LEFT">
+								<Size x="220" y="14"/>
 								<Anchors>
 									<Anchor point="TOPLEFT" relativeKey="$parent.SelectedCharacterName" relativePoint="BOTTOMLEFT" x="0" y="-4"/>
 								</Anchors>
@@ -2462,7 +2458,8 @@
 									</Texture>
 								</Layer>
 								<Layer level="ARTWORK">
-									<FontString key="Label" inherits="GameFontBlack" text="BLIZZARD_STORE_VAS_TRANSFER_REALM">
+									<FontString parentKey="Label" inherits="GameFontBlack" text="BLIZZARD_STORE_VAS_TRANSFER_REALM" justifyH="LEFT">
+										<Size x="124" y="14"/>
 										<Anchors>
 											<Anchor point="LEFT" relativePoint="RIGHT" x="4" y="0"/>
 										</Anchors>
@@ -2565,7 +2562,8 @@
 									</Texture>
 								</Layer>
 								<Layer level="ARTWORK">
-									<FontString key="Label" inherits="GameFontBlack" text="BLIZZARD_STORE_VAS_TRANSFER_ACCOUNT">
+									<FontString parentKey="Label" inherits="GameFontBlack" text="BLIZZARD_STORE_VAS_TRANSFER_ACCOUNT" justifyH="LEFT">
+										<Size x="124" y="14"/>
 										<Anchors>
 											<Anchor point="LEFT" relativePoint="RIGHT" x="4" y="0"/>
 										</Anchors>
@@ -2602,7 +2600,8 @@
 									</Texture>
 								</Layer>
 								<Layer level="ARTWORK">
-									<FontString parentKey="Label" inherits="GameFontBlack">
+									<FontString parentKey="Label" inherits="GameFontBlack" justifyH="LEFT">
+										<Size x="280" y="14"/>
 										<Anchors>
 											<Anchor point="LEFT" relativePoint="RIGHT" x="4" y="0"/>
 										</Anchors>
@@ -2616,7 +2615,7 @@
 						<EditBox parentKey="TransferBattlenetAccountEditbox" letters="100" inherits="StoreEditBoxTemplate">
 							<Size x="220" y="22"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" relativeKey="$parent.TransferFactionCheckbox" relativePoint="BOTTOMLEFT" x="14" y="-40"/>
+								<Anchor point="TOPLEFT" relativeKey="$parent.TransferAccountCheckbox" relativePoint="BOTTOMLEFT" x="14" y="-20"/>
 							</Anchors>
 							<Layers>
 								<Layer level="ARTWORK">
@@ -2636,6 +2635,17 @@
 								<OnTextChanged function="VASCharacterSelectionTransferBattlenetAccountEditbox_OnTextChanged"/>
 							</Scripts>
 						</EditBox>
+						<Frame parentKey="TransferBnetWoWAccountDropDown" inherits="StoreDropDownMenuTemplate" enableMouse="true">
+							<Size x="150" y="22"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent.TransferBattlenetAccountEditbox" relativePoint="BOTTOMLEFT" x="-20" y="-12"/>
+							</Anchors>
+							<Scripts>
+								<OnLoad>
+									self.Button:SetScript("OnClick", VASCharacterSelectionTransferBnetWoWAccountDropDown_OnClick);
+								</OnLoad>
+							</Scripts>
+						</Frame>
 					</Frames>
 				</Frame>
 			</Frames>

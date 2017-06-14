@@ -214,7 +214,6 @@ local ArtifactUILua =
 				{ Name = "itemAppearanceID", Type = "number", Nilable = true },
 				{ Name = "altItemAppearanceID", Type = "number", Nilable = true },
 				{ Name = "altOnTop", Type = "bool", Nilable = false },
-				{ Name = "artifactMaxed", Type = "bool", Nilable = false },
 				{ Name = "tier", Type = "number", Nilable = false },
 			},
 		},
@@ -267,6 +266,7 @@ local ArtifactUILua =
 			Arguments =
 			{
 				{ Name = "rank", Type = "number", Nilable = false },
+				{ Name = "tier", Type = "number", Nilable = false },
 			},
 
 			Returns =
@@ -301,7 +301,6 @@ local ArtifactUILua =
 				{ Name = "itemAppearanceID", Type = "number", Nilable = true },
 				{ Name = "altItemAppearanceID", Type = "number", Nilable = true },
 				{ Name = "altOnTop", Type = "bool", Nilable = false },
-				{ Name = "artifactMaxed", Type = "bool", Nilable = false },
 				{ Name = "tier", Type = "number", Nilable = false },
 			},
 		},
@@ -373,6 +372,15 @@ local ArtifactUILua =
 			Returns =
 			{
 				{ Name = "itemIevelIncrease", Type = "number", Nilable = false },
+			},
+		},
+		{
+			Name = "GetMaxArtifactKnowledgeLevel",
+			Type = "Function",
+
+			Returns =
+			{
+				{ Name = "maxArtifactKnowledge", Type = "number", Nilable = false },
 			},
 		},
 		{
@@ -493,12 +501,12 @@ local ArtifactUILua =
 			},
 		},
 		{
-			Name = "GetPowersAffectedByRelicItemID",
+			Name = "GetPowersAffectedByRelicItemLink",
 			Type = "Function",
 
 			Arguments =
 			{
-				{ Name = "relicItemID", Type = "number", Nilable = false },
+				{ Name = "relicItemInfo", Type = "string", Nilable = false },
 			},
 
 			Returns =
@@ -604,7 +612,6 @@ local ArtifactUILua =
 				{ Name = "itemAppearanceID", Type = "number", Nilable = true },
 				{ Name = "altItemAppearanceID", Type = "number", Nilable = true },
 				{ Name = "altOnTop", Type = "bool", Nilable = false },
-				{ Name = "artifactMaxed", Type = "bool", Nilable = false },
 				{ Name = "tier", Type = "number", Nilable = false },
 			},
 		},
@@ -649,6 +656,24 @@ local ArtifactUILua =
 			Returns =
 			{
 				{ Name = "isAtForge", Type = "bool", Nilable = false },
+			},
+		},
+		{
+			Name = "IsEquippedArtifactMaxed",
+			Type = "Function",
+
+			Returns =
+			{
+				{ Name = "artifactMaxed", Type = "bool", Nilable = false },
+			},
+		},
+		{
+			Name = "IsMaxedByRulesOrEffect",
+			Type = "Function",
+
+			Returns =
+			{
+				{ Name = "isEffectivelyMaxed", Type = "bool", Nilable = false },
 			},
 		},
 		{
@@ -717,6 +742,10 @@ local ArtifactUILua =
 				{ Name = "shouldSuppressForgeRotation", Type = "bool", Nilable = false },
 			},
 		},
+	},
+
+	Events =
+	{
 	},
 
 	Tables =

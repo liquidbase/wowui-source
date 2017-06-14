@@ -542,6 +542,15 @@ function ObjectiveTrackerBlockHeader_OnLeave(self)
 end
 
 -- *****************************************************************************************************
+-- ***** OBJECTIVE TRACKER LINES
+-- *****************************************************************************************************
+
+function ObjectiveTrackerCheckLine_OnHide(self)
+	self.Glow.Anim:Stop();
+	self.Sheen.Anim:Stop();
+end
+
+-- *****************************************************************************************************
 -- ***** TIMER BARS
 -- *****************************************************************************************************
 
@@ -803,6 +812,7 @@ function ObjectiveTracker_ToggleDropDown(frame, handlerFunc)
 	dropDown.activeFrame = frame;
 	dropDown.initialize = handlerFunc;
 	ToggleDropDownMenu(1, nil, dropDown, "cursor", 3, -3);
+	PlaySound("igMainMenuOptionCheckBoxOn");
 end
 
 -- *****************************************************************************************************

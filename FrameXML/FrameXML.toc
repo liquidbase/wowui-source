@@ -1,5 +1,5 @@
 # Do not delete the following line!
-## Interface: 70100
+## Interface: 70200
 
 ## add C namespace augmentations here
 ..\SharedXML\C_TimerAugment.lua
@@ -7,6 +7,7 @@
 ## add snippets independent of modules here
 ..\SharedXML\Util.lua
 ..\SharedXML\Pools.lua
+..\SharedXML\LoopingSoundEffect.lua
 ..\SharedXML\CircularBuffer.lua
 ..\SharedXML\FontableFrameMixin.lua
 ..\SharedXML\Vector2D.lua
@@ -33,8 +34,6 @@ FontStyles.xml
 
 
 ## add new modules below here
-
-BasicControls.xml
 WorldFrame.xml
 UIParent.xml
 QuestUtils.lua
@@ -45,6 +44,7 @@ MoneyFrame.xml
 MoneyInputFrame.lua
 MoneyInputFrame.xml
 ..\SharedXML\SharedUIPanelTemplates.xml
+..\SharedXML\SharedBasicControls.xml
 GameTooltip.xml
 UIMenu.xml
 UIDropDownMenu.xml
@@ -172,7 +172,6 @@ TalentFrameTemplates.xml
 ClassPowerBar.xml
 RuneFrame.xml
 ShardBar.xml
-EclipseBarFrame.xml
 ComboFramePlayer.xml
 InsanityBar.xml
 EasyMenu.lua

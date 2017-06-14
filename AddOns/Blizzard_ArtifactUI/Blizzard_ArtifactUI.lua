@@ -38,7 +38,11 @@ StaticPopupDialogs["NOT_ENOUGH_POWER_ARTIFACT_RESPEC"] = {
 }
 
 function ArtifactUI_CanViewArtifact()
-	return C_ArtifactUI.IsAtForge() or C_ArtifactUI.GetTotalPurchasedRanks() > 0 or C_ArtifactUI.GetNumObtainedArtifacts() > 1;
+	return C_ArtifactUI.IsAtForge() or ArtifactUI_HasPurchasedAnything() or C_ArtifactUI.GetNumObtainedArtifacts() > 1;
+end
+
+function ArtifactUI_HasPurchasedAnything()
+	return C_ArtifactUI.GetTotalPurchasedRanks() > 0 or C_ArtifactUI.IsMaxedByRulesOrEffect();
 end
 
 local TAB_PERKS = 1;
@@ -206,7 +210,7 @@ function ArtifactUIMixin:SetTab(id)
 end
 
 function ArtifactUIMixin:SetupPerArtifactData()
-	local itemID, altItemID, name, icon, xp, pointsSpent, quality, artifactAppearanceID, appearanceModID, itemAppearanceID, altItemAppearanceID, altOnTop, artifactMaxed, tier = C_ArtifactUI.GetArtifactInfo()
+	local _, _, _, icon = C_ArtifactUI.GetArtifactInfo();
 	if icon then
 		self.ForgeBadgeFrame.ItemIcon:SetTexture(icon);
 	end
@@ -254,7 +258,8 @@ end
 function ArtifactUIMixin:OnKnowledgeEnter(knowledgeFrame)
 	GameTooltip:SetOwner(knowledgeFrame, "ANCHOR_BOTTOMRIGHT", -25, 27);
 	local artifactArtInfo = C_ArtifactUI.GetArtifactArtInfo();
-	GameTooltip:SetText(artifactArtInfo.titleName, artifactArtInfo.titleColor:GetRGB());
+	local color = ITEM_QUALITY_COLORS[LE_ITEM_QUALITY_ARTIFACT];
+	GameTooltip:SetText(artifactArtInfo.titleName, color.r, color.g, color.b);
 
 	GameTooltip:AddLine(ARTIFACTS_NUM_PURCHASED_RANKS:format(C_ArtifactUI.GetTotalPurchasedRanks()), HIGHLIGHT_FONT_COLOR:GetRGB());
 
@@ -279,18 +284,24 @@ end
 
 function ArtifactUIMixin:OnInventoryItemMouseEnter(bag, slot)
 	if self:IsVisible() then
-		local itemID = select(10, GetContainerItemInfo(bag, slot));
+		local itemInfo = {GetContainerItemInfo(bag, slot)};
+		local itemLink = itemInfo[7];
+		local itemID = itemInfo[10];
+
 		if itemID and IsArtifactRelicItem(itemID) and not CursorHasItem() then
-			self.PerksTab:ShowHighlightForRelicItemID(itemID);
-			self.PerksTab.TitleContainer:RefreshRelicHighlights(itemID);
+			self.PerksTab:ShowHighlightForRelicItemID(itemID, itemLink);
+			self.PerksTab.TitleContainer:RefreshRelicHighlights(itemID, itemLink);
 		end
 	end
 end
 
 function ArtifactUIMixin:OnInventoryItemMouseLeave(bag, slot)
-	local itemID = select(10, GetContainerItemInfo(bag, slot));
+	local itemInfo = {GetContainerItemInfo(bag, slot)};
+	local itemLink = itemInfo[7];
+	local itemID = itemInfo[10];
+
 	if itemID and IsArtifactRelicItem(itemID) and not CursorHasItem() then
-		self.PerksTab:HideHighlightForRelicItemID(itemID);
+		self.PerksTab:HideHighlightForRelicItemID(itemID, itemLink);
 		self.PerksTab.TitleContainer:RefreshRelicHighlights();
 	end
 end

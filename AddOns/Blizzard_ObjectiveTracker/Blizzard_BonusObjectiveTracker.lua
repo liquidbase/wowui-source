@@ -70,6 +70,7 @@ end
 function BonusObjectiveTrackerModuleMixin:OnFreeLine(line)
 	if ( line.finished ) then
 		line.CheckFlash.Anim:Stop();
+		line.CheckFlash:Hide();
 		line.finished = nil;
 	end
 end
@@ -158,6 +159,8 @@ function BonusObjectiveTracker_TrackWorldQuest(questID, hardWatch)
 	if not hardWatch or GetSuperTrackedQuestID() == 0 then
 		SetSuperTrackedQuestID(questID);
 	end
+	WorldMapFrame_UpdateMap();
+	ObjectiveTracker_Update(OBJECTIVE_TRACKER_UPDATE_QUEST);
 end
 
 function BonusObjectiveTracker_UntrackWorldQuest(questID)
@@ -169,6 +172,8 @@ function BonusObjectiveTracker_UntrackWorldQuest(questID)
 			QuestSuperTracking_ChooseClosestQuest();
 		end
 	end
+	WorldMapFrame_UpdateMap();
+	ObjectiveTracker_Update(OBJECTIVE_TRACKER_UPDATE_QUEST);
 end
 
 function BonusObjectiveTracker_OnBlockClick(self, button)
@@ -184,6 +189,7 @@ function BonusObjectiveTracker_OnBlockClick(self, button)
 					if mapID then
 						ShowQuestLog();
 						SetMapByID(mapID);
+						WorldMapPing_StartPingQuest(self.TrackedQuest.questID);
 					end
 				end
 			end
@@ -532,16 +538,16 @@ function BonusObjectiveTracker_ShowRewardsTooltip(block)
 			GameTooltip:AddLine(string.format(BONUS_OBJECTIVE_ARTIFACT_XP_FORMAT, artifactXP), 1, 1, 1);
 		end
 		-- currency
-		local numQuestCurrencies = GetNumQuestLogRewardCurrencies(questID);
-		for i = 1, numQuestCurrencies do
-			local name, texture, numItems = GetQuestLogRewardCurrencyInfo(i, questID);
-			local text = string.format(BONUS_OBJECTIVE_REWARD_WITH_COUNT_FORMAT, texture, numItems, name);
-			GameTooltip:AddLine(text, 1, 1, 1);
-		end
+		QuestUtils_AddQuestCurrencyRewardsToTooltip(questID, GameTooltip);
 		-- honor
 		local honorAmount = GetQuestLogRewardHonor(questID);
 		if ( honorAmount > 0 ) then
 			GameTooltip:AddLine(BONUS_OBJECTIVE_REWARD_WITH_COUNT_FORMAT:format("Interface\\ICONS\\Achievement_LegionPVPTier4", honorAmount, HONOR), 1, 1, 1);
+		end
+		-- money
+		local money = GetQuestLogRewardMoney(questID);
+		if ( money > 0 ) then
+			SetTooltipMoney(GameTooltip, money, nil);
 		end
 		-- items
 		local numQuestRewards = GetNumQuestLogRewards(questID);
@@ -549,7 +555,7 @@ function BonusObjectiveTracker_ShowRewardsTooltip(block)
 			local name, texture, numItems, quality, isUsable = GetQuestLogRewardInfo(i, questID);
 			local text;
 			if ( numItems > 1 ) then
-				text = string.format(BONUS_OBJECTIVE_REWARD_WITH_COUNT_FORMAT, texture, numItems, name);
+				text = string.format(BONUS_OBJECTIVE_REWARD_WITH_COUNT_FORMAT, texture, HIGHLIGHT_FONT_COLOR:WrapTextInColorCode(numItems), name);
 			elseif( texture and name ) then
 				text = string.format(BONUS_OBJECTIVE_REWARD_FORMAT, texture, name);
 			end
@@ -557,11 +563,6 @@ function BonusObjectiveTracker_ShowRewardsTooltip(block)
 				local color = ITEM_QUALITY_COLORS[quality];
 				GameTooltip:AddLine(text, color.r, color.g, color.b);
 			end
-		end
-		-- money
-		local money = GetQuestLogRewardMoney(questID);
-		if ( money > 0 ) then
-			SetTooltipMoney(GameTooltip, money, nil);
 		end
 	end
 	GameTooltip:Show();
@@ -718,6 +719,7 @@ local function UpdateScenarioBonusObjectives(module)
 					firstLine.Icon:SetAtlas("Tracker-Check", true);
 					-- play anim if needed
 					if ( existingBlock and not block.finished ) then
+						firstLine.CheckFlash:Show();
 						firstLine.CheckFlash.Anim:Play();
 						if (BonusObjectiveTracker_GetSupersedingStep(bonusStepIndex)) then
 							BonusObjectiveTracker_SetBlockState(block, "FINISHED");
@@ -806,11 +808,11 @@ local function AddBonusObjectiveQuest(module, questID, posIndex, isTrackedWorldQ
 		end
 
 		if ( QuestUtils_IsQuestWorldQuest(questID) ) then
-			local tagID, tagName, worldQuestType, rarity, isElite, tradeskillLineIndex, allowDisplayPastCritical = GetQuestTagInfo(questID);
+			local tagID, tagName, worldQuestType, rarity, isElite, tradeskillLineIndex, displayTimeLeft = GetQuestTagInfo(questID);
 			assert(worldQuestType);
-			
+
 			local inProgress = questLogIndex ~= 0;
-			WorldMap_SetupWorldQuestButton(block.TrackedQuest, worldQuestType, rarity, isElite, tradeskillLineIndex, inProgress, isSuperTracked, nil, nil, questID);
+			WorldMap_SetupWorldQuestButton(block.TrackedQuest, worldQuestType, rarity, isElite, tradeskillLineIndex, inProgress, isSuperTracked, nil, nil, isTrackedWorldQuest);
 
 			block.TrackedQuest:SetScale(.9);
 			block.TrackedQuest:SetPoint("TOPRIGHT", block.currentLine, "TOPLEFT", 18, 0);
@@ -831,17 +833,16 @@ local function AddBonusObjectiveQuest(module, questID, posIndex, isTrackedWorldQ
 					module:AddObjective(block, objectiveIndex, text, nil, nil, OBJECTIVE_DASH_STYLE_HIDE, OBJECTIVE_TRACKER_COLOR["Complete"]);
 
 					local line = block.currentLine;
+					line.Icon:SetAtlas("Tracker-Check", true);
 					if ( existingLine and not line.finished ) then
 						line.Glow.Anim:Play();
 						line.Sheen.Anim:Play();
+						if ( existingTask ) then
+							line.CheckFlash:Show();
+							line.CheckFlash.Anim:Play();
+						end
 					end
 					line.finished = true;
-
-					line.Icon:SetAtlas("Tracker-Check", true);
-					-- play anim if needed
-					if ( existingTask ) then
-						line.CheckFlash.Anim:Play();
-					end
 					line.Icon:ClearAllPoints();
 					line.Icon:SetPoint("TOPLEFT", line, "TOPLEFT", 10, 0);
 					line.Icon:Show();
@@ -859,10 +860,15 @@ local function AddBonusObjectiveQuest(module, questID, posIndex, isTrackedWorldQ
 				end
 
 				local progressBar = module:AddProgressBar(block, block.currentLine, questID, finished);
-				if ( OBJECTIVE_TRACKER_UPDATE_REASON == OBJECTIVE_TRACKER_UPDATE_TASK_ADDED or OBJECTIVE_TRACKER_UPDATE_REASON == OBJECTIVE_TRACKER_UPDATE_WORLD_QUEST_ADDED ) then
-					if ( playEnterAnim ) then
-						progressBar.Bar.AnimIn:Play();
-					end
+				if ( playEnterAnim and (OBJECTIVE_TRACKER_UPDATE_REASON == OBJECTIVE_TRACKER_UPDATE_TASK_ADDED or OBJECTIVE_TRACKER_UPDATE_REASON == OBJECTIVE_TRACKER_UPDATE_WORLD_QUEST_ADDED) ) then
+					progressBar.Bar.AnimIn:Play();
+				elseif not progressBar.Bar.AnimIn:IsPlaying() then
+					-- Bug ID: 495448, setToFinal doesn't always work properly with sibling animations, hackily fix up the state here
+					progressBar.Bar.BarGlow:SetAlpha(0);
+					progressBar.Bar.Starburst:SetAlpha(0);
+					progressBar.Bar.BarFrame2:SetAlpha(0);
+					progressBar.Bar.BarFrame3:SetAlpha(0);
+					progressBar.Bar.Sheen:SetAlpha(0);
 				end
 			end
 		end
@@ -895,6 +901,30 @@ local function AddBonusObjectiveQuest(module, questID, posIndex, isTrackedWorldQ
 	return true;
 end
 
+local function SortWorldQuestsHelper(questID1, questID2)
+	local inArea1, onMap1 = GetTaskInfo(questID1);
+	local inArea2, onMap2 = GetTaskInfo(questID2);
+
+	if (inArea1 ~= inArea2) then
+		return inArea1;
+	elseif (onMap1 ~= onMap2) then
+		return onMap1;
+	else
+		return questID1 < questID2;
+	end
+end
+
+function BonusObjectiveTracker_SortWorldQuests()
+	local sortedQuests = {};
+	for i = 1, GetNumWorldQuestWatches() do
+		tinsert(sortedQuests, GetWorldQuestWatchInfo(i));
+	end
+
+	table.sort(sortedQuests, SortWorldQuestsHelper);
+
+	return sortedQuests;
+end
+
 local function UpdateTrackedWorldQuests(module)
 	if ( module.ticker ) then
 		module.ticker:Cancel();
@@ -902,12 +932,10 @@ local function UpdateTrackedWorldQuests(module)
 	end
 	module.tickerSeconds = 0;
 
-	for i = 1, GetNumWorldQuestWatches() do
-		local watchedWorldQuestID = GetWorldQuestWatchInfo(i);
-		if ( watchedWorldQuestID ) then
-			if not AddBonusObjectiveQuest(module, watchedWorldQuestID, i, true) then
-				break; -- No more room
-			end
+	local sortedQuests = BonusObjectiveTracker_SortWorldQuests();
+	for i, questID in ipairs(sortedQuests) do
+		if not AddBonusObjectiveQuest(module, questID, i, true) then
+			break; -- No more room
 		end
 	end
 
@@ -991,6 +1019,11 @@ function BonusObjectiveTracker_SetBlockState(block, state, force)
 	if ( state == "LEAVING" ) then
 		-- only apply this state if block is PRESENT - let ENTERING anim finish
 		if ( block.state == "PRESENT" ) then
+			for _, line in pairs(block.lines) do
+				line.Glow.Anim:Stop();
+				line.Sheen.Anim:Stop();
+			end
+			
 			-- animate out
 			block.AnimOut:Play();
 			block.state = "LEAVING";
@@ -1068,36 +1101,7 @@ function BonusObjectiveTrackerModuleMixin:AddProgressBar(block, line, questID, f
 		if( not finished ) then
 			BonusObjectiveTrackerProgressBar_SetValue( progressBar, GetQuestProgressBarPercent(questID) );
 		end
-		-- reward icon; try the first item
-		local _, texture = GetQuestLogRewardInfo(1, questID);
-		-- artifact xp
-		local artifactXP, artifactCategory = GetQuestLogRewardArtifactXP(questID);
-		if ( not texture and artifactXP > 0 ) then
-			local name, icon = C_ArtifactUI.GetArtifactXPRewardTargetInfo(artifactCategory);
-			texture = icon or "Interface\\Icons\\INV_Misc_QuestionMark";
-		end
-		-- currency
-		if ( not texture and GetNumQuestLogRewardCurrencies(questID) > 0 ) then
-			_, texture = GetQuestLogRewardCurrencyInfo(1, questID);
-		end
-		-- money?
-		if ( not texture and GetQuestLogRewardMoney(questID) > 0 ) then
-			texture = "Interface\\Icons\\inv_misc_coin_02";
-		end
-		-- xp
-		if ( not texture and GetQuestLogRewardXP(questID) > 0 and UnitLevel("player") < MAX_PLAYER_LEVEL ) then
-			texture = "Interface\\Icons\\xp_icon";
-		end
-		if ( not texture ) then
-			progressBar.Bar.Icon:Hide();
-			progressBar.Bar.IconBG:Hide();
-			progressBar.Bar.BarGlow:SetAtlas("bonusobjectives-bar-glow", true);
-		else
-			progressBar.Bar.Icon:SetTexture(texture);
-			progressBar.Bar.Icon:Show();
-			progressBar.Bar.IconBG:Show();
-			progressBar.Bar.BarGlow:SetAtlas("bonusobjectives-bar-glow-ring", true);
-		end
+		BonusObjectiveTrackerProgressBar_UpdateReward(progressBar);
 	end
 	-- anchor the status bar
 	local anchor = block.currentLine or block.HeaderText;
@@ -1142,24 +1146,68 @@ function BonusObjectiveTrackerProgressBar_SetValue(self, percent)
 end
 
 function BonusObjectiveTrackerProgressBar_OnEvent(self)
-	local percent = 100;
-	if( not self.finished ) then
-		percent = GetQuestProgressBarPercent(self.questID);
+	BonusObjectiveTrackerProgressBar_PlayAnimation(self);
+	if ( self.needsReward ) then
+		BonusObjectiveTrackerProgressBar_UpdateReward(self);
 	end
-	BonusObjectiveTrackerProgressBar_PlayFlareAnim(self, percent - self.AnimValue);
+end
+
+function BonusObjectiveTrackerProgressBar_UpdateReward(progressBar)
+	local _, texture;
+	if ( HaveQuestRewardData(progressBar.questID) ) then
+		-- reward icon; try the first item
+		_, texture = GetQuestLogRewardInfo(1, progressBar.questID);
+		-- artifact xp
+		local artifactXP, artifactCategory = GetQuestLogRewardArtifactXP(progressBar.questID);
+		if ( not texture and artifactXP > 0 ) then
+			local name, icon = C_ArtifactUI.GetArtifactXPRewardTargetInfo(artifactCategory);
+			texture = icon or "Interface\\Icons\\INV_Misc_QuestionMark";
+		end
+		-- currency
+		if ( not texture and GetNumQuestLogRewardCurrencies(progressBar.questID) > 0 ) then
+			_, texture = GetQuestLogRewardCurrencyInfo(1, progressBar.questID);
+		end
+		-- money?
+		if ( not texture and GetQuestLogRewardMoney(progressBar.questID) > 0 ) then
+			texture = "Interface\\Icons\\inv_misc_coin_02";
+		end
+		-- xp
+		if ( not texture and GetQuestLogRewardXP(progressBar.questID) > 0 and UnitLevel("player") < MAX_PLAYER_LEVEL ) then
+			texture = "Interface\\Icons\\xp_icon";
+		end
+		progressBar.needsReward = nil;
+	else
+		progressBar.needsReward = true;
+	end
+	if ( not texture ) then
+		progressBar.Bar.Icon:Hide();
+		progressBar.Bar.IconBG:Hide();
+		progressBar.Bar.BarGlow:SetAtlas("bonusobjectives-bar-glow", true);
+	else
+		progressBar.Bar.Icon:SetTexture(texture);
+		progressBar.Bar.Icon:Show();
+		progressBar.Bar.IconBG:Show();
+		progressBar.Bar.BarGlow:SetAtlas("bonusobjectives-bar-glow-ring", true);
+	end
+end
+
+function BonusObjectiveTrackerProgressBar_PlayAnimation(self, overridePercent, overrideDelta, sparkHorizontalOffset)
+	local percent = overridePercent or self.finished and 100 or GetQuestProgressBarPercent(self.questID);
+	local delta = overrideDelta or percent - self.AnimValue;
+	BonusObjectiveTrackerProgressBar_PlayFlareAnim(self, delta, sparkHorizontalOffset);
 	BonusObjectiveTrackerProgressBar_SetValue(self, percent);
 end
 
-function BonusObjectiveTrackerProgressBar_PlayFlareAnim(progressBar, delta)
+function BonusObjectiveTrackerProgressBar_PlayFlareAnim(progressBar, delta, sparkHorizontalOffset)
 	if( progressBar.AnimValue >= 100 or delta == 0 ) then
 		return;
 	end
 
-	local width = progressBar.Bar:GetWidth();
-	local offset = width * (progressBar.AnimValue / 100) - 12;
+	animOffset = animOffset or 12;
+	local offset = progressBar.Bar:GetWidth() * (progressBar.AnimValue / 100) - animOffset;
 
-	local prefix = "";
-	if( delta < 10 ) then
+	local prefix = overridePrefix or "";
+	if( delta < 10 and not overridePrefix ) then
 		prefix = "Small";
 	end
 
@@ -1227,8 +1275,7 @@ function ObjectiveTrackerBonusBannerFrame_PlayBanner(self, questID)
 	self.Anim.BonusLabelTranslation:SetOffset(xOffset, yOffset);
 	self.Anim.IconTranslation:SetOffset(xOffset, yOffset);
 	-- hide zone text as it's very likely to be up
-	ZoneTextString:SetText("");
-	SubZoneTextString:SetText("");
+	ZoneText_Clear();
 	-- show and play
 	self:Show();
 	self.Anim:Stop();

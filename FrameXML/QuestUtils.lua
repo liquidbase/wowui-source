@@ -97,7 +97,7 @@ end
 
 function QuestUtils_GetQuestName(questID)
 	-- TODO: Make unified API for this?
-	local questName = select(4, GetTaskInfo(questID));
+	local questName = C_TaskQuest.GetQuestInfoByQuestID(questID);
 	if not questName then
 		local questIndex = GetQuestLogIndexByID(questID);
 		if questIndex and questIndex > 0 then
@@ -112,18 +112,47 @@ function QuestUtils_CanUseAutoGroupFinder(questID, isDropdownRequest)
 	-- Auto-Finder dropdown is enabled for incomplete "group" non-dungeon quests that have a valid activity.
 	-- Auto-Finder button is enabled for all non-dungeon quests that have a valid activity.
 	if not IsQuestComplete(questID) then
-		local tagID, tagName, worldQuestType, rarity, isElite, tradeskillLineIndex, allowDisplayPastCritical = GetQuestTagInfo(questID);
+		local tagID, tagName, worldQuestType, rarity, isElite, tradeskillLineIndex, displayTimeLeft = GetQuestTagInfo(questID);
 	 	if not IsQuestDungeonQuest_Internal(tagID, worldQuestType) and C_LFGList.GetActivityIDForQuestID(questID) then
+	 		local isCurrentExpansion = GetQuestExpansion(questID) == LE_EXPANSION_LEVEL_CURRENT;
+
 			if IsQuestWorldQuest_Internal(worldQuestType) then
-				return isDropdownRequest or isElite;
+				return isDropdownRequest or (isElite and isCurrentExpansion);
 			else
 				local questIndex = GetQuestLogIndexByID(questID);
 				if questIndex and questIndex > 0 then
-					return isDropdownRequest or (GetQuestLogGroupNum(questIndex) > 1);
+					return isDropdownRequest or (isCurrentExpansion and (GetQuestLogGroupNum(questIndex) > 1));
 				end
 			end
 		end
 	end
 
 	return false;
+end
+
+function QuestUtils_AddQuestCurrencyRewardsToTooltip(questID, tooltip)
+	local numQuestCurrencies = GetNumQuestLogRewardCurrencies(questID);
+	local currencies = { };
+	for i = 1, numQuestCurrencies do
+		local name, texture, numItems, currencyID = GetQuestLogRewardCurrencyInfo(i, questID);
+		local rarity = select(8, GetCurrencyInfo(currencyID));
+		local currencyInfo = { name = name, texture = texture, numItems = numItems, currencyID = currencyID, rarity = rarity };
+		tinsert(currencies, currencyInfo);
+	end
+
+	table.sort(currencies,
+		function(currency1, currency2)
+			if currency1.rarity ~= currency2.rarity then
+				return currency1.rarity > currency2.rarity;
+			end
+			return currency1.currencyID > currency2.currencyID;
+		end
+	);
+
+	for i, currencyInfo in ipairs(currencies) do
+		local text = BONUS_OBJECTIVE_REWARD_WITH_COUNT_FORMAT:format(currencyInfo.texture, currencyInfo.numItems, currencyInfo.name);
+		local currencyColor = GetColorForCurrencyReward(currencyInfo.currencyID, currencyInfo.numItems);
+		tooltip:AddLine(text, currencyColor:GetRGB());
+	end
+	return numQuestCurrencies;
 end

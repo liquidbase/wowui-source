@@ -123,6 +123,10 @@ function GetTexCoordsForRole(role)
 	end
 end
 
+function ReloadUI()
+	C_UI.Reload();
+end
+
 function tDeleteItem(table, item)
 	local index = 1;
 	while table[index] do
@@ -153,6 +157,28 @@ function tInvert(tbl)
 	return inverted;
 end
 
+function tFilter(tbl, pred, isIndexTable)
+	local out = {};
+
+	if (isIndexTable) then
+		local currentIndex = 1;
+		for i, v in ipairs(tbl) do
+			if (pred(v)) then
+				out[currentIndex] = v;
+				currentIndex = currentIndex + 1;
+			end
+		end
+	else
+		for k, v in pairs(tbl) do
+			if (pred(v)) then
+				out[k] = v;
+			end
+		end
+	end
+
+	return out;
+end
+
 function CopyTable(settings)
 	local copy = {};
 	for k, v in pairs(settings) do
@@ -163,6 +189,16 @@ function CopyTable(settings)
 		end
 	end
 	return copy;
+end
+
+function FindInTableIf(tbl, pred)
+	for k, v in pairs(tbl) do
+		if (pred(v)) then
+			return k, v;
+		end
+	end
+
+	return nil;
 end
 
 function GetItemInfoFromHyperlink(link)
@@ -289,6 +325,15 @@ end
 
 function FrameDeltaLerp(startValue, endValue, amount)
 	return DeltaLerp(startValue, endValue, amount, GetTickTime());
+end
+
+function GetNavigationButtonEnabledStates(count, index)
+	-- Returns indicate whether navigation for "previous" and "next" should be enabled, respectively.
+	if count > 1 then
+		return index > 1, index < count;
+	end
+
+	return false, false;
 end
 
 ----------------------------------
@@ -457,10 +502,22 @@ end
 
 local g_updatingBars = {};
 
+local function IsCloseEnough(bar, newValue, targetValue)
+	local min, max = bar:GetMinMaxValues();
+	local range = max - min;
+	if range > 0.0 then
+		return math.abs((newValue - targetValue) / range) < .00001;
+	end
+
+	return true;
+end
+
 local function ProcessSmoothStatusBars()
 	for bar, targetValue in pairs(g_updatingBars) do
-		local newValue = FrameDeltaLerp(bar:GetValue(), targetValue, .25);
-		if math.abs(newValue - targetValue) < .005 then
+		local effectiveTargetValue = Clamp(targetValue, bar:GetMinMaxValues());
+		local newValue = FrameDeltaLerp(bar:GetValue(), effectiveTargetValue, .25);
+
+		if IsCloseEnough(bar, newValue, effectiveTargetValue) then
 			g_updatingBars[bar] = nil;
 		end
 
@@ -493,7 +550,7 @@ function SmoothStatusBarMixin:SetMinMaxSmoothedValue(min, max)
 	if targetValue then
 		local ratio = 1;
 		if max ~= 0 and self.lastSmoothedMax and self.lastSmoothedMax ~= 0 then
-			ratio = max / (self.lastSmoothedMax or max);
+			ratio = max / self.lastSmoothedMax;
 		end
 
 		g_updatingBars[self] = targetValue * ratio;
@@ -562,6 +619,54 @@ end
 
 function ColorMixin:WrapTextInColorCode(text)
 	return WrapTextInColorCode(text, self:GenerateHexColor());
+end
+
+-- Mix this into a FontString to have it resize until it stops truncating, or gets too small
+ShrinkUntilTruncateFontStringMixin = {};
+
+-- From largest to smallest
+function ShrinkUntilTruncateFontStringMixin:SetFontObjectsToTry(...)
+	self.fontObjectsToTry = { ... };
+	if self:GetText() then
+		self:ApplyFontObjects();
+	end
+end
+
+function ShrinkUntilTruncateFontStringMixin:ApplyFontObjects()
+	if not self.fontObjectsToTry then
+		error("No fonts applied to ShrinkUntilTruncateFontStringMixin, call SetFontObjectsToTry first");
+	end
+
+	for i, fontObject in ipairs(self.fontObjectsToTry) do
+		self:SetFontObject(fontObject);
+		if not self:IsTruncated() then
+			break;
+		end
+	end
+end
+
+function ShrinkUntilTruncateFontStringMixin:SetText(text)
+	if not self:GetFont() then
+		if not self.fontObjectsToTry then
+			error("No fonts applied to ShrinkUntilTruncateFontStringMixin, call SetFontObjectsToTry first");
+		end
+		self:SetFontObject(self.fontObjectsToTry[1]);
+	end
+
+	getmetatable(self).__index.SetText(self, text);
+	self:ApplyFontObjects();
+end
+
+function ShrinkUntilTruncateFontStringMixin:SetFormattedText(format, ...)
+	if not self:GetFont() then
+		if not self.fontObjectsToTry then
+			error("No fonts applied to ShrinkUntilTruncateFontStringMixin, call SetFontObjectsToTry first");
+		end
+		self:SetFontObject(self.fontObjectsToTry[1]);
+	end
+
+	getmetatable(self).__index.SetFormattedText(self, format, ...);
+	self:ApplyFontObjects();
 end
 
 -- Time --
@@ -650,10 +755,18 @@ function SecondsToTimeAbbrev(seconds)
 end
 
 function FormatShortDate(day, month, year)
-	if (LOCALE_enGB) then
-		return SHORTDATE_EU:format(day, month, year);
+	if (year) then
+		if (LOCALE_enGB) then
+			return SHORTDATE_EU:format(day, month, year);
+		else
+			return SHORTDATE:format(day, month, year);
+		end
 	else
-		return SHORTDATE:format(day, month, year);
+		if (LOCALE_enGB) then
+			return SHORTDATENOYEAR_EU:format(day, month);
+		else
+			return SHORTDATENOYEAR:format(day, month);
+		end
 	end
 end
 
@@ -664,8 +777,14 @@ function Round(value)
 	return math.floor(value + .5);
 end
 
-function FormatPercentage(percentage)
-	return ("%d%%"):format(Round(percentage * 100));
+function FormatPercentage(percentage, roundToNearestInteger)
+	if roundToNearestInteger then
+		percentage = Round(percentage * 100);
+	else
+		percentage = percentage * 100;
+	end
+
+	return PERCENTAGE_STRING:format(percentage);
 end
 
 function CreateTextureMarkup(file, fileWidth, fileHeight, width, height, left, right, top, bottom)

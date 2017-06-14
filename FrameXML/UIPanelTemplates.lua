@@ -90,18 +90,6 @@ function BagSearch_OnChar(self, text)
 	end
 end
 
-function ScrollingEdit_OnTextChanged(self, scrollFrame)
-	-- force an update when the text changes
-	self.handleCursorChange = true;
-	ScrollingEdit_OnUpdate(self, 0, scrollFrame);
-end
-
-function ScrollingEdit_OnCursorChanged(self, x, y, w, h)
-	self.cursorOffset = y;
-	self.cursorHeight = h;
-	self.handleCursorChange = true;
-end
-
 UIFrameCache = CreateFrame("FRAME");
 local caches = {};
 function UIFrameCache:New (frameType, baseName, parent, template)
@@ -375,11 +363,12 @@ end
 
 CurrencyTemplateMixin = {};
 
-function CurrencyTemplateMixin:SetCurrencyFromID(currencyID, amount, formatString)
+function CurrencyTemplateMixin:SetCurrencyFromID(currencyID, amount, formatString, colorCode)
 	local _, _, currencyTexture = GetCurrencyInfo(currencyID);
 	local markup = CreateTextureMarkup(currencyTexture, 64, 64, 16, 16, 0, 1, 0, 1);
+	colorCode = colorCode or HIGHLIGHT_FONT_COLOR_CODE;
 
-	local currencyString = ("|cffffffff%s %s|r"):format(BreakUpLargeNumbers(amount), markup);
+	local currencyString = ("%s%s %s|r"):format(colorCode, BreakUpLargeNumbers(amount), markup);
 
 	if formatString then
 		self:SetText(formatString:format(currencyString));

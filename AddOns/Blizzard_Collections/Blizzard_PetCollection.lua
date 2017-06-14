@@ -602,9 +602,9 @@ function PetJournal_UpdatePetLoadOut(forceSceneChange)
 			loadoutPlate.xpBar:SetMinMaxValues(0, maxXp);
 			loadoutPlate.xpBar:SetValue(xp);
 			local display = GetCVar("statusTextDisplay")
-			if (display == "3") then
+			if (display == "BOTH") then
 				loadoutPlate.xpBar.rankText:SetFormattedText(PET_BATTLE_CURRENT_XP_FORMAT_BOTH, xp, maxXp, xp/maxXp*100);
-			elseif (display == "2") then
+			elseif (display == "PERCENTAGE") then
 				loadoutPlate.xpBar.rankText:SetFormattedText(PET_BATTLE_CURRENT_XP_FORMAT_PERCENT, xp/maxXp*100);
 			else
 				loadoutPlate.xpBar.rankText:SetFormattedText(PET_BATTLE_CURRENT_XP_FORMAT_VERBOSE, xp, maxXp);
@@ -628,7 +628,7 @@ function PetJournal_UpdatePetLoadOut(forceSceneChange)
 
 				local cardModelSceneID, loadoutModelSceneID = C_PetJournal.GetPetModelSceneInfoBySpeciesID(speciesID);
 
-				loadoutPlate.modelScene:TransitionToModelSceneID(loadoutModelSceneID, CAMERA_MODIFICATION_TYPE_DISCARD, forceSceneChange);
+				loadoutPlate.modelScene:TransitionToModelSceneID(loadoutModelSceneID, CAMERA_TRANSITION_TYPE_IMMEDIATE, CAMERA_MODIFICATION_TYPE_DISCARD, forceSceneChange);
 
 				local battlePetActor = loadoutPlate.modelScene:GetActorByTag("pet");
 				if ( battlePetActor ) then
@@ -925,6 +925,7 @@ function PetJournal_ShowPetDropdown(index, anchorTo, offsetX, offsetY, petID)
 		return;
 	end
 	ToggleDropDownMenu(1, nil, PetJournal.petOptionsMenu, anchorTo, offsetX, offsetY);
+	PlaySound("igMainMenuOptionCheckBoxOn");
 end
 
 function PetJournal_HidePetDropdown()
@@ -1182,7 +1183,7 @@ function PetJournal_UpdatePetCard(self, forceSceneChange)
 
 		local cardModelSceneID, loadoutModelSceneID = C_PetJournal.GetPetModelSceneInfoBySpeciesID(speciesID);
 
-		self.modelScene:TransitionToModelSceneID(cardModelSceneID, CAMERA_MODIFICATION_TYPE_MAINTAIN, forceSceneChange);
+		self.modelScene:TransitionToModelSceneID(cardModelSceneID, CAMERA_TRANSITION_TYPE_IMMEDIATE, CAMERA_MODIFICATION_TYPE_MAINTAIN, forceSceneChange);
 
 		local battlePetActor = self.modelScene:GetActorByTag("unwrapped");
 		if ( battlePetActor ) then

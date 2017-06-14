@@ -1453,9 +1453,35 @@ StaticPopupDialogs["RESURRECT_NO_SICKNESS"] = {
 StaticPopupDialogs["RESURRECT_NO_TIMER"] = {
 	text = RESURRECT_REQUEST_NO_SICKNESS,
 	button1 = ACCEPT,
+	button1Pulse = true,
 	button2 = DECLINE,
 	OnShow = function(self)
 		self.timeleft = GetCorpseRecoveryDelay() + 60;
+		self.hideOnEscape = nil;
+		self.declineTimeLeft = 5;
+		if (HasSoulstone()) then
+			self.declineTimeLeft = 1;
+		end
+		self.button2:SetText(self.declineTimeLeft);
+		self.button2:Disable();
+		self.ticker = C_Timer.NewTicker(1, function()
+			self.declineTimeLeft = self.declineTimeLeft - 1;
+			if (self.declineTimeLeft == 0) then
+				self.button2:SetText(DECLINE)
+				self.button2:Enable();
+				self.ticker:Cancel();
+				self.hideOnEscape = 1;
+				return;
+			else
+				self.button2:SetText(self.declineTimeLeft);
+			end
+		end);
+	end,
+	OnHide = function(self)
+		if (self.ticker) then
+			self.ticker:Cancel();
+		end
+		self.ticker = nil;
 	end,
 	OnAccept = function(self)
 		AcceptResurrect();
@@ -3179,6 +3205,7 @@ StaticPopupDialogs["VOTE_BOOT_PLAYER"] = {
 	text = VOTE_BOOT_PLAYER,
 	button1 = YES,
 	button2 = NO,
+	StartDelay = function(self) if (self.data) then return 0 else return 3 end end,
 	OnAccept = function(self)
 		SetLFGBootVote(true);
 	end,
@@ -3670,6 +3697,19 @@ StaticPopupDialogs["TRANSMOG_APPLY_WARNING"] = {
 	hasItemFrame = 1,
 }
 
+StaticPopupDialogs["TRANSMOG_FAVORITE_WARNING"] = {
+	text = TRANSMOG_FAVORITE_LOSE_REFUND_AND_TRADE,
+	button1 = OKAY,
+	button2 = CANCEL,
+	OnAccept = function(self)
+		local setFavorite = 1;
+		local confirmed = true;
+		WardrobeCollectionFrameModelDropDown_SetFavorite(self.data, setFavorite, confirmed);
+	end,
+	timeout = 0,
+	hideOnEscape = 1,
+}
+
 StaticPopupDialogs["CONFIRM_UNLOCK_TRIAL_CHARACTER"] = {
 	text = CHARACTER_UPGRADE_FINISH_BUTTON_POPUP_TEXT,
 	button1 = OKAY,
@@ -3680,14 +3720,6 @@ StaticPopupDialogs["CONFIRM_UNLOCK_TRIAL_CHARACTER"] = {
 	OnCancel = function()
 		ClassTrialThanksForPlayingDialog:ShowThanks();
 	end,
-	timeout = 0,
-	whileDead = 1,
-}
-
-StaticPopupDialogs["QUEST_IGNORE_TUTORIAL"] = {
-	text = IGNORE_QUEST_TUTORIAL,
-	button1 = OKAY,
-	hideOnEscape = 1,
 	timeout = 0,
 	whileDead = 1,
 }
@@ -3718,6 +3750,18 @@ StaticPopupDialogs["EXPERIMENTAL_CVAR_WARNING"] = {
 
 StaticPopupDialogs["PREMADE_GROUP_SEARCH_DELIST_WARNING"] = {
 	text = PREMADE_GROUP_SEARCH_DELIST_WARNING_TEXT,
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self)
+		LFGListFrame_BeginFindQuestGroup(LFGListFrame, self.data);
+	end,
+	whileDead = 1,
+	showAlert = 1,
+	hideOnEscape = 1,
+}
+
+StaticPopupDialogs["PREMADE_GROUP_INSECURE_SEARCH"] = {
+	text = PREMADE_GROUP_INSECURE_SEARCH,
 	button1 = YES,
 	button2 = NO,
 	OnAccept = function(self)
@@ -3937,6 +3981,8 @@ function StaticPopup_Show(which, text_arg1, text_arg2, data, insertedFrame)
 		info.timeout = text_arg2;
 	else
 		text:SetFormattedText(info.text, text_arg1, text_arg2);
+		text.text_arg1 = text_arg1;
+		text.text_arg2 = text_arg2;
 	end
 
 	-- Show or hide the close button
@@ -4048,6 +4094,7 @@ function StaticPopup_Show(which, text_arg1, text_arg2, data, insertedFrame)
 			tempButtonLocs[i]:SetText(info["button"..i]);
 			tempButtonLocs[i]:Hide();
 			tempButtonLocs[i]:ClearAllPoints();
+			tempButtonLocs[i].PulseAnim:Stop();
 			--Now we possibly remove it.
 			if ( not (info["button"..i] and ( not info["DisplayButton"..i] or info["DisplayButton"..i](dialog))) ) then
 				tremove(tempButtonLocs, i);
@@ -4076,6 +4123,9 @@ function StaticPopup_Show(which, text_arg1, text_arg2, data, insertedFrame)
 				tempButtonLocs[i]:SetWidth(width + 20);
 			else
 				tempButtonLocs[i]:SetWidth(120);
+			end
+			if (info["button"..i.."Pulse"]) then
+				tempButtonLocs[i].PulseAnim:Play();
 			end
 			tempButtonLocs[i]:Enable();
 			tempButtonLocs[i]:Show();
@@ -4108,8 +4158,12 @@ function StaticPopup_Show(which, text_arg1, text_arg2, data, insertedFrame)
 	end
 
 	if ( info.StartDelay ) then
-		dialog.startDelay = info.StartDelay();
-		button1:Disable();
+		dialog.startDelay = info.StartDelay(dialog);
+		if (not dialog.startDelay or dialog.startDelay <= 0) then
+			button1:Enable();
+		else
+			button1:Disable();
+		end
 	else
 		dialog.startDelay = nil;
 		button1:Enable();
@@ -4572,6 +4626,12 @@ function StaticPopupItemFrame_DisplayInfo(self, link, name, color, texture, coun
 	local nameText = _G[self:GetName().."Text"];
 	nameText:SetTextColor(unpack(color or {1, 1, 1, 1}));
 	nameText:SetText(name);
+	
+	if link then
+		local quality = select(3, GetItemInfo(link));
+		SetItemButtonQuality(self, quality, link);
+	end
+	
 	if ( count and count > 1 ) then
 		_G[self:GetName().."Count"]:SetText(count);
 		_G[self:GetName().."Count"]:Show();

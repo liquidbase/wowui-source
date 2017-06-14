@@ -227,7 +227,7 @@ function PlayerTalentFrame_Toggle(suggestedTalentTab)
 			PlayerTalentTab_OnClick(_G["PlayerTalentFrameTab"..SPECIALIZATION_TAB]);
 		elseif ( GetNumUnspentTalents() > 0 ) then
 			PlayerTalentTab_OnClick(_G["PlayerTalentFrameTab"..TALENTS_TAB]);
-        elseif ( GetNumUnspectPvpTalents() > 0 ) then
+        elseif ( GetNumUnspentPvpTalents() > 0 ) then
             PlayerTalentTab_OnClick(_G["PlayerTalentFrameTab"..PVP_TALENTS_TAB]);
 		elseif ( selectedTab ) then
 			PlayerTalentTab_OnClick(_G["PlayerTalentFrameTab"..selectedTab]);
@@ -691,15 +691,16 @@ function PlayerTalentFrameRow_OnEnter(self)
 	self.BottomLine:Show();
 	if ( self.GlowFrame ) then
 		self.GlowFrame:Hide();
+		for i, button in ipairs(self.talents) do
+			button.GlowFrame:Hide();
+		end
 	end
 end
 
 function PlayerTalentFrameRow_OnLeave(self)
 	self.TopLine:Hide();
 	self.BottomLine:Hide();
-	if ( self.shouldGlow ) then
-		self.GlowFrame:Show();
-	end
+	TalentFrame_UpdateRowGlow(self);
 end
 
 local function HandleGeneralTalentFrameChatLink(self, talentName, talentLink)
@@ -1427,7 +1428,7 @@ function PlayerTalentFrame_UpdateSpecFrame(self, spec)
 				frame.icon:SetAlpha(1);
 				local level = GetSpellLevelLearned(bonuses[i]);
 				local futureSpell = level and level > UnitLevel("player");
-				local spellLocked = futureSpell or not FindSpellBookSlotBySpellID(bonuses[i]);
+				local spellLocked = futureSpell or not FindSpellBookSlotBySpellID(bonuses[i], self.isPet);
 				if ( futureSpell ) then
 					frame.subText:SetFormattedText(SPELLBOOK_AVAILABLE_AT, level);
 				else

@@ -37,6 +37,7 @@ NORMAL_FONT_COLOR			= CreateColor(1.0, 0.82, 0.0);
 HIGHLIGHT_FONT_COLOR		= CreateColor(1.0, 1.0, 1.0);
 RED_FONT_COLOR				= CreateColor(1.0, 0.1, 0.1);
 DIM_RED_FONT_COLOR			= CreateColor(0.8, 0.1, 0.1);
+DULL_RED_FONT_COLOR			= CreateColor(0.75, 0.15, 0.15);
 GREEN_FONT_COLOR			= CreateColor(0.1, 1.0, 0.1);
 GRAY_FONT_COLOR				= CreateColor(0.5, 0.5, 0.5);
 YELLOW_FONT_COLOR			= CreateColor(1.0, 1.0, 0.0);
@@ -47,6 +48,7 @@ BATTLENET_FONT_COLOR 		= CreateColor(0.510, 0.773, 1.0);
 TRANSMOGRIFY_FONT_COLOR		= CreateColor(1, 0.5, 1);
 DISABLED_FONT_COLOR			= CreateColor(0.498, 0.498, 0.498);
 LIGHTBLUE_FONT_COLOR		= CreateColor(0.53, 0.67, 1.0);
+LIGHTGRAY_FONT_COLOR		= CreateColor(0.6, 0.6, 0.6);
 
 CHAT_FONT_HEIGHTS = {
 	[1] = 12,
@@ -85,6 +87,10 @@ FRIENDS_BROADCAST_TIME_COLOR_CODE = "|cff4381a8"
 FRIENDS_WOW_NAME_COLOR_CODE = "|cfffde05c";
 FRIENDS_OTHER_NAME_COLOR_CODE = "|cff7b8489";
 
+HTML_START = "<html><body><p>";
+HTML_START_CENTERED = "<html><body><p align=\"center\">";
+HTML_END = "</p></body></html>";
+
 --
 -- Class
 --
@@ -116,27 +122,7 @@ HUNTER_DISMISS_PET = 2641;
 WARLOCK_METAMORPHOSIS = 103958;
 WARLOCK_SOULBURN = 117198;
 WARLOCK_GREEN_FIRE = 101508;
-
--- Power Types
-SPELL_POWER_MANA = 0;
-SPELL_POWER_RAGE = 1;
-SPELL_POWER_FOCUS = 2;
-SPELL_POWER_ENERGY = 3;
-SPELL_POWER_COMBO_POINTS = 4;
-SPELL_POWER_RUNES = 5;
-SPELL_POWER_RUNIC_POWER = 6;
-SPELL_POWER_SOUL_SHARDS = 7;
-SPELL_POWER_LUNAR_POWER = 8;
-SPELL_POWER_HOLY_POWER = 9;
-SPELL_POWER_ALTERNATE_POWER = 10;
-SPELL_POWER_MAELSTROM = 11;
-SPELL_POWER_CHI = 12;
-SPELL_POWER_INSANITY = 13;
-SPELL_POWER_OBSOLETE = 14;
-SPELL_POWER_OBSOLETE2 = 15;
-SPELL_POWER_ARCANE_CHARGES = 16;
-SPELL_POWER_FURY = 17;
-SPELL_POWER_PAIN = 18;
+BATTLEGROUND_ENLISTMENT_BONUS = 241260;
 
 SCHOOL_MASK_NONE	= 0x00;
 SCHOOL_MASK_PHYSICAL	= 0x01;
@@ -902,33 +888,40 @@ LFG_SUBTYPEID_WORLDPVP = 6;
 
 -- CONTRIBUTIONS
 CONTRIBUTION_APPEARANCE_DATA = {
-	[LE_CONTRIBUTION_STATE_BUILDING] = {
+	[Enum.ContributionState.Building] = {
 		stateName = CONTRIBUTION_UNDER_CONSTRUCTION,
 		stateColor = NORMAL_FONT_COLOR,
+		tooltipLine = CONTRIBUTION_POI_TOOLTIP_PERCENTAGE_BUILT,
+		tooltipUseTimeRemaining = false,
 		statusBarAtlas = "_Legionfall_BarFill_UnderConstruction",
 		borderAtlas = "Legionfall_YellowFrame",
 		bannerAtlas = "Legionfall_Banner",
 	},
 
-	[LE_CONTRIBUTION_STATE_ACTIVE] = {
+	[Enum.ContributionState.Active] = {
 		stateName = CONTRIBUTION_ACTIVE,
 		stateColor = GREEN_FONT_COLOR,
+		tooltipLine = CONTRIBUTION_ACTIVE,
+		tooltipUseTimeRemaining = false,
 		statusBarAtlas = "_Legionfall_BarFill_Active",
 		borderAtlas = "Legionfall_GreenFrame",
 		bannerAtlas = "Legionfall_Banner",
 	},
 
-	[LE_CONTRIBUTION_STATE_UNDER_ATTACK] = {
+	[Enum.ContributionState.UnderAttack] = {
 		stateName = CONTRIBUTION_UNDER_ATTACK,
 		stateColor = RED_FONT_COLOR,
+		tooltipLine = CONTRIBUTION_POI_TOOLTIP_REMAINING_TIME,
+		tooltipUseTimeRemaining = true,
 		statusBarAtlas = "_Legionfall_BarFill_UnderAttack",
 		borderAtlas = "Legionfall_RedFrame",
 		bannerAtlas = "Legionfall_Banner",
 	},
 
-	[LE_CONTRIBUTION_STATE_DESTROYED] = {
+	[Enum.ContributionState.Destroyed] = {
 		stateName = CONTRIBUTION_DESTROYED,
 		stateColor = DISABLED_FONT_COLOR,
+		tooltipLine = CONTRIBUTION_DESTROYED,
 		statusBarAtlas = "_Legionfall_BarFill_Active",
 		borderAtlas = "Legionfall_GrayFrame",
 		bannerAtlas = "Legionfall_GrayBanner",
@@ -943,3 +936,6 @@ UPPER_LEFT_VERTEX = 1;
 LOWER_LEFT_VERTEX = 2;
 UPPER_RIGHT_VERTEX = 3;
 LOWER_RIGHT_VERTEX = 4;
+
+-- TUTORIALS
+HELPTIP_HEIGHT_PADDING = 29;

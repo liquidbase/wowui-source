@@ -1,6 +1,6 @@
 local EquipmentManagerLua =
 {
-	Name = "EquipementSet",
+	Name = "EquipmentSet",
 	Type = "System",
 	Namespace = "C_EquipmentSet",
 
@@ -74,6 +74,20 @@ local EquipmentManagerLua =
 			Returns =
 			{
 				{ Name = "specIndex", Type = "number", Nilable = false },
+			},
+		},
+		{
+			Name = "GetEquipmentSetForSpec",
+			Type = "Function",
+
+			Arguments =
+			{
+				{ Name = "specIndex", Type = "number", Nilable = false },
+			},
+
+			Returns =
+			{
+				{ Name = "equipmentSetID", Type = "number", Nilable = false },
 			},
 		},
 		{
@@ -257,6 +271,10 @@ local EquipmentManagerLua =
 				{ Name = "setWasEquipped", Type = "bool", Nilable = false },
 			},
 		},
+	},
+
+	Events =
+	{
 	},
 
 	Tables =

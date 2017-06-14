@@ -37,8 +37,14 @@ function SocialQueueUtil_GetQueueName(queue, nameFormatter)
 		end
 	elseif ( queue.queueType == "pvp" ) then
 		local battlefieldType = queue.battlefieldType;
+		local isBrawl = queue.isBrawl;
 		local name = queue.mapName;
-		if ( battlefieldType == "BATTLEGROUND" ) then
+		if (isBrawl) then
+			local brawlInfo = C_PvP.GetBrawlInfo();
+			if (brawlInfo and brawlInfo.active) then
+				name = brawlInfo.name;
+			end
+		elseif ( battlefieldType == "BATTLEGROUND" ) then
 			name = SOCIAL_QUEUE_FORMAT_BATTLEGROUND:format(name);
 		elseif ( battlefieldType == "ARENA" ) then
 			name = SOCIAL_QUEUE_FORMAT_ARENA:format(queue.teamSize);
@@ -83,7 +89,7 @@ function SocialQueueUtil_SetTooltip(tooltip, playerDisplayName, queues, canJoin,
 
 		if ( canEffectivelyJoin ) then
 			isAutoAccept = firstQueue.isAutoAccept; -- Auto accept is set on the premade group entry
-			LFGListUtil_SetSearchEntryTooltip(tooltip, firstQueue.queueData.lfgListID);
+			LFGListUtil_SetSearchEntryTooltip(tooltip, firstQueue.queueData.lfgListID, LFG_LIST_UTIL_SUPPRESS_AUTO_ACCEPT_LINE);
 		else
 			tooltip:SetText(playerDisplayName, 1, 1, 1, true);
 			tooltip:AddLine(LFG_LIST_ENTRY_DELISTED, RED_FONT_COLOR.r, RED_FONT_COLOR.g, RED_FONT_COLOR.b, true);

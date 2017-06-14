@@ -34,7 +34,14 @@ if (InGlue()) then
 		OnAccept = function()
 			local data = GlueDialog.data;
 
+			if (not data.shouldHandle) then
+				VASCharacterGUID = nil;
+				GetCharacterListUpdate();
+				return;
+			end
+
 			if (GetServerName() ~= data.realmName) then
+				CharacterSelect_SetAutoSwitchRealm(true);
 				C_StoreGlue.ChangeRealmByCharacterGUID(data.guid);
 			else
 				UpdateCharacterList(true);
@@ -50,15 +57,23 @@ if (InGlue()) then
 
 	function StoreFrame_OnCharacterListUpdate()
 		if (C_StoreGlue.GetVASProductReady()) then
-			local _, guid, realmName = C_PurchaseAPI.GetVASCompletionInfo();
+			local productID, guid, realmName, shouldHandle = C_StoreSecure.GetVASCompletionInfo();
+			C_StoreGlue.ClearVASProductReady();
+
+			if (not shouldHandle) then
+				VASCharacterGUID = nil;
+				GetCharacterListUpdate();
+				return;
+			end
+
 			VASCharacterGUID = guid;
 
-		    if (GetServerName() ~= realmName) then
-			    C_StoreGlue.ChangeRealmByCharacterGUID(guid);
+			if (GetServerName() ~= realmName or StoreFrame_IsVASTransferProduct(productID)) then
+				CharacterSelect_SetAutoSwitchRealm(true);
+				C_StoreGlue.ChangeRealmByCharacterGUID(guid);
 		    else
-			    UpdateCharacterList(true);
+				UpdateCharacterList(true);
 		    end
-			C_StoreGlue.ClearVASProductReady();
 			return;
 		end
 
@@ -68,7 +83,7 @@ if (InGlue()) then
 		end
 	end
 
-	function StoreFrame_ShowGlueDialog(text, guid, realmName)
-		GlueDialog_Show("VAS_PRODUCT_DELIVERED", text, { ["guid"] = guid, ["realmName"] = realmName });
+	function StoreFrame_ShowGlueDialog(text, guid, realmName, shouldHandle)
+		GlueDialog_Show("VAS_PRODUCT_DELIVERED", text, { ["guid"] = guid, ["realmName"] = realmName, ["shouldHandle"] = shouldHandle });
 	end
 end

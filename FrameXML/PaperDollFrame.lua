@@ -689,10 +689,10 @@ end
 
 function PaperDollFrame_SetArmor(statFrame, unit)
 	local baselineArmor, effectiveArmor, armor, posBuff, negBuff = UnitArmor(unit);
-	PaperDollFrame_SetLabelAndText(statFrame, STAT_ARMOR, effectiveArmor, false, effectiveArmor);
+	PaperDollFrame_SetLabelAndText(statFrame, STAT_ARMOR, BreakUpLargeNumbers(effectiveArmor), false, effectiveArmor);
     local armorReduction = PaperDollFrame_GetArmorReduction(effectiveArmor, UnitEffectiveLevel(unit));
 
-	statFrame.tooltip = HIGHLIGHT_FONT_COLOR_CODE..format(PAPERDOLLFRAME_TOOLTIP_FORMAT, ARMOR).." "..string.format("%s", effectiveArmor)..FONT_COLOR_CODE_CLOSE;
+	statFrame.tooltip = HIGHLIGHT_FONT_COLOR_CODE..format(PAPERDOLLFRAME_TOOLTIP_FORMAT, ARMOR).." "..BreakUpLargeNumbers(effectiveArmor)..FONT_COLOR_CODE_CLOSE;
 	statFrame.tooltip2 = format(STAT_ARMOR_TOOLTIP, armorReduction);
 	statFrame:Show();
 end
@@ -1147,9 +1147,9 @@ function Mastery_OnEnter(statFrame)
 			GameTooltip:AddSpellByID(masterySpell2);
 		end
 		GameTooltip:AddLine(" ");
-		GameTooltip:AddLine(format(STAT_MASTERY_TOOLTIP, GetCombatRating(CR_MASTERY), masteryBonus), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+		GameTooltip:AddLine(format(STAT_MASTERY_TOOLTIP, BreakUpLargeNumbers(GetCombatRating(CR_MASTERY)), masteryBonus), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
 	else
-		GameTooltip:AddLine(format(STAT_MASTERY_TOOLTIP, GetCombatRating(CR_MASTERY), masteryBonus), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
+		GameTooltip:AddLine(format(STAT_MASTERY_TOOLTIP, BreakUpLargeNumbers(GetCombatRating(CR_MASTERY)), masteryBonus), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
 		GameTooltip:AddLine(" ");
 		GameTooltip:AddLine(STAT_MASTERY_TOOLTIP_NO_TALENT_SPEC, GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b, true);
 	end
@@ -1355,6 +1355,22 @@ function CharacterSpellBonusDamage_OnEnter (self)
 	GameTooltip:Show();
 end
 
+local function ShouldShowExaltedPlusHelpTip()
+	if (GetCVarBitfield("closedInfoFrames", LE_FRAME_TUTORIAL_REPUTATION_EXALTED_PLUS)) then
+		return false;
+	end
+
+	local numFactions = GetNumFactions();
+	for i=1, numFactions do
+		local name, description, standingID, barMin, barMax, barValue, atWarWith, canToggleAtWar, isHeader, isCollapsed, hasRep, isWatched, isChild, factionID, hasBonusRepGain, canBeLFGBonus = GetFactionInfo(i);
+		if (factionID and C_Reputation.IsFactionParagon(factionID) ) then
+			return true;
+		end
+	end
+	return false;
+end
+
+
 function PaperDollFrame_OnShow (self)
 	CharacterStatsPane.initialOffsetY = 0;
 	CharacterFrameTitleText:SetText(UnitPVPName("player"));
@@ -1366,6 +1382,8 @@ function PaperDollFrame_OnShow (self)
 	PaperDollBgDesaturate(true);
 	PaperDollSidebarTabs:Show();
 	PaperDollFrame_UpdateInventoryFixupComplete(self);
+	
+	self:GetParent().ReputationTabHelpBox:SetShown(ShouldShowExaltedPlusHelpTip());
 end
 
 function PaperDollFrame_OnHide (self)
@@ -2393,6 +2411,7 @@ function PaperDollEquipmentManagerPane_Update(equipmentSetsDirty)
 			PaperDollEquipmentManagerPaneSaveSet:Enable();
 			PaperDollEquipmentManagerPaneEquipSet:Enable();
 		end
+		PaperDollFrame_IgnoreSlotsForSet(setID);
 	else
 		PaperDollEquipmentManagerPaneSaveSet:Disable();
 		PaperDollEquipmentManagerPaneEquipSet:Disable();

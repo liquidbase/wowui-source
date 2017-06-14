@@ -92,6 +92,14 @@ function TradeSkillDetailsMixin:RefreshDisplay()
 		end
 
 		self.Contents.RecipeName:SetText(recipeInfo.name);
+		local recipeLink = C_TradeSkillUI.GetRecipeItemLink(self.selectedRecipeID);
+		if ( recipeInfo.productQuality ) then
+			self.Contents.RecipeName:SetTextColor(GetItemQualityColor(recipeInfo.productQuality));
+		else
+			self.Contents.RecipeName:SetTextColor(NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+		end
+		
+		SetItemButtonQuality(self.Contents.ResultIcon, recipeInfo.productQuality, recipeLink);
 		self:AddContentWidget(self.Contents.RecipeName);
 
 		self.Contents.ResultIcon:SetNormalTexture(recipeInfo.icon);
@@ -383,10 +391,9 @@ function TradeSkillDetailsMixin:OnReagentMouseEnter(reagentButton)
 end
 
 function TradeSkillDetailsMixin:OnReagentClicked(reagentButton)
-	if not GetCurrentKeyBoardFocus() then
+	local clickHandled = HandleModifiedItemClick(C_TradeSkillUI.GetRecipeReagentItemLink(self.selectedRecipeID, reagentButton.reagentIndex));
+	if not clickHandled then
 		TradeSkillFrame.SearchBox:SetText(reagentButton.Name:GetText());
-	else
-		HandleModifiedItemClick(C_TradeSkillUI.GetRecipeReagentItemLink(self.selectedRecipeID, reagentButton.reagentIndex));
 	end
 end
 

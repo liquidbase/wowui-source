@@ -5,6 +5,7 @@ local MIN_STORY_TOOLTIP_WIDTH = 240;
 
 function QuestMapFrame_OnLoad(self)
 	self:RegisterEvent("QUEST_LOG_UPDATE");
+	self:RegisterEvent("QUEST_LOG_CRITERIA_UPDATE");
 	self:RegisterEvent("QUEST_WATCH_LIST_CHANGED");
 	self:RegisterEvent("SUPER_TRACKED_QUEST_CHANGED");
 	self:RegisterEvent("GROUP_ROSTER_UPDATE");
@@ -18,6 +19,7 @@ function QuestMapFrame_OnLoad(self)
 	self:RegisterEvent("PLAYER_ENTERING_WORLD");
 	self:RegisterEvent("WORLD_MAP_UPDATE");
 
+	self.completedCriteria = {};
 	QuestPOI_Initialize(QuestScrollFrame.Contents);
 	QuestMapQuestOptionsDropDown.questID = 0;		-- for QuestMapQuestOptionsDropDown_Initialize
 	UIDropDownMenu_Initialize(QuestMapQuestOptionsDropDown, QuestMapQuestOptionsDropDown_Initialize, "MENU");
@@ -57,9 +59,16 @@ function QuestMapFrame_OnEvent(self, event, ...)
 			QuestMapFrame_UpdateQuestDetailsButtons();
 		end
 		QuestMapFrame_UpdateAll();
+		QuestMapFrame_UpdateAllQuestCriteria();
 
 		if ( tooltipButton ) then
 			QuestMapLogTitleButton_OnEnter(tooltipButton);
+		end
+	elseif ( event == "QUEST_LOG_CRITERIA_UPDATE" ) then
+		local questID, criteriaID, description, fulfilled, required = ...;
+
+		if (QuestMapFrame_CheckQuestCriteria(questID, criteriaID, description, fulfilled, required)) then
+			UIErrorsFrame:AddMessage(ERR_QUEST_ADD_FOUND_SII:format(description, fulfilled, required), YELLOW_FONT_COLOR:GetRGB());
 		end
 	elseif ( event == "QUEST_WATCH_UPDATE" ) then
 		if (not IsTutorialFlagged(11) and TUTORIAL_QUEST_TO_WATCH) then
@@ -187,6 +196,7 @@ function QuestMapFrame_UpdateAll()
 	local numPOIs = QuestMapUpdateAllQuests();
 	QuestPOIUpdateIcons();
 	QuestObjectiveTracker_UpdatePOIs();
+
 	if ( WorldMapFrame:IsShown() ) then
 		local poiTable = { };
 		if ( numPOIs > 0 and GetCVarBool("questPOI") ) then
@@ -253,7 +263,6 @@ function QuestMapFrame_ShowQuestDetails(questID)
 
 	-- save current view
 	QuestMapFrame.DetailsFrame.continent = GetCurrentMapContinent();
-	QuestMapFrame.DetailsFrame.mapID = GetCurrentMapAreaID();
 	QuestMapFrame.DetailsFrame.questMapID = nil;	-- doing it now because GetQuestWorldMapAreaID will do a SetMap to current zone
 	QuestMapFrame.DetailsFrame.dungeonFloor = GetCurrentMapDungeonLevel();
 
@@ -262,7 +271,9 @@ function QuestMapFrame_ShowQuestDetails(questID)
 		SetMapByID(mapID);
 		if ( floorNumber ~= 0 ) then
 			SetDungeonMapLevel(floorNumber);
+			QuestMapFrame.DetailsFrame.dungeonFloor = floorNumber;
 		end
+		QuestMapFrame.DetailsFrame.mapID = mapID;
 	end
 
 	QuestMapFrame_UpdateQuestDetailsButtons();
@@ -335,12 +346,32 @@ end
 function QuestMapFrame_OpenToQuestDetails(questID)
 	ShowQuestLog();
 	QuestMapFrame_ShowQuestDetails(questID);
-	-- back button should just close details
-	QuestMapFrame.DetailsFrame.mapID = nil;
 end
 
 function QuestMapFrame_GetDetailQuestID()
 	return QuestMapFrame.DetailsFrame.questID;
+end
+
+function QuestMapFrame_UpdateAllQuestCriteria()
+	for questID, _ in pairs(QuestMapFrame.completedCriteria) do
+		if (not IsQuestTask(questID) and GetQuestLogIndexByID(questID) == 0) then
+			QuestMapFrame.completedCriteria[questID] = nil;
+		end
+	end
+end
+
+function QuestMapFrame_CheckQuestCriteria(questID, criteriaID, description, fulfilled, required)
+	if (fulfilled == required) then
+		if (QuestMapFrame.completedCriteria[questID] and QuestMapFrame.completedCriteria[questID][criteriaID]) then
+			return false;
+		end
+		if (not QuestMapFrame.completedCriteria[questID]) then
+			QuestMapFrame.completedCriteria[questID] = {};
+		end
+		QuestMapFrame.completedCriteria[questID][criteriaID] = true;
+	end
+
+	return true;
 end
 
 -- *****************************************************************************************************
@@ -586,6 +617,8 @@ function QuestLogQuests_Update(poiTable)
 					if( tagCoords ) then
 						button.TagTexture:SetTexCoord( unpack(tagCoords) );
 						button.TagTexture:Show();
+					else
+						button.TagTexture:Hide();
 					end
 				else
 					button.TagTexture:Hide();
@@ -1046,6 +1079,9 @@ function GetZoneStoryID()
 		-- Val'sharah
 		["1018-Alliance"] = {10698, 1018},
 		["1018-Horde"] = {10698, 1018},
+		-- Broken Shore
+		["1021-Alliance"] = {11546, 1021},
+		["1021-Horde"] = {11546, 1021},
 	};
 	if (achievementTable[key] ~= nil) then
 		return achievementTable[key][1], achievementTable[key][2];

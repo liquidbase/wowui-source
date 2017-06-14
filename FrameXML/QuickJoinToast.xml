@@ -11,7 +11,7 @@
 				<Texture parentKey="Background" alpha="0" alphaMode="BLEND" atlas="quickjoin-toast-background" setAllPoints="true"/>
 			</Layer>
 			<Layer level="ARTWORK">
-				<FontString parentKey="Text" alpha="0" alphaMode="BLEND" inherits="GameFontNormalSmall2" justifyH="LEFT">
+				<FontString parentKey="Text" alpha="0" inherits="GameFontNormalSmall2" justifyH="LEFT">
 					<Size x="272" y="11"/>
 					<Anchors>
 						<Anchor point="LEFT" relativeKey="$parent" relativePoint="LEFT" x="18" y="2"/>
@@ -76,6 +76,8 @@
 			<OnEnter method="OnEnter"/>
 			<OnEvent method="OnEvent"/>
 			<OnLeave method="OnLeave"/>
+			<OnShow method="OnShow"/>
+			<OnHide method="OnHide"/>
 		</Scripts>
 		<HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD"/>
 		<Animations>

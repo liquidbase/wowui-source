@@ -1,7 +1,7 @@
 LEGION_POSTPATCH_QUESTS = { Alliance = { 40519, 44663 }, Horde = { 43926, 44663 }};
 
 BASE_SPLASH_SCREEN_VERSION = 7;
-NEWEST_SPLASH_SCREEN_VERSION = 8;
+NEWEST_SPLASH_SCREEN_VERSION = 10;
 
 local function GetLegionQuestID()
 	local faction = UnitFactionGroup("player");
@@ -55,19 +55,22 @@ SPLASH_SCREENS = {
 								        },
 						},
 	},
-	["LEGION_CURRENT"] = {	id = NEWEST_SPLASH_SCREEN_VERSION, -- 7.1
+	["LEGION_CURRENT"] = {	id = NEWEST_SPLASH_SCREEN_VERSION, -- 7.2.5
 					questID = nil,
-					leftTex = "splash-710-topleft",
-					rightTex = "splash-710-right",
-					bottomTex = "splash-710-botleft",
+					leftTex = "splash-725-topleft",
+					rightTex = "splash-725-right",
+					bottomTex = "splash-725-botleft",
 					header = SPLASH_BASE_HEADER,
-					label = SPLASH_LEGION_NEW_7_1_LABEL,
-					feature1Title = SPLASH_LEGION_NEW_7_1_FEATURE1_TITLE,
-					feature1Desc = SPLASH_LEGION_NEW_7_1_FEATURE1_DESC,
-					feature2Title = SPLASH_LEGION_NEW_7_1_FEATURE2_TITLE,
-					feature2Desc = SPLASH_LEGION_NEW_7_1_FEATURE2_DESC,
-					rightTitle = SPLASH_LEGION_NEW_7_1_RIGHT_TITLE,
-					rightDesc = SPLASH_LEGION_NEW_7_1_RIGHT_DESC,
+					label = SPLASH_LEGION_NEW_7_2_5_LABEL,
+					feature1Title = SPLASH_LEGION_NEW_7_2_5_FEATURE1_TITLE,
+					feature1Desc = SPLASH_LEGION_NEW_7_2_5_FEATURE1_DESC,
+					feature2Title = SPLASH_LEGION_NEW_7_2_5_FEATURE2_TITLE,
+					feature2Desc = SPLASH_LEGION_NEW_7_2_5_FEATURE2_DESC,
+					rightTitle = SPLASH_LEGION_NEW_7_2_5_RIGHT_TITLE,
+					rightDesc = SPLASH_LEGION_NEW_7_2_5_RIGHT_DESC,
+					rightDescSubText = SPLASH_OPENS_SOON,
+					rightDescSubTextPredicate = function() return not IsSplashFramePrimaryFeatureUnlocked() end,
+					rightTitleMaxLines = 1,
 					cVar="splashScreenNormal",
 					hideStartButton = true,
 					minDisplayLevel = 101,
@@ -184,8 +187,7 @@ function SplashFrame_Display(tag, showStartButton)
 	frame.Feature2.Title:SetText(screenInfo.feature2Title);
 	frame.Feature2.Description:SetText(screenInfo.feature2Desc);
 	frame.RightTitle:SetText(screenInfo.rightTitle);
-	frame.RightTitle:SetSize( 400, 32 );
-	frame.RightTitle:SetWordWrap( false );
+	frame.RightTitle:SetSize(310, 0);
 
 	local fontSizeFound = false;
 	local fonts = {
@@ -199,16 +201,19 @@ function SplashFrame_Display(tag, showStartButton)
 		"Game18Font",
 	}
 
+	local rightTitleMaxLines = screenInfo.rightTitleMaxLines or 1;
+	frame.RightTitle:SetMaxLines(rightTitleMaxLines);
+
 	for _, font in pairs(fonts) do
 		frame.RightTitle:SetFontObject(font);
-		if( frame.RightTitle:GetStringWidth() < 310 ) then
+
+		if( not frame.RightTitle:IsTruncated() ) then
 			fontSizeFound = true
 			break;
 		end
 	end
 	if( not fontSizeFound ) then
-		frame.RightTitle:SetSize( 300, 40 );
-		frame.RightTitle:SetWordWrap( true );
+		frame.RightTitle:SetSize(310, 0);
 	end
 
 	SplashFrame_SetStartButtonDisplay(showStartButton);
@@ -225,6 +230,7 @@ function SplashFrame_SetStartButtonDisplay( showStartButton )
 		frame.StartButton:Show();
 		frame.RightDescription:SetWidth(300);
 		frame.RightDescription:SetPoint("BOTTOM", 164, 183);
+		frame.RightDescriptionSubtext:Hide();
 		frame.BottomCloseButton:Hide();
 		if( ShouldEnableStartButton( SPLASH_SCREENS[tag].questID ) ) then
 			frame.StartButton.Text:SetTextColor(1, 1, 1);
@@ -241,6 +247,15 @@ function SplashFrame_SetStartButtonDisplay( showStartButton )
 		frame.RightDescription:SetWidth(234);
 		frame.RightDescription:SetPoint("BOTTOM", 164, 133);
 		frame.BottomCloseButton:Show();
+
+		local rightDescSubText = SPLASH_SCREENS[tag].rightDescSubText;
+		local rightDescSubTextPredicate = SPLASH_SCREENS[tag].rightDescSubTextPredicate;
+		if rightDescSubText and rightDescSubText ~= "" and (not rightDescSubTextPredicate or rightDescSubTextPredicate()) then
+			frame.RightDescriptionSubtext:SetText(rightDescSubText);
+			frame.RightDescriptionSubtext:Show();
+		else
+			frame.RightDescriptionSubtext:Hide();
+		end
 	end
 end
 

@@ -911,6 +911,7 @@ function GarrisonFollowerListButton_OnClick(self, button)
 				end
 				followerList.OptionDropDown.followerID = self.id;
 				ToggleDropDownMenu(1, nil, followerList.OptionDropDown, "cursor", 0, 0);
+				PlaySound("igMainMenuOptionCheckBoxOn");
 			else
 				followerList.OptionDropDown.followerID = nil;
 				CloseDropDownMenus();
@@ -1907,7 +1908,6 @@ function GarrisonFollowerTabMixin:ShowAbilities(followerInfo)
 		self.AbilitiesFrame.CombatAllySpell[i]:Show();
 		self.AbilitiesFrame.CombatAllySpell[i].iconTexture:SetTexture(texture);
 		self.AbilitiesFrame.CombatAllySpell[i].spellID = combatAllySpell;
-		self.AbilitiesFrame.CombatAllySpell[i].followerID = followerID;
 	end
 	self.AbilitiesFrame.CombatAllyLabel:SetShown(hasCombatAllySpell);
 	self.AbilitiesFrame.CombatAllyLabel.layoutIndex = BASE_COMBAT_ALLY_LAYOUT_INDEX;
@@ -1959,16 +1959,13 @@ function GarrisonFollowerTabMixin:ShowEquipment(followerInfo)
 		if (equipment.icon) then
 			equipmentFrame.Icon:SetTexture(equipment.icon);
 			equipmentFrame.Icon:Show();
-			if (not hideCounters) then
-				for id, counter in pairs(equipment.counters) do
-					equipment.Counter.Icon:SetTexture(counter.icon);
-					equipment.Counter.tooltip = counter.name;
-					equipment.Counter.mainFrame = mainFrame;
-					equipment.Counter.info = counter;
-					equipment.Counter:Show();
-
-					break;
-				end
+			local id, counter = next(equipment.counters, nil);
+			if (counter) then
+				equipmentFrame.Counter.Icon:SetTexture(counter.icon);
+				equipmentFrame.Counter.tooltip = counter.name;
+				equipmentFrame.Counter.mainFrame = self:GetParent();
+				equipmentFrame.Counter.info = counter;
+				equipmentFrame.Counter:Show();
 			end
 
 			if (followerInfo.isCollected and GarrisonFollowerAbilities_IsNew(self.lastUpdate, followerID, equipment.id, GARRISON_FOLLOWER_ABILITY_TYPE_EITHER)) then
@@ -2031,6 +2028,7 @@ function GarrisonFollowerTabMixin:ShowFollower(followerID, followerList)
 		followerInfo.abilities = { };
 		followerInfo.unlockableAbilities = { };
 		followerInfo.equipment = { };
+		followerInfo.unlockableEquipment = { };
 		followerInfo.combatAllySpellIDs = { };
 	end
 	GarrisonMissionPortrait_SetFollowerPortrait(self.PortraitFrame, followerInfo);

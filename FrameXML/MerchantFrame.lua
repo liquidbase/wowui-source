@@ -52,6 +52,35 @@ function MerchantFrame_OnEvent(self, event, ...)
 	elseif ( event == "MERCHANT_CONFIRM_TRADE_TIMER_REMOVAL" ) then
 		local item = ...;
 		StaticPopup_Show("CONFIRM_MERCHANT_TRADE_TIMER_REMOVAL", item);
+	elseif ( event == "GET_ITEM_INFO_RECEIVED" ) then
+		MerchantFrame_UpdateItemQualityBorders(self);
+	end
+end
+
+function MerchantFrame_OnUpdate(self, dt)
+	if ( self.update == true ) then
+		self.update = false;
+		if ( self:IsVisible() ) then
+			MerchantFrame_Update();
+		end
+	end
+	if ( MerchantFrame.itemHover ) then
+		if ( IsModifiedClick("DRESSUP") ) then
+			ShowInspectCursor();
+		else
+			if (CanAffordMerchantItem(MerchantFrame.itemHover) == false) then
+				SetCursor("BUY_ERROR_CURSOR");
+			else
+				SetCursor("BUY_CURSOR");
+			end
+		end
+	end
+	if ( MerchantRepairItemButton:IsShown() ) then
+		if ( InRepairMode() ) then
+			MerchantRepairItemButton:LockHighlight();
+		else
+			MerchantRepairItemButton:UnlockHighlight();
+		end
 	end
 end
 
@@ -107,6 +136,55 @@ function MerchantFrame_Update()
 	
 end
 
+function MerchantFrameItem_UpdateQuality(self, link)
+	local quality = link and select(3, GetItemInfo(link)) or nil;
+	if ( quality ) then
+		self.Name:SetTextColor(ITEM_QUALITY_COLORS[quality].r, ITEM_QUALITY_COLORS[quality].g, ITEM_QUALITY_COLORS[quality].b);
+	else
+		self.Name:SetTextColor(NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b);
+		MerchantFrame_RegisterForQualityUpdates();
+	end
+	
+	SetItemButtonQuality(self.ItemButton, quality, link);
+end
+
+function MerchantFrame_RegisterForQualityUpdates()
+	if ( not MerchantFrame:IsEventRegistered("GET_ITEM_INFO_RECEIVED") ) then
+		MerchantFrame:RegisterEvent("GET_ITEM_INFO_RECEIVED");
+	end
+end
+
+function MerchantFrame_UnregisterForQualityUpdates()
+	if ( MerchantFrame:IsEventRegistered("GET_ITEM_INFO_RECEIVED") ) then
+		MerchantFrame:UnregisterEvent("GET_ITEM_INFO_RECEIVED");
+	end
+end
+
+function MerchantFrame_UpdateItemQualityBorders(self)
+	MerchantFrame_UnregisterForQualityUpdates(); -- We'll re-register if we need to.
+	
+	if ( MerchantFrame.selectedTab == 1 ) then
+		local numMerchantItems = GetMerchantNumItems();
+		for i=1, MERCHANT_ITEMS_PER_PAGE do
+			local index = (((MerchantFrame.page - 1) * MERCHANT_ITEMS_PER_PAGE) + i);
+			local item = _G["MerchantItem"..i];
+			if ( index <= numMerchantItems ) then
+				local itemLink = GetMerchantItemLink(index);
+				MerchantFrameItem_UpdateQuality(item, itemLink);
+			end
+		end
+	else
+		local numBuybackItems = GetNumBuybackItems();
+		for index=1, BUYBACK_ITEMS_PER_PAGE do
+			local item = _G["MerchantItem"..index];
+			if ( index <= numBuybackItems ) then
+				local itemLink = GetBuybackItemLink(index);
+				MerchantFrameItem_UpdateQuality(item, itemLink);
+			end
+		end
+	end
+end
+
 function MerchantFrame_UpdateMerchantInfo()
 	MerchantNameText:SetText(UnitName("NPC"));
 	SetPortraitTexture(MerchantFramePortrait, "NPC");
@@ -115,15 +193,15 @@ function MerchantFrame_UpdateMerchantInfo()
 	
 	MerchantPageText:SetFormattedText(MERCHANT_PAGE_NUMBER, MerchantFrame.page, math.ceil(numMerchantItems / MERCHANT_ITEMS_PER_PAGE));
 
-	local name, texture, price, stackCount, numAvailable, isUsable, extendedCost;
-	for i=1, MERCHANT_ITEMS_PER_PAGE, 1 do
+	local name, texture, price, stackCount, numAvailable, isPurchasable, isUsable, extendedCost;
+	for i=1, MERCHANT_ITEMS_PER_PAGE do
 		local index = (((MerchantFrame.page - 1) * MERCHANT_ITEMS_PER_PAGE) + i);
 		local itemButton = _G["MerchantItem"..i.."ItemButton"];
 		local merchantButton = _G["MerchantItem"..i];
 		local merchantMoney = _G["MerchantItem"..i.."MoneyFrame"];
 		local merchantAltCurrency = _G["MerchantItem"..i.."AltCurrencyFrame"];
 		if ( index <= numMerchantItems ) then
-			name, texture, price, stackCount, numAvailable, isUsable, extendedCost = GetMerchantItemInfo(index);
+			name, texture, price, stackCount, numAvailable, isPurchasable, isUsable, extendedCost = GetMerchantItemInfo(index);
 			local canAfford = CanAffordMerchantItem(index);
 			_G["MerchantItem"..i.."Name"]:SetText(name);
 			SetItemButtonCount(itemButton, stackCount);
@@ -176,10 +254,10 @@ function MerchantFrame_UpdateMerchantInfo()
 				merchantMoney:Show();
 			end
 
+			local itemLink = GetMerchantItemLink(index);
+			MerchantFrameItem_UpdateQuality(merchantButton, itemLink);
+
 			local merchantItemID = GetMerchantItemID(index);
-
-			SetItemButtonQuality(itemButton, select(3, GetItemInfo(merchantItemID)), merchantItemID);
-
 			local isHeirloom = merchantItemID and C_Heirloom.IsItemHeirloom(merchantItemID);
 			local isKnownHeirloom = isHeirloom and C_Heirloom.PlayerHasHeirloom(merchantItemID);
 
@@ -189,7 +267,7 @@ function MerchantFrame_UpdateMerchantInfo()
 			itemButton:SetID(index);
 			itemButton:Show();
 
-			local tintRed = not isUsable and not isHeirloom;
+			local tintRed = not isPurchasable or (not isUsable and not isHeirloom);
 			
 			SetItemButtonDesaturated(itemButton, isKnownHeirloom);
 
@@ -235,12 +313,14 @@ function MerchantFrame_UpdateMerchantInfo()
 	MerchantFrame_UpdateRepairButtons();
 
 	-- Handle vendor buy back item
-	local buybackName, buybackTexture, buybackPrice, buybackQuantity, buybackNumAvailable, buybackIsUsable = GetBuybackItemInfo(GetNumBuybackItems());
+	local numBuybackItems = GetNumBuybackItems();
+	local buybackName, buybackTexture, buybackPrice, buybackQuantity, buybackNumAvailable, buybackIsUsable = GetBuybackItemInfo(numBuybackItems);
 	if ( buybackName ) then
 		MerchantBuyBackItemName:SetText(buybackName);
 		SetItemButtonCount(MerchantBuyBackItemItemButton, buybackQuantity);
 		SetItemButtonStock(MerchantBuyBackItemItemButton, buybackNumAvailable);
 		SetItemButtonTexture(MerchantBuyBackItemItemButton, buybackTexture);
+		MerchantFrameItem_UpdateQuality(MerchantBuyBackItem, GetBuybackItemLink(numBuybackItems));
 		MerchantBuyBackItemMoneyFrame:Show();
 		MoneyFrame_Update("MerchantBuyBackItemMoneyFrame", buybackPrice);
 		MerchantBuyBackItem:Show();
@@ -250,6 +330,7 @@ function MerchantFrame_UpdateMerchantInfo()
 		MerchantBuyBackItemMoneyFrame:Hide();
 		SetItemButtonTexture(MerchantBuyBackItemItemButton, "");
 		SetItemButtonCount(MerchantBuyBackItemItemButton, 0);
+		MerchantFrameItem_UpdateQuality(MerchantBuyBackItem, nil);
 		-- Hide the tooltip upon sale
 		if ( GameTooltip:IsOwned(MerchantBuyBackItemItemButton) ) then
 			GameTooltip:Hide();
@@ -302,7 +383,7 @@ function MerchantFrame_UpdateAltCurrency(index, indexOnPage, canAfford)
 
 	-- update Alt Currency Frame with itemValues
 	if ( itemCount > 0 ) then
-		for i=1, MAX_ITEM_COST, 1 do
+		for i=1, MAX_ITEM_COST do
 			local itemTexture, itemValue, itemLink = GetMerchantItemCostItem(index, i);
 			if ( itemTexture ) then
 				usedCurrencies = usedCurrencies + 1;
@@ -323,7 +404,7 @@ function MerchantFrame_UpdateAltCurrency(index, indexOnPage, canAfford)
 			_G[frameName.."Item"..i]:Hide();
 		end
 	else
-		for i=1, MAX_ITEM_COST, 1 do
+		for i=1, MAX_ITEM_COST do
 			_G[frameName.."Item"..i]:Hide();
 		end
 	end
@@ -348,6 +429,7 @@ function MerchantFrame_UpdateBuybackInfo()
 	local numBuybackItems = GetNumBuybackItems();
 	local itemButton, buybackButton;
 	local buybackName, buybackTexture, buybackPrice, buybackQuantity, buybackNumAvailable, buybackIsUsable;
+	local buybackItemLink;
 	for i=1, BUYBACK_ITEMS_PER_PAGE do
 		itemButton = _G["MerchantItem"..i.."ItemButton"];
 		buybackButton = _G["MerchantItem"..i];
@@ -360,6 +442,8 @@ function MerchantFrame_UpdateBuybackInfo()
 			SetItemButtonTexture(itemButton, buybackTexture);
 			_G["MerchantItem"..i.."MoneyFrame"]:Show();
 			MoneyFrame_Update("MerchantItem"..i.."MoneyFrame", buybackPrice);
+			buybackItemLink = GetBuybackItemLink(i);
+			MerchantFrameItem_UpdateQuality(buybackButton, buybackItemLink);
 			itemButton:SetID(i);
 			itemButton:Show();
 			if ( not buybackIsUsable ) then
@@ -499,13 +583,7 @@ function MerchantItemButton_OnModifiedClick(self, button)
 		end
 		if ( IsModifiedClick("SPLITSTACK")) then
 			local maxStack = GetMerchantItemMaxStack(self:GetID());
-			local _, _, price, stackCount, _, _, extendedCost = GetMerchantItemInfo(self:GetID());
-			
-			-- TODO: Support shift-click for stacks of extended cost items
-			if (stackCount > 1 and extendedCost) then
-				MerchantItemButton_OnClick(self, button);
-				return;
-			end
+			local _, _, price, stackCount, _, _, _, extendedCost = GetMerchantItemInfo(self:GetID());
 			
 			local canAfford;
 			if (price and price > 0) then
@@ -514,9 +592,20 @@ function MerchantItemButton_OnModifiedClick(self, button)
 				canAfford = maxStack;
 			end
 			
+			if (extendedCost) then
+				local itemCount = GetMerchantItemCostInfo(self:GetID());
+				for i = 1, MAX_ITEM_COST do
+					local itemTexture, itemValue, itemLink, currencyName = GetMerchantItemCostItem(self:GetID(), i);
+					if (itemLink and not currencyName) then
+						local myCount = GetItemCount(itemLink, false, false, true);
+						canAfford = min(canAfford, floor(myCount / (itemValue / stackCount)));
+					end
+				end
+			end
+
 			if ( maxStack > 1 ) then
 				local maxPurchasable = min(maxStack, canAfford);
-				OpenStackSplitFrame(maxPurchasable, self, "BOTTOMLEFT", "TOPLEFT");
+				OpenStackSplitFrame(maxPurchasable, self, "BOTTOMLEFT", "TOPLEFT", stackCount);
 			end
 			return;
 		end
@@ -563,10 +652,17 @@ function MerchantFrame_ConfirmExtendedItemCost(itemButton, numToPurchase)
 	
 	local maxQuality = 0;
 	local usingCurrency = false;
-	for i=1, MAX_ITEM_COST, 1 do
+	for i=1, MAX_ITEM_COST do
 		local itemTexture, costItemCount, itemLink, currencyName = GetMerchantItemCostItem(index, i);
 		costItemCount = costItemCount * (numToPurchase / stackCount); -- cost per stack times number of stacks
-		if ( itemLink ) then
+		if ( currencyName ) then
+			usingCurrency = true;
+			if ( itemsString ) then
+				itemsString = itemsString .. ", |T"..itemTexture..":0:0:0:-1|t ".. format(CURRENCY_QUANTITY_TEMPLATE, costItemCount, currencyName);
+			else
+				itemsString = " |T"..itemTexture..":0:0:0:-1|t "..format(CURRENCY_QUANTITY_TEMPLATE, costItemCount, currencyName);
+			end
+		elseif ( itemLink ) then
 			local _, _, itemQuality = GetItemInfo(itemLink);
 			maxQuality = math.max(itemQuality, maxQuality);
 			if ( itemsString ) then
@@ -574,14 +670,7 @@ function MerchantFrame_ConfirmExtendedItemCost(itemButton, numToPurchase)
 			else
 				itemsString = format(ITEM_QUANTITY_TEMPLATE, costItemCount, itemLink);
 			end
-		elseif ( currencyName ) then
-			usingCurrency = true;
-			if ( itemsString ) then
-				itemsString = itemsString .. ", |T"..itemTexture..":0:0:0:-1|t ".. format(CURRENCY_QUANTITY_TEMPLATE, costItemCount, currencyName);
-			else
-				itemsString = " |T"..itemTexture..":0:0:0:-1|t "..format(CURRENCY_QUANTITY_TEMPLATE, costItemCount, currencyName);
-			end
-		end		
+		end
 	end
 	if ( itemButton.showNonrefundablePrompt and itemButton.price ) then
 		if ( itemsString ) then
