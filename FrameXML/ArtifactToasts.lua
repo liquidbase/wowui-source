@@ -26,14 +26,14 @@ function ArtifactLevelUpToastMixin:EvaluateTrigger()
 		self.showArtifact = showArtifact;
 
 		if self.showArtifact then
-			self.currentArtifactPurchasableTraits = MainMenuBar_GetNumArtifactTraitsPurchasableFromXP(pointsSpent, xp, artifactTier);
+			self.currentArtifactPurchasableTraits = ArtifactBarGetNumArtifactTraitsPurchasableFromXP(pointsSpent, xp, artifactTier);
 			self.currentItemID = itemID;
 		else
 			self.currentArtifactPurchasableTraits = nil;
 			self.currentItemID = nil;
 		end
 	elseif self.showArtifact then
-		local artifactPurchasableTraits = MainMenuBar_GetNumArtifactTraitsPurchasableFromXP(pointsSpent, xp, artifactTier);
+		local artifactPurchasableTraits = ArtifactBarGetNumArtifactTraitsPurchasableFromXP(pointsSpent, xp, artifactTier);
 		if self.currentItemID == itemID then
 			if self.currentArtifactPurchasableTraits < artifactPurchasableTraits then
 				local artifactArtInfo = C_ArtifactUI.GetEquippedArtifactArtInfo();
@@ -62,7 +62,7 @@ function ArtifactLevelUpToastMixin:PlayBanner(data)
 	self:Show();
 	
 	self.ArtifactLevelUpAnim:Play();
-	PlaySound("UI_70_Artifact_Forge_Toast_TraitAvailable");
+	PlaySound(SOUNDKIT.UI_70_ARTIFACT_FORGE_TOAST_TRAIT_AVAILABLE);
 end
 
 function ArtifactLevelUpToastMixin:StopBanner()

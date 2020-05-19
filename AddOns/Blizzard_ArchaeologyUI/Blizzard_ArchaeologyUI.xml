@@ -100,7 +100,7 @@
 		<Scripts>
 			<OnClick>
 				ArchaeologyFrame_ShowArtifact(self:GetID() + ((ArchaeologyFrame.summaryPage.currentPage - 1) * ARCHAEOLOGY_MAX_RACES));
-				PlaySound("igSpellBookOpen");
+				PlaySound(SOUNDKIT.IG_SPELLBOOK_OPEN);
 			</OnClick>
 			<OnDisable>
 				SetDesaturation(self:GetNormalTexture(), true);
@@ -162,7 +162,7 @@
 		<Scripts>
 			<OnClick>
 				ArchaeologyFrame_ShowArtifact(self.raceIndex + ((ArchaeologyFrame.summaryPage.currentPage - 1) * ARCHAEOLOGY_MAX_RACES), self.projectIndex);
-				PlaySound("igSpellBookOpen");
+				PlaySound(SOUNDKIT.IG_SPELLBOOK_OPEN);
 			</OnClick>
 			<OnEnter>
 				GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT");
@@ -171,7 +171,7 @@
 				
 				GameTooltip:AddLine(" ");
 				
-				local adate = date("*t", self.firstComletionTime);
+				local adate = date("*t", self.firstCompletionTime);
 				GameTooltip:AddLine(ARCHAEOLOGY_TIMESTAMP.." |cffffffff"..FormatShortDate(adate.day, adate.month, adate.year).." "..
 												GameTime_GetFormattedTime(adate.hour, adate.min, true).."|r");
 				GameTooltip:AddLine(string.format(ARCHAEOLOGY_COMPLETION, self.completionCount));
@@ -202,7 +202,7 @@
 				ArchaeologyFrame_KeyStoneClick(self);
 				GameTooltip:SetOwner(self, "ANCHOR_LEFT");
 				GameTooltip:SetText(self.tooltip, NORMAL_FONT_COLOR[1], NORMAL_FONT_COLOR[2], NORMAL_FONT_COLOR[3], 1, true);
-				PlaySound("igMainMenuOptionCheckBoxOn");
+				PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 			</OnClick>
 			<OnEnter>
 				GameTooltip:SetOwner(self, "ANCHOR_LEFT");
@@ -326,7 +326,7 @@
 				<BarTexture name="$parentBar" file="Interface\PaperDollInfoFrame\UI-Character-Skills-Bar"/>
 				<BarColor r="0.03125" g="0.85" b="0.0" />
 			</StatusBar>
-			<Button name="$parentSummarytButton" parentKey="tab1" id="1">
+			<Button name="$parentSummarytButton" frameLevel="600" parentKey="tab1" id="1">
 				<Size x="63" y="57"/>
 				<Anchors>
 					<Anchor point="TOPLEFT" x="-22" y="-50" relativePoint="TOPRIGHT"/>
@@ -344,7 +344,7 @@
 				<Scripts>
 					<OnClick>
 						ArchaeologyFrame_OnTabClick(self)
-						PlaySound("igSpellBookOpen");
+						PlaySound(SOUNDKIT.IG_SPELLBOOK_OPEN);
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT");
@@ -370,7 +370,7 @@
 					<Color r="1" g="1" b="1" a="0.3"/>
 				</HighlightTexture>
 			</Button>
-			<Button name="$parentCompletedButton"  parentKey="tab2" id="2">
+			<Button name="$parentCompletedButton" frameLevel="600" parentKey="tab2" id="2">
 				<Size x="63" y="57"/>
 				<Anchors>
 					<Anchor point="TOPLEFT" x="-22" y="-120" relativePoint="TOPRIGHT"/>
@@ -378,7 +378,7 @@
 				<Scripts>
 					<OnClick>
 						ArchaeologyFrame_OnTabClick(self)
-						PlaySound("igSpellBookOpen");
+						PlaySound(SOUNDKIT.IG_SPELLBOOK_OPEN);
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT");
@@ -793,7 +793,7 @@
 								ArchaeologyFrame.artifactPage:Hide();
 								ArchaeologyFrame.completedPage:Show();
 								ArchaeologyFrame.raceFilterDropDown:Show();
-								PlaySound("igMainMenuOptionCheckBoxOn");
+								PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 							</OnClick>
 						</Scripts>
 					</Button>
@@ -934,7 +934,7 @@
 				<Scripts>
 					<OnClick>
 						ArchaeologyFrame_OnTabClick(self);
-						PlaySound("igSpellBookOpen");
+						PlaySound(SOUNDKIT.IG_SPELLBOOK_OPEN);
 					</OnClick>
 				</Scripts>
 			</Button>

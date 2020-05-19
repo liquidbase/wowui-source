@@ -1,10 +1,12 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
+	<Script file="HybridScrollFrame.lua"/>
+
 	<Texture name="HybridScrollBarButton" virtual="true">
 		<TexCoords left="0.25" right="0.75" top="0.25" bottom="0.75"/>
 	</Texture>
-	
-	<Slider name="HybridScrollBarTemplate" parentKey="scrollBar" virtual="true">
+
+	<Slider name="HybridScrollBarBackgroundTemplate" parentKey="scrollBar" virtual="true">
 		<Size x="20" y="0"/>
 		<Anchors>
 			<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="0" y="-18"/>
@@ -38,10 +40,17 @@
 					</Anchors>
 					<TexCoords left="0" right="0.484375" top="0.1640625" bottom="1"/>
 				</Texture>
-			</Layer>	
+			</Layer>
 		</Layers>
+		<ThumbTexture name="$parentThumbTexture" file="Interface\Buttons\UI-ScrollBar-Knob" parentKey="thumbTexture">
+			<Size x="18" y="24"/>
+			<TexCoords left="0.20" right="0.80" top="0.125" bottom="0.875"/>
+		</ThumbTexture>
+	</Slider>
+
+	<Slider name="HybridScrollBarTemplate" inherits="HybridScrollBarBackgroundTemplate" virtual="true">
 		<Frames>
-			<Button name="$parentScrollUpButton" inherits="UIPanelScrollUpButtonTemplate">
+			<Button name="$parentScrollUpButton" parentKey="ScrollUpButton" inherits="UIPanelScrollUpButtonTemplate">
 				<Anchors>
 					<Anchor point="BOTTOM" relativePoint="TOP" x="0" y="-2"/>
 				</Anchors>
@@ -50,7 +59,7 @@
 					<OnClick function ="HybridScrollFrameScrollButton_OnClick"/>
 				</Scripts>
 			</Button>
-			<Button name="$parentScrollDownButton" inherits="UIPanelScrollDownButtonTemplate">
+			<Button name="$parentScrollDownButton" parentKey="ScrollDownButton" inherits="UIPanelScrollDownButtonTemplate">
 				<Anchors>
 					<Anchor point="TOP" relativePoint="BOTTOM" x="0" y="2"/>
 				</Anchors>
@@ -63,10 +72,6 @@
 		<Scripts>
 			<OnValueChanged function="HybridScrollFrame_OnValueChanged"/>
 		</Scripts>
-		<ThumbTexture name="$parentThumbTexture" inherits="HybridScrollBarButton" file="Interface\Buttons\UI-ScrollBar-Knob" parentKey="thumbTexture">
-			<Size x="18" y="24"/>
-			<TexCoords left="0.20" right="0.80" top="0.125" bottom="0.875"/>
-		</ThumbTexture>		
 	</Slider>
 
 	<Slider name="HybridScrollBarTrimTemplate" parentKey="scrollBar" virtual="true">
@@ -94,12 +99,12 @@
 				</Texture>
 				<Texture name="$parentMiddle" parentKey="Middle" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
 					<Anchors>
-						<Anchor point="TOPLEFT" relativeTo="$parentTop" relativePoint="BOTTOMLEFT"/>
-						<Anchor point="BOTTOMRIGHT" relativeTo="$parentBottom" relativePoint="TOPRIGHT"/>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Top" relativePoint="BOTTOMLEFT"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Bottom" relativePoint="TOPRIGHT"/>
 					</Anchors>
 					<TexCoords left="0" right="0.45" top="0.1640625" bottom="1"/>
 				</Texture>
-			</Layer>	
+			</Layer>
 		</Layers>
 		<Frames>
 			<Button name="$parentScrollUpButton" parentKey="UpButton" inherits="UIPanelScrollUpButtonTemplate">
@@ -127,7 +132,7 @@
 		<ThumbTexture name="$parentThumbTexture" inherits="HybridScrollBarButton" file="Interface\Buttons\UI-ScrollBar-Knob" parentKey="thumbTexture">
 			<Size x="18" y="24"/>
 			<TexCoords left="0.20" right="0.80" top="0.125" bottom="0.875"/>
-		</ThumbTexture>		
+		</ThumbTexture>
 	</Slider>
 
 	<Slider name="MinimalHybridScrollBarTemplate" parentKey="scrollBar" virtual="true">
@@ -171,8 +176,8 @@
 			<TexCoords left="0.20" right="0.80" top="0.125" bottom="0.875"/>
 		</ThumbTexture>
 	</Slider>
-	
-	<ScrollFrame name="HybridScrollFrameTemplate" virtual="true">			
+
+	<ScrollFrame name="HybridScrollFrameTemplate" virtual="true">
 		<Scripts>
 			<OnLoad function="HybridScrollFrame_OnLoad"/>
 			<OnMouseWheel function="HybridScrollFrame_OnMouseWheel"/>
@@ -192,19 +197,24 @@
 			<Anchor point="BOTTOMRIGHT"/>
 		</Anchors>
 		<Frames>
-			<Slider name="$parentScrollBar" inherits="HybridScrollBarTemplate"/>
+			<Slider name="$parentScrollBar" parentKey="ScrollBar" inherits="HybridScrollBarTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="0" y="-17"/>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="0" y="12"/>
+				</Anchors>
+			</Slider>
 		</Frames>
 	</ScrollFrame>
-	
+
 	<!-- This is a scrollframe with no border and a black texture for a track -->
 	<ScrollFrame name="MinimalHybridScrollFrameTemplate" inherits="HybridScrollFrameTemplate" virtual="true">
 		<Frames>
-			<Slider name="$parentScrollBar" inherits="MinimalHybridScrollBarTemplate" parentKey="ScrollBar">
+			<Slider name="$parentScrollBar" inherits="MinimalHybridScrollBarTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="0" y="-17"/>
 					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="0" y="17"/>
 				</Anchors>
 			</Slider>
-		</Frames>		
+		</Frames>
 	</ScrollFrame>
 </Ui>

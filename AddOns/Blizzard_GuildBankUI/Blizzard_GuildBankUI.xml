@@ -21,7 +21,7 @@
 </Texture>
  -->
 	
-	<Button name="GuildBankItemButtonTemplate" inherits="ItemButtonTemplate" virtual="true">
+	<ItemButton name="GuildBankItemButtonTemplate" virtual="true">
 		<Frames>
 			<Cooldown name="$parentCooldown" inherits="CooldownFrameTemplate"/>
 		</Frames>
@@ -51,7 +51,7 @@
 				end
 			</OnEvent>
 		</Scripts>
-	</Button>
+	</ItemButton>
 	<Frame name="GuildBankFrameColumnTemplate" virtual="true">
 		<Size x="100" y="311"/>
 		<Layers>
@@ -62,76 +62,76 @@
 			</Layer>
 		</Layers>
 		<Frames>
-			<Button name="$parentButton1" inherits="GuildBankItemButtonTemplate">
+			<ItemButton name="$parentButton1" inherits="GuildBankItemButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="7" y="-3"/>
 				</Anchors>
-			</Button>
-			<Button name="$parentButton2" inherits="GuildBankItemButtonTemplate">
+			</ItemButton>
+			<ItemButton name="$parentButton2" inherits="GuildBankItemButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentButton1" relativePoint="BOTTOMLEFT" x="0" y="-7"/>
 				</Anchors>
-			</Button>
-			<Button name="$parentButton3" inherits="GuildBankItemButtonTemplate">
+			</ItemButton>
+			<ItemButton name="$parentButton3" inherits="GuildBankItemButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentButton2" relativePoint="BOTTOMLEFT" x="0" y="-7"/>
 				</Anchors>
-			</Button>
-			<Button name="$parentButton4" inherits="GuildBankItemButtonTemplate">
+			</ItemButton>
+			<ItemButton name="$parentButton4" inherits="GuildBankItemButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentButton3" relativePoint="BOTTOMLEFT" x="0" y="-7"/>
 				</Anchors>
-			</Button>
-			<Button name="$parentButton5" inherits="GuildBankItemButtonTemplate">
+			</ItemButton>
+			<ItemButton name="$parentButton5" inherits="GuildBankItemButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentButton4" relativePoint="BOTTOMLEFT" x="0" y="-7"/>
 				</Anchors>
-			</Button>
-			<Button name="$parentButton6" inherits="GuildBankItemButtonTemplate">
+			</ItemButton>
+			<ItemButton name="$parentButton6" inherits="GuildBankItemButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentButton5" relativePoint="BOTTOMLEFT" x="0" y="-7"/>
 				</Anchors>
-			</Button>
-			<Button name="$parentButton7" inherits="GuildBankItemButtonTemplate">
+			</ItemButton>
+			<ItemButton name="$parentButton7" inherits="GuildBankItemButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentButton6" relativePoint="BOTTOMLEFT" x="0" y="-7"/>
 				</Anchors>
-			</Button>
-			<Button name="$parentButton8" inherits="GuildBankItemButtonTemplate">
+			</ItemButton>
+			<ItemButton name="$parentButton8" inherits="GuildBankItemButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentButton1" relativePoint="TOPRIGHT" x="12" y="0"/>
 				</Anchors>
-			</Button>
-			<Button name="$parentButton9" inherits="GuildBankItemButtonTemplate">
+			</ItemButton>
+			<ItemButton name="$parentButton9" inherits="GuildBankItemButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentButton8" relativePoint="BOTTOMLEFT" x="0" y="-7"/>
 				</Anchors>
-			</Button>
-			<Button name="$parentButton10" inherits="GuildBankItemButtonTemplate" id="10">
+			</ItemButton>
+			<ItemButton name="$parentButton10" inherits="GuildBankItemButtonTemplate" id="10">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentButton9" relativePoint="BOTTOMLEFT" x="0" y="-7"/>
 				</Anchors>
-			</Button>
-			<Button name="$parentButton11" inherits="GuildBankItemButtonTemplate" id="11">
+			</ItemButton>
+			<ItemButton name="$parentButton11" inherits="GuildBankItemButtonTemplate" id="11">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentButton10" relativePoint="BOTTOMLEFT" x="0" y="-7"/>
 				</Anchors>
-			</Button>
-			<Button name="$parentButton12" inherits="GuildBankItemButtonTemplate" id="12">
+			</ItemButton>
+			<ItemButton name="$parentButton12" inherits="GuildBankItemButtonTemplate" id="12">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentButton11" relativePoint="BOTTOMLEFT" x="0" y="-7"/>
 				</Anchors>
-			</Button>
-			<Button name="$parentButton13" inherits="GuildBankItemButtonTemplate" id="13">
+			</ItemButton>
+			<ItemButton name="$parentButton13" inherits="GuildBankItemButtonTemplate" id="13">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentButton12" relativePoint="BOTTOMLEFT" x="0" y="-7"/>
 				</Anchors>
-			</Button>
-			<Button name="$parentButton14" inherits="GuildBankItemButtonTemplate" id="14">
+			</ItemButton>
+			<ItemButton name="$parentButton14" inherits="GuildBankItemButtonTemplate" id="14">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentButton13" relativePoint="BOTTOMLEFT" x="0" y="-7"/>
 				</Anchors>
-			</Button>
+			</ItemButton>
 		</Frames>
 	</Frame>
 	<Frame name="GuildBankTabTemplate" enableMouse="true" virtual="true">
@@ -186,7 +186,7 @@
 					<OnClick>
 						local currentTab = self:GetParent():GetID();
 						if ( GetCurrentGuildBankTab() ~= currentTab or button == "RightButton" ) then
-							PlaySound("GuildBankOpenBag");
+							PlaySound(SOUNDKIT.GUILD_BANK_OPEN_BAG);
 						end
 						GuildBankTab_OnClick(self, button, currentTab);
 					</OnClick>
@@ -274,11 +274,6 @@
 				<FontString name="GuildBankLimitLabel" inherits="GameFontNormalSmall">
 					<Anchors>
 						<Anchor point="CENTER" relativeTo="GuildBankTabLimitBackground" x="0" y="1"/>
-					</Anchors>
-				</FontString>
-				<FontString name="GuildBankCashFlowLabel" inherits="GameFontNormalSmall" text="GUILDBANK_CASHFLOW">
-					<Anchors>
-						<Anchor point="LEFT" relativeTo="GuildBankTabLimitBackground" x="4" y="1"/>
 					</Anchors>
 				</FontString>
 			</Layer>
@@ -599,16 +594,6 @@
 					</OnLoad>
 				</Scripts>
 			</Frame>
-			<Frame name="GuildBankCashFlowMoneyFrame" inherits="SmallMoneyFrameTemplate">
-				<Anchors>
-					<Anchor point="RIGHT" relativeTo="GuildBankTabLimitBackground" x="10" y="0"/>
-				</Anchors>
-				<Scripts>
-					<OnLoad>
-						SmallMoneyFrame_OnLoad(self, "GUILDBANKCASHFLOW");
-					</OnLoad>
-				</Scripts>
-			</Frame>
 			<Frame name="GuildBankWithdrawMoneyFrame" inherits="SmallMoneyFrameTemplate">
 				<Anchors>
 					<Anchor point="LEFT" relativeTo="GuildBankMoneyLimitLabel" relativePoint="RIGHT" x="13" y="0"/>
@@ -626,7 +611,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						PlaySound("igMainMenuOption");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
 						StaticPopup_Hide("GUILDBANK_WITHDRAW");
 						if(StaticPopup_Visible("GUILDBANK_DEPOSIT")) then
 							StaticPopup_Hide("GUILDBANK_DEPOSIT");
@@ -643,7 +628,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						PlaySound("igMainMenuOption");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
 						StaticPopup_Hide("GUILDBANK_DEPOSIT");
 						if(StaticPopup_Visible("GUILDBANK_WITHDRAW")) then
 							StaticPopup_Hide("GUILDBANK_WITHDRAW");
@@ -777,7 +762,7 @@
 						</Anchors>
 						<Scripts>
 							<OnClick>
-								PlaySound("igMainMenuOption");
+								PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
 								StaticPopup_Show("CONFIRM_BUY_GUILDBANK_TAB");
 							</OnClick>
 						</Scripts>
@@ -855,7 +840,7 @@
 								self:SetWidth(_G[self:GetName().."Text"]:GetWidth()+40);
 							</OnLoad>
 							<OnClick>
-								PlaySound("igMainMenuOptionCheckBoxOn");
+								PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 								if ( GuildBankTabInfoEditBox:GetText() ~= GuildBankTabInfoEditBox.text ) then
 									SetGuildBankText(GetCurrentGuildBankTab(), GuildBankTabInfoEditBox:GetText());
 									GuildBankTabInfoEditBox:ClearFocus();
@@ -1075,7 +1060,7 @@
 						<Scripts>
 							<OnClick>
 								GuildBankPopupFrame_CancelEdit(self)
-								PlaySound("gsTitleOptionOK");
+								PlaySound(SOUNDKIT.GS_TITLE_OPTION_OK);
 							</OnClick>
 						</Scripts>
 					</Button>
@@ -1087,7 +1072,7 @@
 						<Scripts>
 							<OnClick>
 								GuildBankPopupOkayButton_OnClick(self);
-								PlaySound("gsTitleOptionOK");
+								PlaySound(SOUNDKIT.GS_TITLE_OPTION_OK);
 							</OnClick>
 						</Scripts>
 					</Button>

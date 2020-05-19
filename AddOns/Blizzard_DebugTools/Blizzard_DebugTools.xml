@@ -26,10 +26,10 @@
 			</Layer>
 		</Layers>
 		<Frames>
-			<Button name="$parentHideButton" hidden="true" parentKey="HideButton">
-				<Size x="16" y="8"/>
+			<Button name="$parentHideButton" hidden="true" parentKey="HideButton" inherits="UIPanelCloseButtonNoScripts">
+				<Size x="20" y="20"/>
 				<Anchors>
-					<Anchor point="LEFT"/>
+					<Anchor point="LEFT" x="-4"/>
 				</Anchors>
 				<Scripts>
 					<OnClick function="EventTraceFrameEventHideButton_OnClick"/>
@@ -37,11 +37,6 @@
 						EventTraceFrameEvent_OnLeave(self:GetParent());
 					</OnLeave>
 				</Scripts>
-				<ButtonText text="X" inherits="GameFontRedSmall">
-					<Anchors>
-						<Anchor point="LEFT"/>
-					</Anchors>
-				</ButtonText>
 			</Button>
 		</Frames>
 		<Scripts>
@@ -200,13 +195,15 @@
 		</Scripts>
 	</Frame>
 
-	<GameTooltip name="FrameStackTooltip" frameStrata="TOOLTIP" hidden="true" inherits="GameTooltipTemplate">
+	<GameTooltip name="FrameStackTooltip" frameStrata="TOOLTIP" hidden="true" inherits="GameTooltipTemplate" enableKeyboard="true">
 		<Scripts>
 			<OnLoad function="FrameStackTooltip_OnLoad"/>
 			<OnShow function="FrameStackTooltip_OnShow"/>
+			<OnHide function="FrameStackTooltip_OnHide"/>
 			<OnEnter function="FrameStackTooltip_OnEnter"/>
 			<OnUpdate function="FrameStackTooltip_OnUpdate"/>
 			<OnEvent function="FrameStackTooltip_OnEvent"/>
+			<OnTooltipCleared function="FrameStackTooltip_OnTooltipCleared"/>
 			<OnTooltipSetFramestack function="FrameStackTooltip_OnTooltipSetFrameStack"/>
 		</Scripts>
 	</GameTooltip>
@@ -217,12 +214,54 @@
 		</Scripts>
 	</GameTooltip>
 
-	<Frame name="FrameStackHighlight" frameStrata="TOOLTIP">
+	<Frame name="FrameHighlightTemplate" mixin="AnchorHighlightMixin" frameStrata="TOOLTIP" virtual="true">
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="$parentTexture">
+				<Texture>
 					<Color r="0.0" g="0.8" b="0.0" a=".4"/>
 				</Texture>
+			</Layer>
+		</Layers>
+	</Frame>
+
+	<Frame name="FrameStackHighlight" inherits="FrameHighlightTemplate"/>
+
+	<Frame name="FrameStackAnchorHighlightTemplate" parentArray="AnchorHighlights" virtual="true" enableMouse="false" frameStrata="TOOLTIP">
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture>
+					<Color r="0.6" g="0.6" b="0.2" a=".4"/>
+				</Texture>
+				<Texture parentKey="AnchorPoint">
+					<Size x="4" y="4"/>
+					<Color r="1.0" g="0.0" b="0.0" a=".4"/>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Frame>
+	
+	<Frame name="DebugIdentifierFrameNoNameTemplate" virtual="true">
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="DebugHighlight" setAllPoints="true">
+					<Color r="0.0" g="0.0" b="0.0" a="0.6"/>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad function="DebugIdentifierFrame_OnLoad"/>
+		</Scripts>
+	</Frame>
+	
+	<Frame name="DebugIdentifierFrameTemplate" inherits="DebugIdentifierFrameNoNameTemplate" virtual="true">
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString parentKey="DebugName" inherits="GameFontHighlightSmall">
+					<Anchors>
+						<Anchor point="LEFT"/>
+						<Anchor point="RIGHT"/>
+					</Anchors>
+				</FontString>
 			</Layer>
 		</Layers>
 	</Frame>

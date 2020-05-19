@@ -20,9 +20,9 @@ function TradeSkillUIMixin:OnLoad()
 	self:RegisterEvent("TRADE_SKILL_LIST_UPDATE");
 	self:RegisterEvent("TRADE_SKILL_DETAILS_UPDATE");
 	self:RegisterEvent("TRADE_SKILL_NAME_UPDATE");
-	self:RegisterEvent("TRADE_SKILL_FILTER_UPDATE");
 
 	self:RegisterEvent("SKILL_LINES_CHANGED");
+	self:RegisterEvent("TRIAL_STATUS_UPDATE");
 
 	self:RegisterEvent("TRADE_SKILL_CLOSE");
 	self:RegisterEvent("GARRISON_TRADESKILL_NPC_CLOSED");
@@ -59,11 +59,11 @@ function TradeSkillUIMixin:OnEvent(event, ...)
 		if self:IsVisible() then
 			self:RefreshTitle();
 		end
-	elseif event == "TRADE_SKILL_FILTER_UPDATE" then
-		if self:IsVisible() then
-			self.RecipeList:Refresh();
-		end
 	elseif event == "SKILL_LINES_CHANGED" then
+		if self:IsVisible() then
+			self:RefreshSkillRank();
+		end
+	elseif event == "TRIAL_STATUS_UPDATE" then
 		if self:IsVisible() then
 			self:RefreshSkillRank();
 		end
@@ -76,13 +76,13 @@ end
 
 function TradeSkillUIMixin:OnShow()
 	self:RefreshRetrievingDataFrame();
-	PlaySound("UI_ProfessionsWindow_Open");
+	PlaySound(SOUNDKIT.UI_PROFESSIONS_WINDOW_OPEN);
 end
 
 function TradeSkillUIMixin:OnHide()
 	C_TradeSkillUI.CloseTradeSkill();
 	C_Garrison.CloseGarrisonTradeskillNPC();
-	PlaySound("UI_ProfessionsWindow_Close");
+	PlaySound(SOUNDKIT.UI_PROFESSIONS_WINDOW_CLOSE);
 end
 
 function TradeSkillUIMixin:OnDataSourceChanged()
@@ -97,8 +97,8 @@ function TradeSkillUIMixin:OnDataSourceChanged()
 	self:RefreshTitle();
 
 	self.LinkToButton:SetShown(C_TradeSkillUI.CanTradeSkillListLink());
-	
-	self:ClearSlotFilter();	
+
+	self:ClearSlotFilter();
 
 	CloseDropDownMenus();
 	self.SearchBox:SetText("");
@@ -109,14 +109,17 @@ function TradeSkillUIMixin:RefreshRetrievingDataFrame()
 end
 
 function TradeSkillUIMixin:RefreshTitle()
-	local tradeSkillID, skillLineName, skillLineRank, skillLineMaxRank, skillLineModifier =  C_TradeSkillUI.GetTradeSkillLine();
+	local tradeSkillID, skillLineName, skillLineRank, skillLineMaxRank, skillLineModifier, parentSkillLineID, parentSkillLineName =  C_TradeSkillUI.GetTradeSkillLine();
+
+	if (parentSkillLineName) then
+		skillLineName = parentSkillLineName;
+	end
 
 	self.LinkNameButton:Hide();
 
 	if C_TradeSkillUI.IsTradeSkillGuild() then
-		self.TitleText:SetFormattedText(GUILD_TRADE_SKILL_TITLE, skillLineName);
-
-		self.portrait:Hide();
+		self:SetTitleFormatted(GUILD_TRADE_SKILL_TITLE, skillLineName);
+		self:SetPortraitShown(false);
 
 		self.TabardBackground:Show();
 		self.TabardEmblem:Show();
@@ -126,7 +129,7 @@ function TradeSkillUIMixin:RefreshTitle()
 		local linked, linkedName = C_TradeSkillUI.IsTradeSkillLinked();
 		if linked and linkedName then
 			self.LinkNameButton:Show();
-			self.TitleText:SetFormattedText("%s %s[%s]|r", TRADE_SKILL_TITLE:format(skillLineName), HIGHLIGHT_FONT_COLOR_CODE, linkedName);
+			self:SetTitleFormatted("%s %s[%s]|r", TRADE_SKILL_TITLE:format(skillLineName), HIGHLIGHT_FONT_COLOR_CODE, linkedName);
 			self.LinkNameButton.linkedName = linkedName;
 			self.LinkNameButton:SetWidth(self.TitleText:GetStringWidth());
 		else
@@ -134,11 +137,11 @@ function TradeSkillUIMixin:RefreshTitle()
 			self.LinkNameButton.linkedName = nil;
 		end
 
-		self.portrait:Show();
 		self.TabardBackground:Hide();
 		self.TabardEmblem:Hide();
 		self.TabardBorder:Hide();
-		SetPortraitToTexture(self.portrait, C_TradeSkillUI.GetTradeSkillTexture(tradeSkillID));
+		self:SetPortraitShown(true);
+		self:SetPortraitToAsset(C_TradeSkillUI.GetTradeSkillTexture(tradeSkillID));
 	end
 end
 
@@ -157,7 +160,7 @@ end
 
 function TradeSkillUIMixin:OnSearchTextChanged(searchBox)
 	local text = searchBox:GetText();
-	
+
 	local minLevel, maxLevel;
 	local approxLevel = text:match("^~(%d+)");
 	if approxLevel then
@@ -201,14 +204,14 @@ function TradeSkillUIMixin:SetSlotFilter(inventorySlotIndex, categoryID, subCate
 	end
 end
 
-local function GenerateRankText(skillLineRank, skillLineMaxRank, skillLineModifier)
+local function GenerateRankText(skillLineName, skillLineRank, skillLineMaxRank, skillLineModifier)
 	local rankText;
 	if skillLineModifier > 0  then
-		rankText = TRADESKILL_RANK_WITH_MODIFIER:format(skillLineRank, skillLineModifier, skillLineMaxRank);
+		rankText = TRADESKILL_NAME_RANK_WITH_MODIFIER:format(skillLineName, skillLineRank, skillLineModifier, skillLineMaxRank);
 	else
-		rankText = TRADESKILL_RANK:format(skillLineRank, skillLineMaxRank);
+		rankText = TRADESKILL_NAME_RANK:format(skillLineName, skillLineRank, skillLineMaxRank);
 	end
-		
+
 	if GameLimitedMode_IsActive() then
 		local _, _, profCap = GetRestrictedAccountData();
 		if skillLineRank >= profCap then
@@ -219,7 +222,7 @@ local function GenerateRankText(skillLineRank, skillLineMaxRank, skillLineModifi
 end
 
 function TradeSkillUIMixin:RefreshSkillRank()
-	if C_TradeSkillUI.IsTradeSkillGuild() then
+	if C_TradeSkillUI.IsTradeSkillGuild() or C_TradeSkillUI.IsTradeSkillGuildMember() then
 		self.RankFrame:Hide();
 	else
 		local tradeSkillID, skillLineName, skillLineRank, skillLineMaxRank, skillLineModifier = C_TradeSkillUI.GetTradeSkillLine();
@@ -229,7 +232,7 @@ function TradeSkillUIMixin:RefreshSkillRank()
 			self.RankFrame:SetMinMaxValues(0, skillLineMaxRank);
 			self.RankFrame:SetValue(skillLineRank);
 
-			local rankText = GenerateRankText(skillLineRank, skillLineMaxRank, skillLineModifier);
+			local rankText = GenerateRankText(skillLineName, skillLineRank, skillLineMaxRank, skillLineModifier);
 			self.RankFrame.RankText:SetText(rankText);
 
 			self.RankFrame:Show();
@@ -242,54 +245,54 @@ function TradeSkillUIMixin:InitFilterMenu(dropdown, level)
 	if level == 1 then
 		--[[ Only show makeable recipes ]]--
 		info.text = CRAFT_IS_MAKEABLE;
-		info.func = function() 
+		info.func = function()
 			C_TradeSkillUI.SetOnlyShowMakeableRecipes(not C_TradeSkillUI.GetOnlyShowMakeableRecipes());
-		end 
+		end
 
 		info.keepShownOnClick = true;
 		info.checked = C_TradeSkillUI.GetOnlyShowMakeableRecipes();
 		info.isNotRadio = true;
 		UIDropDownMenu_AddButton(info, level)
-		
+
 		--[[ Only show recipes that provide skill ups ]]--
 		local tradeSkillID, name, rank, skillLineMaxRank = C_TradeSkillUI.GetTradeSkillLine();
 		local isNPCCrafting = C_TradeSkillUI.IsNPCCrafting() and skillLineMaxRank == 0;
-		
+
 		if not C_TradeSkillUI.IsTradeSkillGuild() and not isNPCCrafting then
 			info.text = TRADESKILL_FILTER_HAS_SKILL_UP;
-			info.func = function() 
+			info.func = function()
 				C_TradeSkillUI.SetOnlyShowSkillUpRecipes(not C_TradeSkillUI.GetOnlyShowSkillUpRecipes());
-			end 
+			end
 			info.keepShownOnClick = true;
 			info.checked = C_TradeSkillUI.GetOnlyShowSkillUpRecipes();
 			info.isNotRadio = true;
 			UIDropDownMenu_AddButton(info, level);
 		end
-		
+
 		info.checked = 	nil;
 		info.isNotRadio = nil;
 		info.func = nil;
 		info.notCheckable = true;
 		info.keepShownOnClick = true;
-		info.hasArrow = true;	
-		
-		--[[ Filter recipes by inventory slot ]]--	
+		info.hasArrow = true;
+
+		--[[ Filter recipes by inventory slot ]]--
 		info.text = TRADESKILL_FILTER_SLOTS;
 		info.value = 1;
 		UIDropDownMenu_AddButton(info, level);
-				
-		--[[ Filter recipes by parent category ]]--	
+
+		--[[ Filter recipes by parent category ]]--
 		info.text = TRADESKILL_FILTER_CATEGORY;
 		info.value = 2;
 		UIDropDownMenu_AddButton(info, level);
 
-		--[[ Filter recipes by source ]]--	
+		--[[ Filter recipes by source ]]--
 		info.text = SOURCES;
 		info.value = 3;
 		UIDropDownMenu_AddButton(info, level);
-	
+
 	elseif level == 2 then
-		--[[ Inventory slots ]]--	
+		--[[ Inventory slots ]]--
 		if UIDROPDOWNMENU_MENU_VALUE == 1 then
 			local inventorySlots = { C_TradeSkillUI.GetAllFilterableInventorySlots() };
 			for i, inventorySlot in ipairs(inventorySlots) do
@@ -301,7 +304,7 @@ function TradeSkillUIMixin:InitFilterMenu(dropdown, level)
 				UIDropDownMenu_AddButton(info, level);
 			end
 		elseif UIDROPDOWNMENU_MENU_VALUE == 2 then
-			--[[ Parent categories ]]--	
+			--[[ Parent categories ]]--
 			local categories = { C_TradeSkillUI.GetCategories() };
 
 			for i, categoryID in ipairs(categories) do
@@ -319,21 +322,21 @@ function TradeSkillUIMixin:InitFilterMenu(dropdown, level)
 			info.isNotRadio = true;
 			info.notCheckable = true;
 			info.keepShownOnClick = true;
-				
+
 			info.text = CHECK_ALL;
 			info.func = function()
 							TradeSkillFrame_SetAllSourcesFiltered(false);
 							UIDropDownMenu_Refresh(self.FilterDropDown, 3, 2);
 						end;
 			UIDropDownMenu_AddButton(info, level);
-			
+
 			info.text = UNCHECK_ALL;
 			info.func = function()
 							TradeSkillFrame_SetAllSourcesFiltered(true);
 							UIDropDownMenu_Refresh(self.FilterDropDown, 3, 2);
 						end;
 			UIDropDownMenu_AddButton(info, level);
-		
+
 			info.notCheckable = false;
 
 			local numSources = C_PetJournal.GetNumPetSources();
@@ -349,7 +352,7 @@ function TradeSkillUIMixin:InitFilterMenu(dropdown, level)
 			end
 		end
 	elseif level == 3 then
-		--[[ Subcategories ]]--	
+		--[[ Subcategories ]]--
 		local categoryID = UIDROPDOWNMENU_MENU_VALUE;
 		local categoryData = C_TradeSkillUI.GetCategoryInfo(categoryID);
 		local subCategories = { C_TradeSkillUI.GetSubCategories(categoryID) };
@@ -370,25 +373,25 @@ function TradeSkillUIMixin:OnLinkToButtonClicked()
 	if MacroFrameText and MacroFrameText:IsShown() and MacroFrameText:HasFocus() then
 		local link = C_TradeSkillUI.GetTradeSkillListLink();
 		local text = MacroFrameText:GetText() .. link;
-		if strlenutf8(text) <= MacroFrameText:GetNumLetters() then
+		if strlenutf8(text) <= MacroFrameText:GetMaxLetters() then
 			MacroFrameText:Insert(link);
 		end
-	else 
+	else
 		local activeEditBox = ChatEdit_GetActiveWindow();
 		if activeEditBox then
 			local link = C_TradeSkillUI.GetTradeSkillListLink();
 			ChatEdit_InsertLink(link);
 		else
 			ToggleDropDownMenu(1, nil, self.LinkToDropDown, self.LinkToButton, 25, 25);
-			PlaySound("igMainMenuOptionCheckBoxOn");
+			PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 		end
 	end
-	PlaySound("igMainMenuOptionCheckBoxOn");
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 end
 
 function TradeSkillUIMixin:InitLinkToMenu(dropdown, level)
-	local info = UIDropDownMenu_CreateInfo();	
-	info.notCheckable = true;	
+	local info = UIDropDownMenu_CreateInfo();
+	info.notCheckable = true;
 	info.text = TRADESKILL_POST;
 	info.isTitle = true;
 	UIDropDownMenu_AddButton(info);
@@ -397,36 +400,34 @@ function TradeSkillUIMixin:InitLinkToMenu(dropdown, level)
 	info.notCheckable = true;
 	info.func = function(_, channel)
 		local link = C_TradeSkillUI.GetTradeSkillListLink();
-		if link then 
+		if link then
 			ChatFrame_OpenChat(channel.." "..link, DEFAULT_CHAT_FRAME);
 		end
 	end;
-	
+
 	info.text = GUILD;
 	info.arg1 = SLASH_GUILD1;
 	info.disabled = not IsInGuild();
 	UIDropDownMenu_AddButton(info);
-	
+
 	info.text = PARTY;
 	info.arg1 = SLASH_PARTY1;
 	info.disabled = GetNumSubgroupMembers() == 0;
 	UIDropDownMenu_AddButton(info);
-	
+
 	info.text = RAID;
 	info.disabled = not IsInRaid();
 	info.arg1 = SLASH_RAID1;
 	UIDropDownMenu_AddButton(info);
-	
+
 	info.disabled = false
 
 	local channels = { GetChannelList() };
-	local channelCount = #channels / 2;
-	for i=1, MAX_CHANNEL_BUTTONS do
-		if i <= channelCount then
-			info.text = channels[i * 2];
-			info.arg1 = "/"..channels[(i - 1) * 2 + 1];
-			UIDropDownMenu_AddButton(info);
-		end
+	for i = 1, #channels, 3 do
+		info.text = ChatFrame_ResolveChannelName(channels[i + 1]);
+		info.arg1 = "/"..channels[i];
+		info.disabled = channels[i + 2];
+		UIDropDownMenu_AddButton(info);
 	end
 end
 

@@ -146,7 +146,9 @@ function QuestObjectiveFindGroup_OnLeave(self)
 end
 
 function QuestObjectiveFindGroup_OnClick(self)
-	LFGListUtil_FindQuestGroup(self.questID);
+	local isFromGreenEyeButton = true;
+	--We only want green eye button groups to display the create a group button if there are already groups there. 
+	LFGListUtil_FindQuestGroup(self.questID, isFromGreenEyeButton);
 end
 
 local defaultInitialAnchorOffsets = { 0, 0 };
@@ -176,10 +178,10 @@ function QuestObjectiveSetupBlockButton_AddRightButton(block, button, initialAnc
 end
 
 function QuestObjectiveSetupBlockButton_FindGroup(block, questID)
-	-- Cache this off to avoid spurious calls to QuestUtils_CanUseAutoGroupFinder, for a given quest the result will not change until
+	-- Cache this off to avoid spurious calls to C_LFGList.CanCreateQuestGroup, for a given quest the result will not change until
 	-- completed, and when completed this world quest should no longer be on the tracker.
 	if block.hasGroupFinderButton == nil then
-		block.hasGroupFinderButton = QuestUtils_CanUseAutoGroupFinder(questID);
+		block.hasGroupFinderButton = C_LFGList.CanCreateQuestGroup(questID);
 	end
 
 	if block.hasGroupFinderButton then

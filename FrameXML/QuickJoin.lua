@@ -7,13 +7,13 @@ ROLE_SELECTION_PROMPT_DEFAULT_HEIGHT = 160;
 ----------------------------
 -------QuickJoinFrame-------
 ----------------------------
-QuickJoinMixin = {};
+QuickJoinMixin = CreateFromMixins(EventRegistrationHelper);
 
 function QuickJoinMixin:OnLoad()
+	self:AddEvents("SOCIAL_QUEUE_UPDATE", "GROUP_JOINED", "GROUP_LEFT", "LFG_LIST_SEARCH_RESULT_UPDATED", "PVP_BRAWL_INFO_UPDATED", "GUILD_ROSTER_UPDATE");
+
 	self.ScrollFrame.update = function() self:UpdateScrollFrame(); end
 	self.ScrollFrame.dynamic = function(...) return self:GetTopButton(...) end
-	self.ScrollFrame.scrollBar.doNotHide = true;
-	self.ScrollFrame.scrollBar.trackBG:Hide();
 
 	self.entries = CreateFromMixins(QuickJoinEntriesMixin);
 	self.entries:Init();
@@ -25,17 +25,6 @@ function QuickJoinMixin:OnLoad()
 	UIDropDownMenu_SetInitializeFunction(self.dropdown, QuickJoinFrameDropDown_Initialize);
 
 	self:UpdateScrollFrame();
-end
-
-function QuickJoinMixin:SetEventsRegistered(registered)
-	local func = registered and self.RegisterEvent or self.UnregisterEvent;
-
-	func(self, "SOCIAL_QUEUE_UPDATE");
-	func(self, "GROUP_JOINED");
-	func(self, "GROUP_LEFT");
-	func(self, "LFG_LIST_SEARCH_RESULT_UPDATED");
-	func(self, "PVP_BRAWL_INFO_UPDATED");
-	func(self, "GUILD_ROSTER_UPDATE");
 end
 
 function QuickJoinMixin:OnShow()
@@ -78,9 +67,9 @@ function QuickJoinMixin:OnEvent(event, ...)
 	elseif ( event == "GUILD_ROSTER_UPDATE" ) then
 		local canRequestGuildRoster = ...;
 		if ( canRequestGuildRoster ) then
-			GuildRoster();
+			C_GuildInfo.GuildRoster();
 		end
-		
+
 		self:UpdateScrollFrame();
 	end
 end
@@ -242,7 +231,7 @@ function QuickJoinFrameDropDown_Initialize(dropdownFrame, level, menuList)
 	info.text = WHISPER;
 	info.notCheckable = 1;
 	info.func = function()
-		local link, text = SplitLink(memberInfo.playerLink);
+		local link, text = LinkUtil.SplitLink(memberInfo.playerLink);
 		SetItemRef(link, text, "LeftButton");
 	end
 	UIDropDownMenu_AddButton(info, UIDROPDOWN_MENU_LEVEL);
@@ -292,7 +281,7 @@ end
 function QuickJoinButtonMixin:OnClick(button)
 	if ( button == "LeftButton" ) then
 		if ( self:GetEntry():CanJoin() ) then
-			PlaySound("igMainMenuOptionCheckBoxOn");
+			PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 			self:GetMainPanel():SelectGroup(self:GetEntry():GetGUID());
 		end
 	elseif ( button == "RightButton" ) then
@@ -402,8 +391,8 @@ function QuickJoinEntryMixin:UpdateAll()
 	SocialQueueUtil_SortGroupMembers(self.displayedMembers);
 end
 
-local function guidIDGetter(guid)
-	return guid; --Guids are unique identifying information as-is.
+local function guidIDGetter(playerInfo)
+	return playerInfo.guid; --Guids are unique identifying information as-is.
 end
 
 local function queueIDGetter(queue)
@@ -506,20 +495,14 @@ function QuickJoinEntryMixin:ApplyToTooltip(tooltip)
 		return;
 	end
 
-	local playerName, color = SocialQueueUtil_GetNameAndColor(members[1]);
-	if ( #members > 1 ) then
-		playerName = string.format(QUICK_JOIN_TOAST_EXTRA_PLAYERS, playerName, #members - 1);
-	end
-	playerName = color..playerName..FONT_COLOR_CODE_CLOSE;
-
-	SocialQueueUtil_SetTooltip(tooltip, playerName, self.displayedQueues, self:CanJoin(), self:HasLocalRelationshipWithLeader());
+	SocialQueueUtil_SetTooltip(tooltip, SocialQueueUtil_GetHeaderName(self.guid), self.displayedQueues, self:CanJoin(), self:HasLocalRelationshipWithLeader());
 end
 
 local MAX_NUM_DISPLAYED_QUEUES = 6;
 function QuickJoinEntryMixin:ApplyToFrame(frame)
 	--Names
 	for i=1, #self.displayedMembers do
-		local name, color, relationship, playerLink = SocialQueueUtil_GetNameAndColor(self.displayedMembers[i]);
+		local name, color, relationship, playerLink = SocialQueueUtil_GetRelationshipInfo(self.displayedMembers[i].guid, nil, self.displayedMembers[i].clubId);
 		local nameObj = frame.Members[i];
 		if ( not nameObj ) then
 			nameObj = frame:CreateFontString(nil, "ARTWORK", "QuickJoinButtonMemberTemplate");

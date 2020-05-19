@@ -1,8 +1,9 @@
 GARRISON_FOLLOWER_MAX_LEVEL = 100;
 GARRISON_FOLLOWER_MAX_UPGRADE_QUALITY = {
-	[LE_FOLLOWER_TYPE_GARRISON_6_0] = LE_GARR_FOLLOWER_QUALITY_EPIC;
-	[LE_FOLLOWER_TYPE_SHIPYARD_6_2] = LE_GARR_FOLLOWER_QUALITY_EPIC;
-	[LE_FOLLOWER_TYPE_GARRISON_7_0] = LE_GARR_FOLLOWER_QUALITY_TITLE;
+	[LE_FOLLOWER_TYPE_GARRISON_6_0] = LE_GARR_FOLLOWER_QUALITY_EPIC,
+	[LE_FOLLOWER_TYPE_SHIPYARD_6_2] = LE_GARR_FOLLOWER_QUALITY_EPIC,
+	[LE_FOLLOWER_TYPE_GARRISON_7_0] = LE_GARR_FOLLOWER_QUALITY_TITLE,
+	[LE_FOLLOWER_TYPE_GARRISON_8_0] = LE_GARR_FOLLOWER_QUALITY_LEGENDARY,
 }
 
 GARRISON_MISSION_NAME_FONT_COLOR	=	{r=0.78, g=0.75, b=0.73};
@@ -15,7 +16,7 @@ GARRISON_MISSION_TYPE_FONT_COLOR	=	{r=0.8, g=0.7, b=0.53};
 GarrisonLandingPageMixin = { }
 function GarrisonLandingPageMixin:OnLoad()
 	self.selectedTab = 1;
-	
+
 	GarrisonLandingPage.Report:Show();
 	GarrisonLandingPage.FollowerList:Hide();
 	GarrisonLandingPage.FollowerList:SetSortFuncs(GarrisonFollowerList_DefaultSort, GarrisonFollowerList_InitializeDefaultSort);
@@ -36,7 +37,7 @@ function GarrisonLandingPageMixin:UpdateTabs()
 	end
 	PanelTemplates_SetNumTabs(self, numTabs);
 	PanelTemplates_UpdateTabs(self);
-	
+
 	if (self.garrTypeID == LE_GARRISON_TYPE_6_0) then
 		local fleetCount = C_Garrison.GetNumFollowers(LE_FOLLOWER_TYPE_SHIPYARD_6_2);
 		if (fleetCount == 0) then
@@ -72,6 +73,18 @@ function GarrisonLandingPageMixin:UpdateUIToGarrisonType()
 		self.Report.Background:SetAtlas("legionmission-landingpage-background-"..className, true);
 		self.Report.Background:ClearAllPoints();
 		self.Report.Background:SetPoint("BOTTOM", self.Report, "BOTTOMLEFT", 194, 54);
+	elseif (self.garrTypeID == LE_GARRISON_TYPE_8_0) then
+
+		local faction = UnitFactionGroup("player");
+		if ( faction == "Horde" ) then
+			self.Report.Background:SetAtlas("BfAMissionsLandingPage-Background-Horde", true);
+			self.Report.Background:ClearAllPoints();
+			self.Report.Background:SetPoint("BOTTOMLEFT", 100, 127);
+		else
+			self.Report.Background:SetAtlas("BfAMissionsLandingPage-Background-Alliance", true);
+			self.Report.Background:ClearAllPoints();
+			self.Report.Background:SetPoint("BOTTOMLEFT", 100, 127);
+		end
 	end
 	self.abilityCountersForMechanicTypes = C_Garrison.GetFollowerAbilityCountersForMechanicTypes(GetPrimaryGarrisonFollowerType(self.garrTypeID));
 	GarrisonThreatCountersFrame:SetParent(self.FollowerTab);
@@ -80,13 +93,13 @@ end
 
 function GarrisonLandingPageMixin:OnShow()
 	self:UpdateUIToGarrisonType();
-	PlaySound("UI_Garrison_GarrisonReport_Open");
+	PlaySound(SOUNDKIT.UI_GARRISON_GARRISON_REPORT_OPEN);
 
 	self:RegisterEvent("GARRISON_HIDE_LANDING_PAGE")
 end
 
 function GarrisonLandingPageMixin:OnHide()
-	PlaySound("UI_Garrison_GarrisonReport_Close");
+	PlaySound(SOUNDKIT.UI_GARRISON_GARRISON_REPORT_CLOSE);
 	StaticPopup_Hide("CONFIRM_FOLLOWER_TEMPORARY_ABILITY");
 	StaticPopup_Hide("CONFIRM_FOLLOWER_UPGRADE");
 	StaticPopup_Hide("CONFIRM_FOLLOWER_ABILITY_UPGRADE");
@@ -106,7 +119,7 @@ end
 
 function GarrisonLandingPageMixin:OnEvent(event)
 	if (event == "GARRISON_HIDE_LANDING_PAGE") then
-		self:Hide();
+		HideUIPanel(self);
 	end
 end
 
@@ -139,7 +152,7 @@ function GarrisonLandingPageTab_OnLeave(self)
 end
 
 function GarrisonLandingPageTab_OnClick(self)
-	PlaySound("UI_Garrison_Nav_Tabs");
+	PlaySound(SOUNDKIT.UI_GARRISON_NAV_TABS);
 	GarrisonLandingPageTab_SetTab(self);
 end
 
@@ -184,7 +197,7 @@ end
 function GarrisonLandingPageReport_OnLoad(self)
 	HybridScrollFrame_CreateButtons(self.List.listScroll, "GarrisonLandingPageReportMissionTemplate", 0, 0);
 	GarrisonLandingPageReportList_Update();
-	
+
 	self.List.listScroll:SetScript("OnMouseWheel", function(self, ...) HybridScrollFrame_OnMouseWheel(self, ...); GarrisonLandingPageReportList_UpdateMouseOverTooltip(self); end);
 	self.shipmentsPool = CreateFramePool("FRAME", self, "GarrisonLandingPageReportShipmentStatusTemplate", OnShipmentReleased);
 end
@@ -238,7 +251,7 @@ function GarrisonLandingPageReport_OnUpdate(self)
 		items = C_Garrison.GetLandingPageItems(self:GetParent().garrTypeID);
 	end
 	GarrisonLandingPageReport.List.items = GarrisonLandingPageReportMission_FilterOutCombatAllyMissions(items);
-	
+
 	if( GarrisonLandingPageReportList_Update() ) then
 		GarrisonLandingPageReport:SetScript("OnUpdate", nil);
 	end
@@ -325,7 +338,7 @@ function GarrisonLandingPageReport_GetShipments(self)
 	local completeTalentID = C_Garrison.GetCompleteTalent(garrisonType);
 	if (talentTreeIDs) then
 		for treeIndex, treeID in ipairs(talentTreeIDs) do
-			local _, _, tree = C_Garrison.GetTalentTreeInfoForID(garrisonType, treeID);
+			local _, _, tree = C_Garrison.GetTalentTreeInfoForID(treeID);
 			for talentIndex, talent in ipairs(tree) do
 				local showTalent = false;
 				if (talent.isBeingResearched) then
@@ -359,7 +372,7 @@ function GarrisonLandingPageReportShipment_OnEnter(self)
 
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 		GameTooltip:SetText(itemName or name);
-	
+
 		local isBuilding, canActivate;
 		if (self.plotID) then
 			_,_,_,_,_, isBuilding, _,_, canActivate = C_Garrison.GetOwnedBuildingInfoAbbrev(self.plotID);
@@ -386,18 +399,18 @@ function GarrisonLandingPageReportShipment_OnEnter(self)
 			if (shipmentsReady and shipmentsTotal) then
 				if (shipmentsReady == shipmentsTotal) then
 					GameTooltip:AddLine(format(GARRISON_LANDING_RETURN, shipmentsTotal), GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b);
-				else			
+				else
 					if (timeleftString) then
 						GameTooltip:AddLine(format(GARRISON_LANDING_COMPLETED, shipmentsReady, shipmentsTotal) .. " " .. format(GARRISON_LANDING_NEXT,timeleftString), 1, 1, 1);
 					else
-						GameTooltip:AddLine(format(GARRISON_LANDING_COMPLETED, shipmentsReady, shipmentsTotal), 1, 1, 1);			
+						GameTooltip:AddLine(format(GARRISON_LANDING_COMPLETED, shipmentsReady, shipmentsTotal), 1, 1, 1);
 					end
 				end
 			end
 		end
 		GameTooltip:Show();
 	elseif (self.shipmentType == SHIPMENT_TYPE_TALENT) then
-			
+
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 		local talent = self.talent;
 		GameTooltip:AddLine(talent.name, 1, 1, 1);
@@ -430,7 +443,7 @@ end
 
 function GarrisonLandingPageReportTab_OnClick(self)
 	if ( self == GarrisonLandingPageReport.unselectedTab ) then
-		PlaySound("UI_Garrison_Nav_Tabs");
+		PlaySound(SOUNDKIT.UI_GARRISON_NAV_TABS);
 		GarrisonLandingPageReport_SetTab(self);
 	end
 end
@@ -442,28 +455,28 @@ function GarrisonLandingPageReport_SetTab(self)
 	tab:SetHighlightFontObject(GameFontNormalMed2);
 	tab:GetHighlightTexture():SetAlpha(1);
 	tab:SetSize(205,30);
-	
+
 	GarrisonLandingPageReport.unselectedTab = tab;
 	GarrisonLandingPageReport.selectedTab = self;
-	
+
 	self:GetNormalTexture():SetAtlas("GarrLanding-TopTabSelected", true);
 	self:SetNormalFontObject(GameFontHighlightMed2);
 	self:SetHighlightFontObject(GameFontHighlightMed2);
 	self:GetHighlightTexture():SetAlpha(0);
 	self:SetSize(205,36);
-	
+
 	if (self == GarrisonLandingPageReport.InProgress) then
 		GarrisonLandingPageReport.List.listScroll.update = GarrisonLandingPageReportList_Update;
 	else
 		GarrisonLandingPageReport.List.listScroll.update = GarrisonLandingPageReportList_UpdateAvailable;
 	end
-	
+
 	GarrisonLandingPageReportList_UpdateItems();
 end
 
 function GarrisonLandingPageReportList_UpdateItems()
 	GarrisonLandingPageReport.List.items = C_Garrison.GetLandingPageItems(GarrisonLandingPage.garrTypeID);
-	
+
 	local items = C_Garrison.GetAvailableMissions(GetPrimaryGarrisonFollowerType(GarrisonLandingPage.garrTypeID));
 	GarrisonLandingPageReport.List.AvailableItems = GarrisonLandingPageReportMission_FilterOutCombatAllyMissions(items);
 	Garrison_SortMissions(GarrisonLandingPageReport.List.AvailableItems);
@@ -491,7 +504,7 @@ function GarrisonLandingPageReportList_UpdateAvailable()
 	else
 		GarrisonLandingPageReport.List.EmptyMissionText:SetText(nil);
 	end
-	
+
 	local allItemDataAvailable = true;
 	for i = 1, numButtons do
 		local button = buttons[i];
@@ -541,11 +554,11 @@ function GarrisonLandingPageReportList_UpdateAvailable()
 					if ( not quality ) then
 						allItemDataAvailable = false;
 					end
-					
+
 					if ( reward.quantity > 1 ) then
 						Reward.Quantity:SetText(reward.quantity);
 						Reward.Quantity:Show();
-					end					
+					end
 				else
 					Reward.itemID = nil;
 					Reward.Icon:SetTexture(reward.icon);
@@ -560,10 +573,19 @@ function GarrisonLandingPageReportList_UpdateAvailable()
 							Reward.tooltip = BreakUpLargeNumbers(reward.quantity).." |T"..currencyTexture..":0:0:0:-1|t ";
 							Reward.currencyID = reward.currencyID;
 							Reward.currencyQuantity = reward.quantity;
-							Reward.Quantity:SetText(reward.quantity);
+							if C_CurrencyInfo.IsCurrencyContainer(reward.currencyID, reward.quantity) then
+								local name, texture, quantity = CurrencyContainerUtil.GetCurrencyContainerInfo(reward.currencyID, reward.quantity);
+								Reward.Icon:SetTexture(texture);
+								if quantity > 1 then
+									Reward.Quantity:SetText(quantity);
+									Reward.Quantity:Show();
+								end
+							else
+								Reward.Quantity:SetText(reward.quantity);
+								Reward.Quantity:Show();
+							end
 							local currencyColor = GetColorForCurrencyReward(reward.currencyID, reward.quantity);
 							Reward.Quantity:SetTextColor(currencyColor:GetRGB());
-							Reward.Quantity:Show();
 						end
 					elseif (reward.bonusAbilityID) then
 						Reward.bonusAbilityID = reward.bonusAbilityID;
@@ -576,7 +598,7 @@ function GarrisonLandingPageReportList_UpdateAvailable()
 						if ( reward.followerXP ) then
 							Reward.Quantity:SetText(GarrisonLandingPageReportList_FormatXPNumbers(reward.followerXP));
 							Reward.Quantity:Show();
-						end		
+						end
 					end
 				end
 				Reward:Show();
@@ -585,11 +607,11 @@ function GarrisonLandingPageReportList_UpdateAvailable()
 			for i = index, #button.Rewards do
 				button.Rewards[i]:Hide();
 			end
-			
+
 			-- Set title width based on number of rewards
 			local titleWidth = 334 - ((index - 1)* 44);
 			button.Title:SetWidth(titleWidth);
-			
+
 			button.Status:Hide();
 			button.TimeLeft:Hide();
 			button:Show();
@@ -597,7 +619,7 @@ function GarrisonLandingPageReportList_UpdateAvailable()
 			button:Hide();
 		end
 	end
-	
+
 	if ( allItemDataAvailable ) then
 		if ( GarrisonLandingPageReport:IsEventRegistered("GET_ITEM_INFO_RECEIVED") ) then
 			GarrisonLandingPageReport:UnregisterEvent("GET_ITEM_INFO_RECEIVED");
@@ -607,7 +629,7 @@ function GarrisonLandingPageReportList_UpdateAvailable()
 			GarrisonLandingPageReport:RegisterEvent("GET_ITEM_INFO_RECEIVED");
 		end
 	end
-	
+
 	local totalHeight = numItems * scrollFrame.buttonHeight;
 	local displayedHeight = numButtons * scrollFrame.buttonHeight;
 	HybridScrollFrame_Update(scrollFrame, totalHeight, displayedHeight);
@@ -638,13 +660,13 @@ function GarrisonLandingPageReportList_Update()
 	local numButtons = #buttons;
 
 	local stopUpdate = true;
-	
+
 	if (numItems == 0) then
 		GarrisonLandingPageReport.List.EmptyMissionText:SetText(GARRISON_EMPTY_IN_PROGRESS_LIST);
 	else
 		GarrisonLandingPageReport.List.EmptyMissionText:SetText(nil);
 	end
-	
+
 	for i = 1, numButtons do
 		local button = buttons[i];
 		local index = offset + i; -- adjust index
@@ -705,11 +727,11 @@ function GarrisonLandingPageReportList_Update()
 			button:Hide();
 		end
 	end
-	
+
 	local totalHeight = numItems * scrollFrame.buttonHeight;
 	local displayedHeight = numButtons * scrollFrame.buttonHeight;
 	HybridScrollFrame_Update(scrollFrame, totalHeight, displayedHeight);
-	
+
 	return stopUpdate;
 end
 
@@ -733,7 +755,7 @@ function GarrisonLandingPageReportMission_FilterOutCombatAllyMissions(items)
 end
 
 function GarrisonLandingPageReportMission_OnClick(self, button)
-	
+
 	local items = GarrisonLandingPageReport.List.items or {};
 	if GarrisonLandingPageReport.selectedTab == GarrisonLandingPageReport.Available then
 		items = GarrisonLandingPageReport.List.AvailableItems;
@@ -760,17 +782,17 @@ end
 function GarrisonLandingPageReportMission_OnEnter(self, button)
 	GameTooltip:SetOwner(self, "ANCHOR_NONE");
 	GameTooltip:SetPoint("LEFT", self, "RIGHT", 0, 0);
-	
+
 	local items = GarrisonLandingPageReport.List.items or {};
 	if GarrisonLandingPageReport.selectedTab == GarrisonLandingPageReport.Available then
 	    items = GarrisonLandingPageReport.List.AvailableItems;
 	end
-	
+
 	local item = items[self.id];
 	if (not item) then
 		return;
 	end
-	
+
 	if ( item.isBuilding ) then
 		GameTooltip:SetText(item.name);
 		GameTooltip:AddLine(string.format(GARRISON_BUILDING_LEVEL_LABEL_TOOLTIP, item.buildingLevel), 1, 1, 1);
@@ -827,7 +849,7 @@ function GarrisonLandingPageReportMissionReward_OnEnter(self)
 	if (self.bonusAbilityID) then
 		local tooltip = GarrisonBonusAreaTooltip;
 		GarrisonBonusArea_Set(tooltip.BonusArea, GARRISON_BONUS_EFFECT_TIME_ACTIVE, self.bonusAbilityDuration, self.bonusAbilityIcon, self.bonusAbilityName, self.bonusAbilityDescription);
-		
+
 		tooltip:ClearAllPoints();
 		tooltip:SetPoint("BOTTOMLEFT", self, "TOPRIGHT");
 		tooltip:SetHeight(tooltip.BonusArea:GetHeight());
@@ -837,6 +859,10 @@ function GarrisonLandingPageReportMissionReward_OnEnter(self)
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 		if (self.itemID) then
 			GameTooltip:SetItemByID(self.itemID);
+			return;
+		end
+		if (self.currencyID and C_CurrencyInfo.IsCurrencyContainer(self.currencyID, self.currencyQuantity)) then			
+			GameTooltip:SetCurrencyByID(self.currencyID, self.currencyQuantity);
 			return;
 		end
 		if (self.title) then

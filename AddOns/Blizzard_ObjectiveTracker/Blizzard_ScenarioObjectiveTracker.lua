@@ -131,6 +131,7 @@ end
 function ScenarioBlocksFrame_Hide()
 	SCENARIO_TRACKER_MODULE.BlocksFrame.currentStage = nil;
 	SCENARIO_TRACKER_MODULE.BlocksFrame.scenarioName = nil;
+	SCENARIO_TRACKER_MODULE.BlocksFrame.stageName = nil;
 	SCENARIO_TRACKER_MODULE.BlocksFrame:SetVerticalScroll(0);
 	SCENARIO_TRACKER_MODULE.BlocksFrame:Hide();
 end
@@ -138,6 +139,40 @@ end
 -- *****************************************************************************************************
 -- ***** FRAME HANDLERS
 -- *****************************************************************************************************
+
+local SCENARIO_TRACKER_WIDGET_SET = 252;
+
+local function WidgetsLayout(widgetContainerFrame, sortedWidgets)
+	local widgetsHeight = 0;
+	local maxWidgetWidth = 1;
+
+	for index, widgetFrame in ipairs(sortedWidgets) do
+		if ( index == 1 ) then
+			-- Add a padding of 15 pixels before the first widget (so it doesn't bump right up against the objectives)
+			widgetFrame:SetPoint("TOP", widgetContainerFrame, "TOP", 0, -15);
+			widgetsHeight = 15;
+		else
+			local relative = sortedWidgets[index - 1];
+			widgetFrame:SetPoint("TOP", relative, "BOTTOM", 0, 0);
+		end
+
+		widgetsHeight = widgetsHeight + widgetFrame:GetWidgetHeight();
+
+		local widgetWidth = widgetFrame:GetWidgetWidth();
+		if widgetWidth > maxWidgetWidth then
+			maxWidgetWidth = widgetWidth;
+		end
+	end
+
+	widgetsHeight = math.max(widgetsHeight, 1);
+
+	widgetContainerFrame:SetHeight(widgetsHeight);
+	widgetContainerFrame:SetWidth(maxWidgetWidth);
+
+	-- The scenario tracker needs to update so the new height is taken into account
+	widgetContainerFrame.height = widgetsHeight;
+	ObjectiveTracker_Update(OBJECTIVE_TRACKER_UPDATE_MODULE_SCENARIO);
+end
 
 function ScenarioBlocksFrame_OnLoad(self)
 	self.module = SCENARIO_CONTENT_TRACKER_MODULE;
@@ -149,6 +184,8 @@ function ScenarioBlocksFrame_OnLoad(self)
 	ScenarioChallengeModeBlock.height = ScenarioChallengeModeBlock:GetHeight();
 	ScenarioProvingGroundsBlock.module = SCENARIO_TRACKER_MODULE;
 	ScenarioProvingGroundsBlock.height = ScenarioProvingGroundsBlock:GetHeight();
+	ScenarioWidgetContainerBlock.module = SCENARIO_TRACKER_MODULE;
+	ScenarioWidgetContainerBlock:RegisterForWidgetSet(SCENARIO_TRACKER_WIDGET_SET, WidgetsLayout);
 
 	SCENARIO_TRACKER_MODULE.BlocksFrame = self;
 
@@ -178,7 +215,7 @@ function ScenarioBlocksFrame_OnEvent(self, event, ...)
 		ScenarioProvingGroundsBlock.Score:SetText(score);
 	elseif (event == "SCENARIO_COMPLETED") then
 		local rewardQuestID, xp, money = ...;
-		if( ( xp and xp > 0 and UnitLevel("player") < MAX_PLAYER_LEVEL ) or ( money and money > 0 ) ) then
+		if( ( xp and xp > 0 and not IsPlayerAtEffectiveMaxLevel() ) or ( money and money > 0 ) ) then
 			ScenarioObjectiveTracker_AnimateReward( xp, money );
 		end
 	elseif (event == "SPELL_UPDATE_COOLDOWN") then
@@ -201,7 +238,7 @@ function ScenarioObjectiveStageBlock_OnEnter(self)
 	  GameTooltip:SetText(name, 1, 0.914, 0.682, 1);
 	  GameTooltip:AddLine(description, 1, 1, 1, true);
 	  GameTooltip:AddLine(" ");
-	  if ( xp > 0 and UnitLevel("player") < MAX_PLAYER_LEVEL ) then
+	  if ( xp > 0 and not IsPlayerAtEffectiveMaxLevel() ) then
 		GameTooltip:AddLine(string.format(BONUS_OBJECTIVE_EXPERIENCE_FORMAT, xp), 1, 1, 1);
 	  end
 	  if ( money > 0 ) then
@@ -261,7 +298,7 @@ function ScenarioTimer_CheckTimers(...)
 		if ( type == LE_WORLD_ELAPSED_TIMER_TYPE_CHALLENGE_MODE) then
 			local mapID = C_ChallengeMode.GetActiveChallengeMapID();
 			if ( mapID ) then
-				local _, _, timeLimit = C_ChallengeMode.GetMapInfo(mapID);
+				local _, _, timeLimit = C_ChallengeMode.GetMapUIInfo(mapID);
 				Scenario_ChallengeMode_ShowBlock(timerID, elapsedTime, timeLimit);
 				return;
 			end
@@ -286,7 +323,7 @@ function ScenarioObjectiveTracker_AnimateReward(xp, money)
 	rewardsFrame:Show();
 	rewardsFrame:SetScale(0.9);
 	local rewards = {};
-	if( xp > 0 and UnitLevel("player") < MAX_PLAYER_LEVEL ) then
+	if( xp > 0 and not IsPlayerAtEffectiveMaxLevel() ) then
 		local t = {};
 		t.label = xp;
 		t.texture = "Interface\\Icons\\XP_Icon";
@@ -445,7 +482,7 @@ end
 function ScenarioChallengeDeathCountMixin:OnEnter()
 	GameTooltip:SetOwner(self, "ANCHOR_LEFT");
 	GameTooltip:SetText(CHALLENGE_MODE_DEATH_COUNT_TITLE:format(self.count), 1, 1, 1);
-	GameTooltip:AddLine(CHALLENGE_MODE_DEATH_COUNT_DESCRIPTION:format(GetTimeStringFromSeconds(self.timeLost, false, true)));
+	GameTooltip:AddLine(CHALLENGE_MODE_DEATH_COUNT_DESCRIPTION:format(SecondsToClock(self.timeLost)));
 	GameTooltip:Show();
 end
 
@@ -465,7 +502,7 @@ function Scenario_ChallengeMode_UpdateTime(block, elapsedTime)
 	else
 		block.TimeLeft:SetTextColor(HIGHLIGHT_FONT_COLOR:GetRGB());
 	end
-	block.TimeLeft:SetText(GetTimeStringFromSeconds(timeLeft, false, true));
+	block.TimeLeft:SetText(SecondsToClock(timeLeft));
 end
 
 function Scenario_ChallengeMode_TimesUpLootStatus_OnEnter(self)
@@ -532,7 +569,7 @@ function Scenario_ProvingGrounds_UpdateTime(block, elapsedTime)
 	local anim = ScenarioProvingGroundsBlockAnim.CountdownAnim;
 	if ( elapsedTime < statusBar.duration ) then
 		statusBar:SetValue(statusBar.duration - elapsedTime);
-		statusBar.TimeLeft:SetText(GetTimeStringFromSeconds(statusBar.duration - elapsedTime));
+		statusBar.TimeLeft:SetText(SecondsToClock(statusBar.duration - elapsedTime, true));
 
 		local timeLeft = statusBar.duration - elapsedTime;
 		if (timeLeft <= 5) then
@@ -651,7 +688,7 @@ function ScenarioTrackerProgressBar_GetProgress(self)
 	if (self.criteriaIndex) then
 		return select(4, C_Scenario.GetCriteriaInfo(self.criteriaIndex)) or 0;
 	else
-		return select(9, C_Scenario.GetStepInfo()) or 0;
+		return select(10, C_Scenario.GetStepInfo()) or 0;
 	end
 end
 
@@ -731,7 +768,7 @@ function SCENARIO_TRACKER_MODULE:AddProgressBar(block, line, criteriaIndex)
 	progressBar.Bar.BarGlow:SetAtlas("bonusobjectives-bar-glow", true);
 
 	if (not criteriaIndex) then
-		local rewardQuestID = select(10, C_Scenario.GetStepInfo());
+		local rewardQuestID = select(11, C_Scenario.GetStepInfo());
 
 		if (rewardQuestID ~= 0) then
 			-- reward icon; try the first item
@@ -751,7 +788,7 @@ function SCENARIO_TRACKER_MODULE:AddProgressBar(block, line, criteriaIndex)
 				texture = "Interface\\Icons\\inv_misc_coin_02";
 			end
 			-- xp
-			if ( not texture and GetQuestLogRewardXP(rewardQuestID) > 0 and UnitLevel("player") < MAX_PLAYER_LEVEL ) then
+			if ( not texture and GetQuestLogRewardXP(rewardQuestID) > 0 and not IsPlayerAtEffectiveMaxLevel() ) then
 				texture = "Interface\\Icons\\xp_icon";
 			end
 			if ( texture ) then
@@ -806,20 +843,40 @@ function SCENARIO_CONTENT_TRACKER_MODULE:StaticReanchor()
 	end
 end
 
-function ScenarioStage_CustomizeBlock(stageBlock, scenarioType)
-	if (scenarioType == LE_SCENARIO_TYPE_LEGION_INVASION) then
-		stageBlock.Stage:SetTextColor(0.753, 1, 0);
-		stageBlock.NormalBG:SetAtlas("legioninvasion-ScenarioTrackerToast", true);
-		stageBlock.RewardButton:Hide();
-	else
+function ScenarioStage_UpdateOptionWidgetRegistration(stageBlock, widgetSetID)
+	stageBlock.WidgetContainer:RegisterForWidgetSet(widgetSetID);
+end
+
+function ScenarioStage_CustomizeBlock(stageBlock, scenarioType, widgetSetID, textureKitID)
+	ScenarioStage_UpdateOptionWidgetRegistration(stageBlock, widgetSetID);
+	stageBlock.RewardButton:Hide();
+
+	if widgetSetID then
+		stageBlock.CompleteLabel:SetPoint("LEFT", stageBlock, "LEFT", 15, 17);
+		stageBlock.Stage:SetPoint("TOPLEFT", stageBlock, "TOPLEFT", 15, -8);
 		stageBlock.Stage:SetTextColor(1, 0.914, 0.682);
-		stageBlock.NormalBG:SetAtlas("ScenarioTrackerToast", true);
-		stageBlock.RewardButton:Hide();
+		stageBlock.Stage:SetHeight(34);
+		stageBlock.NormalBG:Hide();
+	else
+		stageBlock.NormalBG:Show();
+		ScenarioStageBlock.CompleteLabel:SetPoint("LEFT", stageBlock, "LEFT", 15, 3);
+
+		if textureKitID then
+			local textureKit = GetUITextureKitInfo(textureKitID);
+			stageBlock.Stage:SetTextColor(1, 0.914, 0.682);
+			stageBlock.NormalBG:SetAtlas(textureKit.."-TrackerHeader", true);
+		elseif (scenarioType == LE_SCENARIO_TYPE_LEGION_INVASION) then
+			stageBlock.Stage:SetTextColor(0.753, 1, 0);
+			stageBlock.NormalBG:SetAtlas("legioninvasion-ScenarioTrackerToast", true);
+		else
+			stageBlock.Stage:SetTextColor(1, 0.914, 0.682);
+			stageBlock.NormalBG:SetAtlas("ScenarioTrackerToast", true);
+		end
 	end
 end
 
 function SCENARIO_CONTENT_TRACKER_MODULE:Update()
-	local scenarioName, currentStage, numStages, flags, _, _, _, xp, money, scenarioType = C_Scenario.GetInfo();
+	local scenarioName, currentStage, numStages, flags, _, _, _, xp, money, scenarioType, _, textureKitID = C_Scenario.GetInfo();
 	local rewardsFrame = ObjectiveTrackerScenarioRewardsFrame;
 	if ( numStages == 0 ) then
 		ScenarioBlocksFrame_Hide();
@@ -845,10 +902,11 @@ function SCENARIO_CONTENT_TRACKER_MODULE:Update()
 	BlocksFrame.contentsHeight = 0;
 	SCENARIO_TRACKER_MODULE.contentsHeight = 0;
 
-	local stageName, stageDescription, numCriteria, _, _, _, numSpells, spellInfo, weightedProgress = C_Scenario.GetStepInfo();
+	local stageName, stageDescription, numCriteria, _, _, _, _, numSpells, spellInfo, weightedProgress, _, widgetSetID = C_Scenario.GetStepInfo();
 	local inChallengeMode = (scenarioType == LE_SCENARIO_TYPE_CHALLENGE_MODE);
 	local inProvingGrounds = (scenarioType == LE_SCENARIO_TYPE_PROVING_GROUNDS);
 	local dungeonDisplay = (scenarioType == LE_SCENARIO_TYPE_USE_DUNGEON_DISPLAY);
+	local inWarfront = (scenarioType == LE_SCENARIO_TYPE_WARFRONT);
 	local scenariocompleted = currentStage > numStages;
 
 	if ( scenariocompleted ) then
@@ -868,7 +926,7 @@ function SCENARIO_CONTENT_TRACKER_MODULE:Update()
 		ObjectiveTracker_AddBlock(stageBlock);
 		stageBlock:Show();
 		-- update if stage changed
-		if ( BlocksFrame.currentStage ~= currentStage or BlocksFrame.scenarioName ~= scenarioName ) then
+		if ( BlocksFrame.currentStage ~= currentStage or BlocksFrame.scenarioName ~= scenarioName or BlocksFrame.stageName ~= stageName) then
 			SCENARIO_TRACKER_MODULE:FreeUnusedLines(objectiveBlock);
 			if ( bit.band(flags, SCENARIO_FLAG_SUPRESS_STAGE_TEXT) == SCENARIO_FLAG_SUPRESS_STAGE_TEXT ) then
 				stageBlock.Stage:SetText(stageName);
@@ -897,11 +955,20 @@ function SCENARIO_CONTENT_TRACKER_MODULE:Update()
 				C_Timer.After(1, function() stageBlock.Stage:ApplyFontObjects(); end);
 				stageBlock.appliedAlready = true;
 			end
-			ScenarioStage_CustomizeBlock(stageBlock, scenarioType);
+			ScenarioStage_CustomizeBlock(stageBlock, scenarioType, widgetSetID, textureKitID);
+		end
+
+		local warfrontHelpBox = BlocksFrame.WarfrontHelpBox;
+		if inWarfront and not GetCVarBitfield("closedInfoFrames", LE_FRAME_TUTORIAL_WARFRONT_RESOURCES) then
+			warfrontHelpBox:SetHeight(25 + warfrontHelpBox.BigText:GetHeight());
+			warfrontHelpBox:Show();
+		else
+			warfrontHelpBox:Hide();
 		end
 	end
 	BlocksFrame.scenarioName = scenarioName;
 	BlocksFrame.currentStage = currentStage;
+	BlocksFrame.stageName = stageName;
 
 	if ( not ScenarioProvingGroundsBlock.timerID and not scenariocompleted ) then
 		if (weightedProgress) then
@@ -924,6 +991,8 @@ function SCENARIO_CONTENT_TRACKER_MODULE:Update()
 	end
 	ScenarioSpellButtons_UpdateCooldowns();
 
+	ObjectiveTracker_AddBlock(ScenarioWidgetContainerBlock);
+
 	-- add the scenario block
 	if ( BlocksFrame.currentBlock ) then
 		BlocksFrame.height = BlocksFrame.contentsHeight + 1;
@@ -931,7 +1000,7 @@ function SCENARIO_CONTENT_TRACKER_MODULE:Update()
 		ObjectiveTracker_AddBlock(BlocksFrame);
 		BlocksFrame:Show();
 		if ( OBJECTIVE_TRACKER_UPDATE_REASON == OBJECTIVE_TRACKER_UPDATE_SCENARIO_NEW_STAGE and not inChallengeMode ) then
-			if ( ObjectiveTrackerFrame:IsVisible() ) then
+			if ( ObjectiveTrackerFrame:IsShown() ) then
 				if ( currentStage == 1 ) then
 					ScenarioBlocksFrame_SlideIn();
 				else
@@ -944,7 +1013,7 @@ function SCENARIO_CONTENT_TRACKER_MODULE:Update()
 			LevelUpDisplay_PlayScenario();
 			-- play sound if not the first stage
 			if ( currentStage > 1 and currentStage <= numStages ) then
-				PlaySound("UI_Scenario_Stage_End");
+				PlaySound(SOUNDKIT.UI_SCENARIO_STAGE_END);
 			end
 		elseif ( OBJECTIVE_TRACKER_UPDATE_REASON == OBJECTIVE_TRACKER_UPDATE_SCENARIO_SPELLS ) then
 			ScenarioSpells_SlideIn(objectiveBlock);
@@ -957,7 +1026,7 @@ function SCENARIO_CONTENT_TRACKER_MODULE:Update()
 		elseif( dungeonDisplay ) then
 			SCENARIO_CONTENT_TRACKER_MODULE.Header.Text:SetText(TRACKER_HEADER_DUNGEON);
 		else
-			SCENARIO_CONTENT_TRACKER_MODULE.Header.Text:SetText(TRACKER_HEADER_SCENARIO);
+			SCENARIO_CONTENT_TRACKER_MODULE.Header.Text:SetText(scenarioName);
 		end
 	else
 		ScenarioBlocksFrame_Hide();

@@ -1,11 +1,7 @@
 -- if you change something here you probably want to change the glue version too
 
 function VideoOptionsFrame_Toggle ()
-	if ( VideoOptionsFrame:IsShown() ) then
-		VideoOptionsFrame:Hide();
-	else
-		VideoOptionsFrame:Show();
-	end
+	ToggleFrame(VideoOptionsFrame);
 end
 
 function VideoOptionsFrame_SetAllToDefaults ()
@@ -20,8 +16,7 @@ end
 
 function VideoOptionsFrame_OnLoad (self)
 	OptionsFrame_OnLoad(self);
-
-	_G[self:GetName().."HeaderText"]:SetText(SYSTEMOPTIONS_MENU);
+	self.Header:Setup(SYSTEMOPTIONS_MENU);
 end
 
 function VideoOptionsFrame_OnHide (self)
@@ -34,7 +29,7 @@ function VideoOptionsFrame_OnHide (self)
 		StaticPopup_Show("CLIENT_LOGOUT_ALERT");
 		VideoOptionsFrame.logout = nil;
 	end
-	
+
 	if (not self.ignoreCancelOnHide) then
 		OptionsFrameCancel_OnClick(VideoOptionsFrame);
 	end

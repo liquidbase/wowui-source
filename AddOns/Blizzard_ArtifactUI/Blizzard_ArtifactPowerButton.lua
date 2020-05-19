@@ -22,7 +22,7 @@ local function PlayArtifactTraitSound(sound)
 		ARTIFACT_TRAIT_SOUND_HANDLE = nil;
 	end
 	
-	local soundPlayed, handle = PlaySound(sound, "SFX", false);
+	local soundPlayed, handle = PlaySound(sound, "SFX", SOUNDKIT_ALLOW_DUPLICATES);
 	if soundPlayed then
 		ARTIFACT_TRAIT_SOUND_HANDLE = handle;
 	end
@@ -62,7 +62,7 @@ function ArtifactPowerButtonMixin:OnClick(button)
 			ChatEdit_InsertLink(C_ArtifactUI.GetPowerHyperlink(self:GetPowerID()));
 			return;
 		end
-		if not C_ArtifactUI.IsAtForge() then
+		if not C_ArtifactUI.IsArtifactDisabled() and not C_ArtifactUI.IsAtForge() then
 			UIErrorsFrame:AddMessage(ARTIFACT_TRAITS_NO_FORGE_ERROR, RED_FONT_COLOR:GetRGBA());
 			return;
 		end
@@ -84,9 +84,6 @@ function ArtifactPowerButtonMixin:OnClick(button)
 end
 
 function ArtifactPowerButtonMixin:OnDragStart()
-	if not self.locked and self.spellID and self.hasSpentAny and not IsPassiveSpell(self.spellID) then
-		PickupSpell(self.spellID);
-	end
 end
 
 function ArtifactPowerButtonMixin:PlayPurchaseAnimation()
@@ -101,15 +98,15 @@ function ArtifactPowerButtonMixin:PlayPurchaseAnimation()
 		self.PointBurstLeft:SetVertexColor(1, 0.81960784313725, 0.3921568627451);
 		self.PointBurstRight:SetVertexColor(1, 0.81960784313725, 0.3921568627451);
 		self.FinalPointSpentAnim:Play();
-		PlayArtifactTraitSound("UI_70_Artifact_Forge_Trait_GoldTrait");
+		PlayArtifactTraitSound(SOUNDKIT.UI_70_ARTIFACT_FORGE_TRAIT_GOLD_TRAIT);
 	elseif self.isGoldMedal then
 		self.PointBurstLeft:SetVertexColor(1, 0.81960784313725, 0.3921568627451);
 		self.PointBurstRight:SetVertexColor(1, 0.81960784313725, 0.3921568627451);
 		self.GoldPointSpentAnim:Play();
 		if self.tier == 2 then
-			PlayArtifactTraitSound("UI_72_Artifact_Forge_Final_Trait_Unlocked");
+			PlayArtifactTraitSound(SOUNDKIT.UI_72_ARTIFACT_FORGE_FINAL_TRAIT_UNLOCKED);
 		else
-			PlayArtifactTraitSound("UI_70_Artifact_Forge_Trait_GoldTrait");
+			PlayArtifactTraitSound(SOUNDKIT.UI_70_ARTIFACT_FORGE_TRAIT_GOLD_TRAIT);
 		end
 	elseif self.isStart then
 		if self.tier ~= 1 then
@@ -117,7 +114,7 @@ function ArtifactPowerButtonMixin:PlayPurchaseAnimation()
 			self.PointBurstLeft:SetVertexColor(1, 0.81960784313725, 0.3921568627451);
 			self.PointBurstRight:SetVertexColor(1, 0.81960784313725, 0.3921568627451);
 			self.FinalPointSpentAnim:Play();
-			PlayArtifactTraitSound("UI_70_Artifact_Forge_Trait_GoldTrait");
+			PlayArtifactTraitSound(SOUNDKIT.UI_70_ARTIFACT_FORGE_TRAIT_GOLD_TRAIT);
 		end
 	else
 		if self.currentRank + 1 == self.maxRank then
@@ -126,7 +123,7 @@ function ArtifactPowerButtonMixin:PlayPurchaseAnimation()
 			self.PointBurstRight:SetVertexColor(1, 0.81960784313725, 0.3921568627451);
 			self.FinalPointSpentAnim:Play();
 			if ArtifactUI_HasPurchasedAnything() then
-				PlayArtifactTraitSound("UI_70_Artifact_Forge_Trait_FinalRank");
+				PlayArtifactTraitSound(SOUNDKIT.UI_70_ARTIFACT_FORGE_TRAIT_FINALRANK);
 			end
 		else
 			self.RingGlow:SetVertexColor(0.30980392156863, 1, 0.2156862745098);
@@ -134,7 +131,7 @@ function ArtifactPowerButtonMixin:PlayPurchaseAnimation()
 			self.PointBurstRight:SetVertexColor(0.30980392156863, 1, 0.2156862745098);
 			self.PointSpentAnim:Play();
 			if ArtifactUI_HasPurchasedAnything() then
-				PlayArtifactTraitSound("UI_70_Artifact_Forge_Trait_RankUp");
+				PlayArtifactTraitSound(SOUNDKIT.UI_70_ARTIFACT_FORGE_TRAIT_RANKUP);
 			end
 		end
 	end
@@ -231,72 +228,96 @@ function ArtifactPowerButtonMixin:UpdatePowerType()
 end
 
 function ArtifactPowerButtonMixin:SetStyle(style)
+	local rankTextColor = CreateColor(0, 0, 0);
+	local iconVertexColor = CreateColor(1, 1, 1);
+	local iconAlpha = 1;
+	local iconBorderAlpha = 1;
+	local iconBorderDesaturatedAlpha = 0;
+
 	self.style = style;
-	self.Icon:SetAlpha(1);
-	self.Icon:SetVertexColor(1, 1, 1);
 	self.IconDesaturated:SetAlpha(1);
 	self.IconDesaturated:SetVertexColor(1, 1, 1);
-	
-	self.IconBorder:SetAlpha(1);
-	self.IconBorder:SetVertexColor(1, 1, 1);
-	self.IconBorderDesaturated:SetAlpha(0);
-
 	self.Rank:SetAlpha(1);
 	self.RankBorder:SetAlpha(1);
-
+	self.IconBorder:SetVertexColor(1, 1, 1);
 	self.LightRune:Hide();
+
+	local artifactDisabled = C_ArtifactUI.IsArtifactDisabled();
 
 	if style == ARTIFACT_POWER_STYLE_RUNE then
 		self.LightRune:Show();
+		self.LightRune:SetDesaturated(artifactDisabled);
 
-		self.Icon:SetAlpha(0);
-		self.IconBorder:SetAlpha(0);
+		iconAlpha = 0;
+		iconBorderAlpha = 0;
 
+		self.Rank:SetText(nil);
 		self.Rank:SetAlpha(0);
 		self.RankBorder:SetAlpha(0);
 
 		self.IconDesaturated:SetAlpha(0);
 	elseif style == ARTIFACT_POWER_STYLE_MAXED then
 		self.Rank:SetText(self.currentRank);
-		self.Rank:SetTextColor(1, 0.82, 0);
+		rankTextColor:SetRGB(1, 0.82, 0);
 		self.RankBorder:SetAtlas("Artifacts-PointsBox", true);
 		self.RankBorder:Show();		
 	elseif style == ARTIFACT_POWER_STYLE_CAN_UPGRADE then
 		self.Rank:SetText(self.currentRank);
-		self.Rank:SetTextColor(0.1, 1, 0.1);
-		self.RankBorder:SetAtlas("Artifacts-PointsBoxGreen", true);
+		rankTextColor:SetRGB(0.1, 1, 0.1);
+		if artifactDisabled then
+			self.RankBorder:SetAtlas("Artifacts-PointsBox", true);
+		else
+			self.RankBorder:SetAtlas("Artifacts-PointsBoxGreen", true);
+		end
 		self.RankBorder:Show();
 	elseif style == ARTIFACT_POWER_STYLE_PURCHASED or style == ARTIFACT_POWER_STYLE_PURCHASED_READ_ONLY then
 		self.Rank:SetText(self.currentRank);
-		self.Rank:SetTextColor(1, 0.82, 0);
+		rankTextColor:SetRGB(1, 0.82, 0);
 		self.RankBorder:SetAtlas("Artifacts-PointsBox", true);
 		self.RankBorder:Show();
 	elseif style == ARTIFACT_POWER_STYLE_UNPURCHASED then
-		self.Icon:SetVertexColor(.6, .6, .6);
 		self.IconBorder:SetVertexColor(.9, .9, .9);
+		iconVertexColor:SetRGB(.6, .6, .6);
 
 		self.Rank:SetText(self.currentRank);
-		self.Rank:SetTextColor(1, 0.82, 0);
+		rankTextColor:SetRGB(1, 0.82, 0);
 		self.RankBorder:SetAtlas("Artifacts-PointsBox", true);
 		self.RankBorder:Show();
 	elseif style == ARTIFACT_POWER_STYLE_UNPURCHASED_READ_ONLY or style == ARTIFACT_POWER_STYLE_UNPURCHASED_LOCKED then
 		if self.isGoldMedal or self.isStart then
-			self.Icon:SetVertexColor(.4, .4, .4);
+			iconVertexColor:SetRGB(.4, .4, .4);
 			self.IconBorder:SetVertexColor(.7, .7, .7);
 			self.IconDesaturated:SetVertexColor(.4, .4, .4);
 			self.RankBorder:Hide();
 			self.Rank:SetText(nil);
-			self.IconBorderDesaturated:SetAlpha(.5);
-			self.Icon:SetAlpha(.5);
+			iconBorderDesaturatedAlpha = 0.5;
+			iconAlpha = .5;
 		else
-			self.Icon:SetVertexColor(.15, .15, .15);
+			iconVertexColor:SetRGB(.15, .15, .15);
             self.IconBorder:SetVertexColor(.4, .4, .4);
             self.IconDesaturated:SetVertexColor(.15, .15, .15);
             self.RankBorder:Hide();
             self.Rank:SetText(nil);
-			self.Icon:SetAlpha(.2);
+			iconAlpha = .2;
 		end
 	end
+
+	if artifactDisabled then
+		rankTextColor = DISABLED_FONT_COLOR;
+		iconAlpha = 0;
+		if style ~= ARTIFACT_POWER_STYLE_RUNE then
+			iconBorderDesaturatedAlpha = 1;
+		end
+		self.IconBorder:Hide();
+	else
+		self.IconBorder:Show();
+	end
+
+	self.Rank:SetTextColor(rankTextColor:GetRGB());
+	self.Icon:SetVertexColor(iconVertexColor:GetRGB());
+	self.Icon:SetAlpha(iconAlpha);
+	self.IconBorder:SetAlpha(iconBorderAlpha);
+	self.IconBorderDesaturated:SetAlpha(iconBorderDesaturatedAlpha);
 end
 
 function ArtifactPowerButtonMixin:ApplyTemporaryRelicType(relicType, relicLink)
@@ -485,13 +506,6 @@ function ArtifactPowerButtonMixin:UpdateIcon()
 	end
 end
 
-function ArtifactPowerButtonMixin:CalculateDistanceTo(otherPowerButton)
-	local cx, cy = self:GetCenter();
-	local ocx, ocy = otherPowerButton:GetCenter();
-	local dx, dy = ocx - cx, ocy - cy;
-	return math.sqrt(dx * dx + dy * dy);
-end
-
 function ArtifactPowerButtonMixin:SetupButton(powerID, anchorRegion, textureKit)
 	local powerInfo = C_ArtifactUI.GetPowerInfo(powerID);
 
@@ -555,7 +569,7 @@ function ArtifactPowerButtonMixin:SetupButton(powerID, anchorRegion, textureKit)
 end
 
 function ArtifactPowerButtonMixin:ShouldGlow(totalPurchasedRanks, isAtForge)
-	if not isAtForge or not self.prereqsMet then
+	if not isAtForge or not self.prereqsMet or C_ArtifactUI.IsArtifactDisabled() then
 		return false;
 	end
 	
@@ -569,7 +583,7 @@ end
 function ArtifactPowerButtonMixin:EvaluateStyle()
 	if not ArtifactUI_HasPurchasedAnything() and not self.prereqsMet then
 		self:SetStyle(ARTIFACT_POWER_STYLE_RUNE);	
-	elseif C_ArtifactUI.IsAtForge() and C_ArtifactUI.IsViewedArtifactEquipped() then
+	elseif (C_ArtifactUI.IsAtForge() and C_ArtifactUI.IsViewedArtifactEquipped()) or C_ArtifactUI.IsArtifactDisabled() then
 		if self.isMaxRank then
 			self:SetStyle(ARTIFACT_POWER_STYLE_MAXED);			
 		elseif self.prereqsMet and C_ArtifactUI.GetPointsRemaining() >= self.cost then

@@ -49,9 +49,10 @@ OBJECTIVE_TRACKER_UPDATE_MODULE_WORLD_QUEST			= 0x02000;
 OBJECTIVE_TRACKER_UPDATE_MODULE_SCENARIO			= 0x04000;
 OBJECTIVE_TRACKER_UPDATE_MODULE_ACHIEVEMENT			= 0x08000;
 OBJECTIVE_TRACKER_UPDATE_SCENARIO_SPELLS			= 0x10000;
+OBJECTIVE_TRACKER_UPDATE_MODULE_UI_WIDGETS			= 0x20000;
 -- special updates
 OBJECTIVE_TRACKER_UPDATE_STATIC						= 0x0000;
-OBJECTIVE_TRACKER_UPDATE_ALL						= 0xFFFF;
+OBJECTIVE_TRACKER_UPDATE_ALL						= 0xFFFFFFFF;
 
 OBJECTIVE_TRACKER_UPDATE_REASON = OBJECTIVE_TRACKER_UPDATE_ALL;		-- default
 OBJECTIVE_TRACKER_UPDATE_ID = 0;
@@ -286,7 +287,7 @@ OBJECTIVE_DASH_STYLE_SHOW = 1;
 OBJECTIVE_DASH_STYLE_HIDE = 2;
 OBJECTIVE_DASH_STYLE_HIDE_AND_COLLAPSE = 3;
 
-function DEFAULT_OBJECTIVE_TRACKER_MODULE:AddObjective(block, objectiveKey, text, lineType, useFullHeight, dashStyle, colorStyle, adjustForNoText)
+function DEFAULT_OBJECTIVE_TRACKER_MODULE:AddObjective(block, objectiveKey, text, lineType, useFullHeight, dashStyle, colorStyle, adjustForNoText, overrideHeight)
 	local line = self:GetLine(block, objectiveKey, lineType);
 	-- width
 	if ( block.lineWidth ~= line.width ) then
@@ -316,7 +317,8 @@ function DEFAULT_OBJECTIVE_TRACKER_MODULE:AddObjective(block, objectiveKey, text
 	end
 
 	-- set the text
-	local height = self:SetStringText(line.Text, text, useFullHeight, colorStyle, block.isHighlighted);
+	local textHeight = self:SetStringText(line.Text, text, useFullHeight, colorStyle, block.isHighlighted);
+	local height = overrideHeight or textHeight;
 	line:SetHeight(height);
 
 	local yOffset;
@@ -341,13 +343,14 @@ function DEFAULT_OBJECTIVE_TRACKER_MODULE:AddObjective(block, objectiveKey, text
 end
 
 function DEFAULT_OBJECTIVE_TRACKER_MODULE:SetStringText(fontString, text, useFullHeight, colorStyle, useHighlight)
-	fontString:SetHeight(0);
-	fontString:SetText(text);
-	local stringHeight = fontString:GetHeight();
-	if ( stringHeight > OBJECTIVE_TRACKER_DOUBLE_LINE_HEIGHT and not useFullHeight ) then
-		fontString:SetHeight(OBJECTIVE_TRACKER_DOUBLE_LINE_HEIGHT);
-		stringHeight = OBJECTIVE_TRACKER_DOUBLE_LINE_HEIGHT;
+	if useFullHeight then
+		fontString:SetMaxLines(0);
+	else
+		fontString:SetMaxLines(2);
 	end
+	fontString:SetText(text);
+
+	local stringHeight = fontString:GetHeight();
 	colorStyle = colorStyle or OBJECTIVE_TRACKER_COLOR["Normal"];
 	if ( useHighlight and colorStyle.reverse ) then
 		colorStyle = colorStyle.reverse;
@@ -523,6 +526,7 @@ end
 -- *****************************************************************************************************
 
 function ObjectiveTrackerBlockHeader_OnLoad(self)
+
 	self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
 end
 
@@ -567,7 +571,7 @@ function ObjectiveTrackerTimerBar_OnUpdate(self, elapsed)
 			return;
 		end
 	end
-	self.Label:SetText(GetTimeStringFromSeconds(timeRemaining, nil, true));
+	self.Label:SetText(SecondsToClock(timeRemaining));
 	self.Label:SetTextColor(ObjectiveTrackerTimerBar_GetTextColor(self.duration, self.duration - timeRemaining));
 end
 
@@ -628,6 +632,7 @@ end
 
 function ObjectiveTracker_Initialize(self)
 	self.MODULES = {	SCENARIO_CONTENT_TRACKER_MODULE,
+						UI_WIDGET_TRACKER_MODULE,
 						AUTO_QUEST_POPUP_TRACKER_MODULE,
 						BONUS_OBJECTIVE_TRACKER_MODULE,
 						WORLD_QUEST_TRACKER_MODULE,
@@ -635,6 +640,7 @@ function ObjectiveTracker_Initialize(self)
 						ACHIEVEMENT_TRACKER_MODULE,
 	};
 	self.MODULES_UI_ORDER = {	SCENARIO_CONTENT_TRACKER_MODULE,
+								UI_WIDGET_TRACKER_MODULE,
 								AUTO_QUEST_POPUP_TRACKER_MODULE,
 								QUEST_TRACKER_MODULE,
 								BONUS_OBJECTIVE_TRACKER_MODULE,
@@ -651,6 +657,7 @@ function ObjectiveTracker_Initialize(self)
 	self:RegisterEvent("SCENARIO_UPDATE");
 	self:RegisterEvent("SCENARIO_CRITERIA_UPDATE");
 	self:RegisterEvent("SCENARIO_SPELL_UPDATE");
+	self:RegisterEvent("SCENARIO_BONUS_VISIBILITY_UPDATE");
 	self:RegisterEvent("TRACKED_ACHIEVEMENT_UPDATE");
 	self:RegisterEvent("ZONE_CHANGED_NEW_AREA");
 	self:RegisterEvent("ZONE_CHANGED");
@@ -658,7 +665,16 @@ function ObjectiveTracker_Initialize(self)
 	self:RegisterEvent("VARIABLES_LOADED");
 	self:RegisterEvent("QUEST_TURNED_IN");
 	self:RegisterEvent("PLAYER_MONEY");
+	self:RegisterEvent("CVAR_UPDATE");
+	self:RegisterEvent("WAYPOINT_UPDATE");
 	self.watchMoneyReasons = 0;
+
+	local function OnFocusedQuestChanged(event, ...)
+		ObjectiveTracker_Update(OBJECTIVE_TRACKER_UPDATE_MODULE_QUEST);
+	end
+
+	WorldMapFrame:RegisterCallback("SetFocusedQuestID", OnFocusedQuestChanged);
+	WorldMapFrame:RegisterCallback("ClearFocusedQuestID", OnFocusedQuestChanged);
 
 	self.initialized = true;
 end
@@ -679,7 +695,7 @@ function ObjectiveTracker_OnEvent(self, event, ...)
 				end
 			else
 				if ( AUTO_QUEST_WATCH == "1" and GetNumQuestWatches() < MAX_WATCHABLE_QUESTS ) then
-					AddQuestWatch(questLogIndex);
+					AddQuestWatchForQuestID(questID);
 					QuestSuperTracking_OnQuestTracked(questID);
 				end
 			end
@@ -712,18 +728,15 @@ function ObjectiveTracker_OnEvent(self, event, ...)
 		ObjectiveTracker_Update(OBJECTIVE_TRACKER_UPDATE_SCENARIO);
 	elseif ( event == "SCENARIO_SPELL_UPDATE" ) then
 		ObjectiveTracker_Update(OBJECTIVE_TRACKER_UPDATE_SCENARIO_SPELLS);
+	elseif ( event == "SCENARIO_BONUS_VISIBILITY_UPDATE") then
+		ObjectiveTracker_Update(OBJECTIVE_TRACKER_UPDATE_MODULE_BONUS_OBJECTIVE);
 	elseif ( event == "SUPER_TRACKED_QUEST_CHANGED" ) then
-		local questID = ...;
-		ObjectiveTracker_Update(OBJECTIVE_TRACKER_UPDATE_SUPER_TRACK_CHANGED, questID);
-		QuestPOI_SelectButtonByQuestID(self.BlocksFrame, questID);
+		ObjectiveTracker_UpdateSuperTrackedQuest(self);
 	elseif ( event == "ZONE_CHANGED" ) then
-		local inMicroDungeon = IsPlayerInMicroDungeon();
-		if ( inMicroDungeon ~= self.inMicroDungeon ) then
-			if ( not WorldMapFrame:IsShown() and GetCVarBool("questPOI") ) then
-				SetMapToCurrentZone();			-- update the zone to get the right POI numbers for the tracker
-			end
+		local lastMapID = C_Map.GetBestMapForUnit("player");
+		if ( lastMapID ~= self.lastMapID ) then
 			SortQuestWatches();
-			self.inMicroDungeon = inMicroDungeon;
+			self.lastMapID = lastMapID;
 		end
 	elseif ( event == "QUEST_AUTOCOMPLETE" ) then
 		local questId = ...;
@@ -736,9 +749,6 @@ function ObjectiveTracker_OnEvent(self, event, ...)
 			ObjectiveTracker_Update(OBJECTIVE_TRACKER_UPDATE_SCENARIO);
 		end
 	elseif ( event == "ZONE_CHANGED_NEW_AREA" ) then
-		if ( not WorldMapFrame:IsShown() and GetCVarBool("questPOI") ) then
-			SetMapToCurrentZone();			-- update the zone to get the right POI numbers for the tracker
-		end
 		SortQuestWatches();
 	elseif ( event == "QUEST_TURNED_IN" ) then
 		local questID, xp, money = ...;
@@ -752,9 +762,20 @@ function ObjectiveTracker_OnEvent(self, event, ...)
 			ObjectiveTracker_Initialize(self);
 		end
 		ObjectiveTracker_Update();
-		QuestSuperTracking_ChooseClosestQuest();
-		self.inMicroDungeon = IsPlayerInMicroDungeon();
+
+		if not QuestSuperTracking_IsSuperTrackedQuestValid() then
+			QuestSuperTracking_ChooseClosestQuest();
+		end
+
+		self.lastMapID = C_Map.GetBestMapForUnit("player");
+	elseif ( event == "CVAR_UPDATE" ) then
+		local arg1 =...;
+		if ( arg1 == "QUEST_POI" ) then
+			ObjectiveTracker_Update(OBJECTIVE_TRACKER_UPDATE_MODULE_QUEST);
+		end
 	elseif ( event == "VARIABLES_LOADED" ) then
+		ObjectiveTracker_Update();
+	elseif ( event == "WAYPOINT_UPDATE" ) then
 		ObjectiveTracker_Update();
 	end
 end
@@ -779,7 +800,7 @@ end
 -- *****************************************************************************************************
 
 function ObjectiveTracker_MinimizeButton_OnClick(self)
-	PlaySound("igMainMenuOptionCheckBoxOn");
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 	if ( ObjectiveTrackerFrame.collapsed ) then
 		ObjectiveTracker_Expand();
 	else
@@ -812,7 +833,7 @@ function ObjectiveTracker_ToggleDropDown(frame, handlerFunc)
 	dropDown.activeFrame = frame;
 	dropDown.initialize = handlerFunc;
 	ToggleDropDownMenu(1, nil, dropDown, "cursor", 3, -3);
-	PlaySound("igMainMenuOptionCheckBoxOn");
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 end
 
 -- *****************************************************************************************************
@@ -1025,6 +1046,12 @@ function DEFAULT_OBJECTIVE_TRACKER_MODULE:StaticReanchor()
 	self:EndLayout(true);
 end
 
+function ObjectiveTracker_UpdateSuperTrackedQuest(self)
+	local questID = GetSuperTrackedQuestID();
+	ObjectiveTracker_Update(OBJECTIVE_TRACKER_UPDATE_SUPER_TRACK_CHANGED, questID);
+	QuestPOI_SelectButtonByQuestID(self.BlocksFrame, questID);
+end
+
 function ObjectiveTracker_Update(reason, id)
 	local tracker = ObjectiveTrackerFrame;
 	if tracker.isUpdating then
@@ -1084,6 +1111,8 @@ function ObjectiveTracker_Update(reason, id)
 		end
 	end
 	ObjectiveTracker_ReorderModules();
+
+	ObjectiveTracker_UpdatePOIs();
 
 	-- hide unused headers
 	for i = 1, #tracker.MODULES do
@@ -1149,18 +1178,51 @@ function ObjectiveTracker_ReorderModules()
 	end
 end
 
-function ObjectiveTracker_Util_ShouldAddDropdownEntryForQuestGroupSearch(questID)
-	return QuestUtils_CanUseAutoGroupFinder(questID, true) and LFGListUtil_CanSearchForGroup();
+function ObjectiveTracker_UpdatePOIs()
+	if not ObjectiveTrackerFrame.MODULES then
+		return;
+	end
+
+	local blocksFrame = ObjectiveTrackerFrame.BlocksFrame;
+	QuestPOI_ResetUsage(blocksFrame);
+
+	local showPOIs = GetCVarBool("questPOI");
+	if ( not showPOIs ) then
+		QuestPOI_HideUnusedButtons(blocksFrame);
+		return;
+	end
+
+	for i, module in ipairs(ObjectiveTrackerFrame.MODULES) do
+		if module.UpdatePOIs then
+			module:UpdatePOIs();
+		end
+	end
+
+	QuestPOI_SelectButtonByQuestID(blocksFrame, GetSuperTrackedQuestID());
+	QuestPOI_HideUnusedButtons(blocksFrame);
 end
 
-function ObjectiveTracker_Util_AddDropdownEntryForQuestGroupSearch(questID)
-	if ObjectiveTracker_Util_ShouldAddDropdownEntryForQuestGroupSearch(questID) then
-		local info = UIDropDownMenu_CreateInfo();
-		info.notCheckable = true;
-		info.text = OBJECTIVES_FIND_GROUP;
-		info.func = function()
-			LFGListUtil_FindQuestGroup(questID);
-		end
-		UIDropDownMenu_AddButton(info, UIDROPDOWN_MENU_LEVEL);
+QuestHeaderMixin = {};
+
+function QuestHeaderMixin:OnShow()
+	self:RegisterEvent("QUEST_SESSION_JOINED");
+	self:RegisterEvent("QUEST_SESSION_LEFT");
+	self:UpdateHeader();
+end
+
+function QuestHeaderMixin:OnHide()
+	self:UnregisterEvent("QUEST_SESSION_JOINED");
+	self:UnregisterEvent("QUEST_SESSION_LEFT");
+end
+
+function QuestHeaderMixin:OnEvent()
+	self:UpdateHeader();
+end
+
+function QuestHeaderMixin:UpdateHeader()
+	if C_QuestSession.HasJoined() then
+		self.Text:SetText(TRACKER_HEADER_PARTY_QUESTS);
+	else
+		self.Text:SetText(TRACKER_HEADER_QUESTS);
 	end
 end

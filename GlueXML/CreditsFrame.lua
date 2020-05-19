@@ -16,8 +16,11 @@ end
 
 function CreditsFrame_Update(self)
 	PlayGlueMusic(GLUE_CREDITS_SOUND_KITS[CreditsFrame.creditsType]);
-	SetExpansionLogo(CreditsLogo, CreditsFrame.creditsType);
-
+	local expansionInfo = GetExpansionDisplayInfo(CreditsFrame.creditsType);
+	if expansionInfo then
+		CreditsLogo:SetTexture(expansionInfo.logo);
+	end
+	
 	CreditsFrame_SetSpeed(CREDITS_SCROLL_RATE_PLAY);
 	CreditsScrollFrame:SetVerticalScroll(0);
 	CreditsScrollFrame.scroll = 0;
@@ -64,7 +67,7 @@ function CreditsFrame_Update(self)
 end
 
 function CreditsFrame_Switch(self, buttonID)
-	PlaySound("igMainMenuOptionCheckBoxOff");
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF);
 	CreditsFrame.creditsType = buttonID;
 	CreditsFrame_Update(CreditsFrame);
 end
@@ -207,7 +210,7 @@ function CreditsFrame_UpdateArt(self, index, elapsed)
 end
 
 function CreditsFrame_SetSpeed(speed)
-	PlaySound("igMainMenuOptionCheckBoxOff");
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF);
 	CREDITS_SCROLL_RATE = speed;
 	CreditsFrame_UpdateSpeedButtons();
 end

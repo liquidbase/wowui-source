@@ -44,9 +44,7 @@ function ActionBarController_OnLoad(self)
 	CURRENT_ACTION_BAR_STATE = LE_ACTIONBAR_STATE_MAIN;
 	
 	-- hack to fix crasy animation on bars when action bar is also animating
-	MainMenuExpBar:SetDeferAnimationCallback(ActionBarBusy);
-	HonorWatchBar.StatusBar:SetDeferAnimationCallback(ActionBarBusy);
-	ArtifactWatchBar.StatusBar:SetDeferAnimationCallback(ActionBarBusy);
+	StatusTrackingBarManager:SetBarAnimation(ActionBarBusy);
 end
 
 
@@ -112,13 +110,7 @@ function ActionBarController_UpdateAll(force)
 	-- If we have a skinned vehicle bar or skinned override bar, display the OverrideActionBar
 	if ((HasVehicleActionBar() and UnitVehicleSkin("player") and UnitVehicleSkin("player") ~= "")
 	or (HasOverrideActionBar() and GetOverrideBarSkin() and GetOverrideBarSkin() ~= 0)) then
-		-- For now, a vehicle has precedence over override bars (hopefully designers make it so these never conflict)
-		if (HasVehicleActionBar()) then
-			OverrideActionBar_Setup(UnitVehicleSkin("player"), GetVehicleBarIndex());
-		else
-			OverrideActionBar_Setup(GetOverrideBarSkin(), GetOverrideBarIndex());
-		end
-		
+		OverrideActionBar_UpdateSkin();
 		CURRENT_ACTION_BAR_STATE = LE_ACTIONBAR_STATE_OVERRIDE;
 	-- If we have a non-skinned override bar of some sort, use the MainMenuBarArtFrame
 	elseif ( HasBonusActionBar() or HasOverrideActionBar() or HasVehicleActionBar() or HasTempShapeshiftActionBar() or C_PetBattles.IsInBattle() ) then
@@ -182,12 +174,22 @@ function ValidateActionBarTransition()
 			BeginActionBarTransition(OverrideActionBar, nil);
 		elseif not MainMenuBar:IsShown() then
 			BeginActionBarTransition(MainMenuBar, 1);
-			BeginActionBarTransition(MultiBarRight, 1);
+			if ( SHOW_MULTI_ACTIONBAR_3 ) then
+				BeginActionBarTransition(MultiBarRight, 1);
+			end
+			if ( SHOW_MULTI_ACTIONBAR_4 ) then
+				BeginActionBarTransition(MultiBarLeft, 1);
+			end
 		end
 	elseif CURRENT_ACTION_BAR_STATE == LE_ACTIONBAR_STATE_OVERRIDE then
 		if MainMenuBar:IsShown() then
 			BeginActionBarTransition(MainMenuBar, nil);
-			BeginActionBarTransition(MultiBarRight, nil);
+			if ( SHOW_MULTI_ACTIONBAR_3 ) then
+				BeginActionBarTransition(MultiBarRight, nil);
+			end
+			if ( SHOW_MULTI_ACTIONBAR_4 ) then
+				BeginActionBarTransition(MultiBarLeft, nil);
+			end
 		elseif not OverrideActionBar:IsShown() then
 			BeginActionBarTransition(OverrideActionBar, 1);
 		end

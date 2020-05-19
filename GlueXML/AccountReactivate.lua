@@ -1,13 +1,17 @@
 function AccountReactivate_ReactivateNow()
-	PlaySound("gsTitleOptionOK");
-	
-	-- open web page
-	LoadURLIndex(22);
+	local info = C_StoreSecure.GetProductGroupInfo(WOW_GAME_TIME_CATEGORY_ID);
+	if info then
+		StoreFrame_SelectGameTimeProduct();
+		ToggleStoreUI();
+	else
+		PlaySound(SOUNDKIT.GS_TITLE_OPTION_OK);
+		LoadURLIndex(22);
+	end
 end
 
 function AccountReactivate_Cancel()
 	SubscriptionRequestDialog:Hide();
-	PlaySound("gsTitleOptionExit");
+	PlaySound(SOUNDKIT.GS_TITLE_OPTION_EXIT);
 end
 
 function AccountReactivate_CloseDialogs(preserveSubscription)
@@ -35,6 +39,7 @@ function ReactivateAccountDialog_OnLoad(self)
 	self:RegisterEvent("TOKEN_REDEEM_RESULT");
 	self:RegisterEvent("TOKEN_BUY_RESULT");
 	self:RegisterEvent("TOKEN_MARKET_PRICE_UPDATED");
+	self:RegisterEvent("TRIAL_STATUS_UPDATE");
 end
 
 function GetTimeLeftMinuteString(minutes)
@@ -172,6 +177,10 @@ function ReactivateAccountDialog_OnEvent(self, event, ...)
 			end
 			CharacterSelect_UpdateButtonState();
 		end
+	elseif (event == "TRIAL_STATUS_UPDATE") then
+		if (not IsVeteranTrialAccount()) then
+			AccountReactivate_CloseDialogs();
+		end
 	end
 end
 
@@ -189,6 +198,8 @@ function ReactivateAccountDialog_CanOpen()
 	elseif (CharacterSelect.undeleting) then
 		return false;
 	elseif (not CharacterSelect_HasVeteranEligibilityInfo()) then
+		return false;
+	elseif (GlueDialog:IsShown()) then
 		return false;
 	end
 
@@ -271,7 +282,7 @@ function SubscriptionRequestDialog_Open()
 end
 
 function ReactivateAccountDialog_OnReactivate(self)
-	PlaySound("gsTitleOptionOK");
+	PlaySound(SOUNDKIT.GS_TITLE_OPTION_OK);
 	if (self:GetParent().redeem) then
 		C_WowTokenSecure.RedeemToken(LE_TOKEN_REDEEM_TYPE_GAME_TIME);
 	else

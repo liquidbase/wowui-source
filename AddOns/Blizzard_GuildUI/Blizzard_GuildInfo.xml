@@ -11,9 +11,9 @@
 		<Scripts>
 			<OnClick>
 				if ( self:GetChecked() ) then
-					PlaySound("igMainMenuOptionCheckBoxOn");
+					PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 				else
-					PlaySound("igMainMenuOptionCheckBoxOff");
+					PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF);
 				end
 				SetGuildRecruitmentSettings(self:GetID(), self:GetChecked());
 				GuildRecruitmentListGuildButton_Update();
@@ -308,7 +308,7 @@
 					<OnClick>
 						PanelTemplates_Tab_OnClick(self, GuildInfoFrame);
 						GuildInfoFrame_Update();
-						PlaySound("igMainMenuOptionCheckBoxOn");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -324,7 +324,7 @@
 					<OnClick>
 						PanelTemplates_Tab_OnClick(self, GuildInfoFrame);
 						GuildInfoFrame_Update();
-						PlaySound("igMainMenuOptionCheckBoxOn");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -340,7 +340,7 @@
 					<OnClick>
 						PanelTemplates_Tab_OnClick(self, GuildInfoFrame);
 						GuildInfoFrame_Update();
-						PlaySound("igMainMenuOptionCheckBoxOn");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -611,10 +611,6 @@
 							StaticPopup_Show("ADD_GUILDMEMBER");
 						end
 					</OnClick>
-					<OnEnter>
-						GameTooltip_AddNewbieTip(self, ADDMEMBER, 1.0, 1.0, 1.0, NEWBIE_TOOLTIP_ADDMEMBER, 1);
-					</OnEnter>
-					<OnLeave function="GameTooltip_Hide"/>
 				</Scripts>
 			</Button>
 			<Button name="GuildControlButton" inherits="MagicButtonTemplate" text="GUILDCONTROL">
@@ -627,13 +623,13 @@
 						if ( not GuildControlUI ) then
 							UIParentLoadAddOn("Blizzard_GuildControlUI");
 						end
+						
+						local wasShown = GuildControlUI:IsShown();
 						CloseWindows(nil, GuildFrame);
-						GuildFramePopup_Toggle(GuildControlUI);
+						if not wasShown then
+							ShowUIPanel(GuildControlUI);
+						end
 					</OnClick>
-					<OnEnter>
-						GameTooltip_AddNewbieTip(self, GUILDCONTROL, 1.0, 1.0, 1.0, NEWBIE_TOOLTIP_GUILDCONTROL, 1);
-					</OnEnter>
-					<OnLeave function="GameTooltip_Hide"/>
 				</Scripts>
 			</Button>
 			<Button name="GuildViewLogButton" inherits="MagicButtonTemplate" text="GUILD_VIEW_LOG">
@@ -1124,7 +1120,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						PlaySound("igMainMenuOptionCheckBoxOn");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 						local name = GetGuildApplicantInfo(GetGuildApplicantSelection());
 						if ( name ) then
 							GuildInvite(name);
@@ -1139,7 +1135,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						PlaySound("igMainMenuOptionCheckBoxOn");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 						DeclineGuildApplicant(GetGuildApplicantSelection());
 					</OnClick>
 				</Scripts>
@@ -1152,7 +1148,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						PlaySound("igMainMenuOptionCheckBoxOn");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 						local name = GetGuildApplicantInfo(GetGuildApplicantSelection());
 						if ( name ) then
 							ChatFrame_SendTell(name);
@@ -1287,7 +1283,7 @@
 		<Scripts>
 			<OnLoad function="GuildTextEditFrame_OnLoad"/>
 			<OnHide>
-				PlaySound("igMainMenuOptionCheckBoxOff");
+				PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF);
 			</OnHide>
 		</Scripts>
 	</Frame>
@@ -1383,10 +1379,10 @@
 			<OnShow>
 				GuildViewLogButton:LockHighlight();
 				QueryGuildEventLog();
-				PlaySound("igMainMenuOptionCheckBoxOn");
+				PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 			</OnShow>
 			<OnHide>
-				PlaySound("igMainMenuOptionCheckBoxOff");
+				PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF);
 				GuildViewLogButton:UnlockHighlight();
 			</OnHide>
 		</Scripts>

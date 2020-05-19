@@ -64,7 +64,7 @@ function ArtifactAppearancesMixin:ProcessAppearanceDeltas(lastUnlockedAppearance
 	if lastUnlockedAppearances then
 		for appearanceID in pairs(currentUnlockedAppearances) do
 			if not lastUnlockedAppearances[appearanceID] then
-				PlaySound("UI_70_Artifact_Forge_Appearance_ApperanceUnlock");
+				PlaySound(SOUNDKIT.UI_70_ARTIFACT_FORGE_APPEARANCE_APPEARANCE_UNLOCK);
 				break;
 			end
 		end
@@ -76,7 +76,7 @@ function ArtifactAppearancesMixin:SetupAppearanceSet(setIndex, prevAppearanceSet
 	if setID and numAppearanceSlots > 0 then
 		local appearanceSet;
 		for appearanceIndex = 1, numAppearanceSlots do
-			local appearanceID, appearanceName, displayIndex, appearanceUnlocked, unlockConditionText, uiCameraID, altHandUICameraID, swatchR, swatchG, swatchB, modelAlpha, modelDesaturation = C_ArtifactUI.GetAppearanceInfo(setIndex, appearanceIndex);
+			local appearanceID, appearanceName, displayIndex, appearanceUnlocked, unlockConditionText, uiCameraID, altHandUICameraID, swatchR, swatchG, swatchB, modelAlpha, modelDesaturation, appearanceObtainable = C_ArtifactUI.GetAppearanceInfo(setIndex, appearanceIndex);
 
 			if appearanceID then
 				if not appearanceSet then
@@ -95,7 +95,7 @@ function ArtifactAppearancesMixin:SetupAppearanceSet(setIndex, prevAppearanceSet
 					appearanceSet:Show();
 				end
 
-				self:AddAppearanceSlot(appearanceSet, appearanceID, swatchR, swatchG, swatchB, appearanceUnlocked, unlockConditionText);
+				self:AddAppearanceSlot(appearanceSet, appearanceID, swatchR, swatchG, swatchB, appearanceUnlocked, unlockConditionText, appearanceObtainable);
 			end
 		end
 
@@ -110,7 +110,7 @@ do
 	local STARTING_Y_OFFSET = 0;
 	local SLOT_PADDING = 12;
 
-	function ArtifactAppearancesMixin:AddAppearanceSlot(appearanceSet, appearanceID, swatchR, swatchG, swatchB, appearanceUnlocked, unlockConditionText)
+	function ArtifactAppearancesMixin:AddAppearanceSlot(appearanceSet, appearanceID, swatchR, swatchG, swatchB, appearanceUnlocked, unlockConditionText, appearanceObtainable)
 		appearanceSet.numAppearanceSlots = appearanceSet.numAppearanceSlots + 1;
 
 		local appearanceSlot = self.appearanceSlotPool:Acquire();
@@ -123,7 +123,9 @@ do
 
 		appearanceSlot.SwatchTexture:SetVertexColor(swatchR, swatchG, swatchB, appearanceUnlocked and 1.0 or .5);
 
+		appearanceSlot.unobtainable = not appearanceObtainable and not appearanceUnlocked;
 		appearanceSlot.LockedIcon:SetShown(not appearanceUnlocked);
+		appearanceSlot.UnobtainableCover:SetShown(appearanceSlot.unobtainable);
 		appearanceSlot.Border:SetShown(appearanceUnlocked);
 		appearanceSlot.Selected:SetShown(isActive);
 		appearanceSlot.Selected:SetAlpha(appearanceUnlocked and 1.0 or .3);
@@ -135,6 +137,7 @@ do
 		appearanceSlot.isActive = isActive;
 
 		appearanceSlot:Show();
+		appearanceSlot:SetEnabled(not appearanceSlot.unobtainable);
 
 		if appearanceUnlocked then
 			self.currentUnlockedAppearances[appearanceID] = true;
@@ -156,9 +159,9 @@ function ArtifactAppearanceSlotMixin:OnClick(button)
 				local currentAppearanceSetID = C_ArtifactUI.GetAppearanceInfoByID(activeAppearanceID);
 				local newAppearanceSetID = C_ArtifactUI.GetAppearanceInfoByID(self.appearanceID);
 				if currentAppearanceSetID == newAppearanceSetID then
-					PlaySound("UI_70_Artifact_Forge_Appearance_ColorSelect", nil, false);
+					PlaySound(SOUNDKIT.UI_70_ARTIFACT_FORGE_APPEARANCE_COLOR_SELECT, nil, SOUNDKIT_ALLOW_DUPLICATES);
 				else
-					PlaySound("UI_70_Artifact_Forge_Appearance_ApperanceChange", nil, false);
+					PlaySound(SOUNDKIT.UI_70_ARTIFACT_FORGE_APPEARANCE_APPEARANCE_CHANGE, nil, SOUNDKIT_ALLOW_DUPLICATES);
 				end
 				
 				self:GetParent():GetParent():OnAppearanceChanging();
@@ -172,13 +175,17 @@ function ArtifactAppearanceSlotMixin:OnClick(button)
 				C_ArtifactUI.SetPreviewAppearance(self.appearanceID);
 				self:GetParent():Refresh();
 			end
-			PlaySound("UI_70_Artifact_Forge_Appearance_Locked");
+			PlaySound(SOUNDKIT.UI_70_ARTIFACT_FORGE_APPEARANCE_LOCKED);
 		end
 	end
 end
 
 function ArtifactAppearanceSlotMixin:OnEnter()
-	if self.unlockConditionText then
+	if self.unobtainable then
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0);
+		GameTooltip:SetText(NO_LONGER_AVAILABLE, nil, nil, nil, nil, true);
+		GameTooltip:Show();
+	elseif self.unlockConditionText then
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0);
 		GameTooltip:SetText(self.unlockConditionText, nil, nil, nil, nil, true);
 		GameTooltip:Show();

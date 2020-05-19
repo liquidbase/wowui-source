@@ -52,20 +52,20 @@
 						</Anchor>
 					</Anchors>
 				</Texture>
-				
+
 				<Texture name="$parentCategoryLeft" file="Interface\Buttons\CollapsibleHeader" parentKey="categoryLeft">
 					<Size x="76" y="16"/>
 					<Anchors>
 						<Anchor point="LEFT" x="0" y="0"/>
 					</Anchors>
-					<TexCoords left="0.17578125" right="0.47265625" top="0.29687500" bottom="0.54687500"/>	
+					<TexCoords left="0.17578125" right="0.47265625" top="0.29687500" bottom="0.54687500"/>
 				</Texture>
 				<Texture name="$parentCategoryRight" file="Interface\Buttons\CollapsibleHeader" parentKey="categoryRight">
 					<Size x="76" y="16"/>
 					<Anchors>
 						<Anchor point="RIGHT" x="0" y="0"/>
 					</Anchors>
-					<TexCoords left="0.17578125" right="0.47265625" top="0.01562500" bottom="0.26562500"/>	
+					<TexCoords left="0.17578125" right="0.47265625" top="0.01562500" bottom="0.26562500"/>
 				</Texture>
 				<Texture name="$parentCategoryMiddle" file="Interface\Buttons\CollapsibleHeader" parentKey="categoryMiddle">
 					<Size x="0" y="16"/>
@@ -73,9 +73,9 @@
 						<Anchor point="LEFT" relativeTo="$parentCategoryLeft" relativePoint="RIGHT" x="-20" y="0"/>
 						<Anchor point="RIGHT" relativeTo="$parentCategoryRight" relativePoint="LEFT" x="20" y="0"/>
 					</Anchors>
-					<TexCoords left="0.48046875" right="0.98046875" top="0.01562500" bottom="0.26562500"/>	
+					<TexCoords left="0.48046875" right="0.98046875" top="0.01562500" bottom="0.26562500"/>
 				</Texture>
-				
+
 			</Layer>
 			<Layer level="ARTWORK">
 				<Texture name="$parentExpandIcon" file="Interface\Buttons\UI-PlusMinus-Buttons">
@@ -146,21 +146,13 @@
 	</Button>
 	<Frame name="TokenFrame" setAllPoints="true" parent="CharacterFrame" useParentLevel="true" enableMouse="true" hidden="true" id="3">
         <Frames>
-			<ScrollFrame name="$parentContainer" inherits="HybridScrollFrameTemplate">
+			<ScrollFrame name="$parentContainer" parentKey="Container" inherits="HybridScrollFrameTemplate">
 				<!-- See TokenFrame_OnShow for anchors -->
 				<Frames>
 					<Slider name="$parentScrollBar" inherits="HybridScrollBarTemplate">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativePoint="TOPRIGHT">
-								<Offset>
-									<AbsDimension x="0" y="-12"/>
-								</Offset>
-							</Anchor>
-							<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT">
-								<Offset>
-									<AbsDimension x="0" y="11"/>
-								</Offset>
-							</Anchor>
+							<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="0" y="-12"/>
+							<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="0" y="11"/>
 						</Anchors>
 					</Slider>
 				</Frames>
@@ -209,6 +201,7 @@
 			</Layer>
 		</Layers>
 		<Frames>
+			<Frame parentKey="Border" inherits="SecureDialogBorderTemplate"/>
 			<CheckButton name="$parentInactiveCheckBox" inherits="OptionsSmallCheckButtonTemplate">
 				<Size>
 					<AbsDimension x="26" y="26"/>
@@ -225,10 +218,10 @@
 					</OnLoad>
 					<OnClick>
 						if ( self:GetChecked() ) then
-							PlaySound("igMainMenuOptionCheckBoxOn");
+							PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 							SetCurrencyUnused(TokenFrame.selectedID, 1);
 						else
-							PlaySound("igMainMenuOptionCheckBoxOff");
+							PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF);
 							SetCurrencyUnused(TokenFrame.selectedID, 0);
 						end
 						TokenFrame_Update();
@@ -264,10 +257,10 @@
 								self:SetChecked(false);
 								return;
 							end
-							PlaySound("igMainMenuOptionCheckBoxOn");
+							PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 							SetCurrencyBackpack(TokenFrame.selectedID, 1);
 						else
-							PlaySound("igMainMenuOptionCheckBoxOff");
+							PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF);
 							SetCurrencyBackpack(TokenFrame.selectedID, 0);
 						end
 						TokenFrame_Update();
@@ -291,23 +284,12 @@
 				</Anchors>
 			</Button>
 		</Frames>
-		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
-			<BackgroundInsets>
-				<AbsInset left="11" right="12" top="12" bottom="11"/>
-			</BackgroundInsets>
-			<TileSize>
-				<AbsValue val="32"/>
-			</TileSize>
-			<EdgeSize>
-				<AbsValue val="32"/>
-			</EdgeSize>
-		</Backdrop>
 		<Scripts>
 			<OnShow>
-				PlaySound("igCharacterInfoOpen");
+				PlaySound(SOUNDKIT.IG_CHARACTER_INFO_OPEN);
 			</OnShow>
 			<OnHide>
-				PlaySound("igCharacterInfoClose");
+				PlaySound(SOUNDKIT.IG_CHARACTER_INFO_CLOSE);
 			</OnHide>
 		</Scripts>
 	</Frame>
@@ -315,24 +297,19 @@
 		<Size x="50" y="12"/>
 		<Layers>
 			<Layer level="ARTWORK">
-				<FontString name="$parentCount" inherits="GameFontHighlightSmall" justifyH="RIGHT" parentKey="count">
-					<Size x="42" y="10"/>
-					<Anchors>
-						<Anchor point="TOPLEFT">
-							<Offset x="0" y="0"/>
-						</Anchor>
-					</Anchors>
-				</FontString>
 				<Texture name="$parentIcon" parentKey="icon">
-					<Size>
-						<AbsDimension x="12" y="12"/>
-					</Size>
+					<Size x="12" y="12"/>
 					<Anchors>
-						<Anchor point="LEFT" relativeTo="$parentCount" relativePoint="RIGHT">
-							<Offset x="0" y="0"/>
-						</Anchor>
+						<Anchor point="RIGHT" x="4" y="1"/>
 					</Anchors>
 				</Texture>
+				<FontString name="$parentCount" inherits="GameFontHighlightSmall" justifyH="RIGHT" parentKey="count">
+					<Size y="10"/>
+					<Anchors>
+						<Anchor point="TOPLEFT"/>
+						<Anchor point="RIGHT" relativeKey="$parent.icon" relativePoint="LEFT"/>
+					</Anchors>
+				</FontString>
 			</Layer>
 		</Layers>
 		<Scripts>
@@ -371,23 +348,17 @@
 		<Frames>
 			<Button name="$parentToken1" inherits="BackpackTokenTemplate" id="1">
 				<Anchors>
-					<Anchor point="LEFT">
-						<Offset x="13" y="0"/>
-					</Anchor>
+					<Anchor point="LEFT" x="13" y="0"/>
 				</Anchors>
 			</Button>
 			<Button name="$parentToken2" inherits="BackpackTokenTemplate" id="2">
 				<Anchors>
-					<Anchor point="LEFT" relativeTo="$parentToken1" relativePoint="RIGHT">
-						<Offset x="2" y="0"/>
-					</Anchor>
+					<Anchor point="LEFT" relativeTo="$parentToken1" relativePoint="RIGHT" x="0" y="0"/>
 				</Anchors>
 			</Button>
 			<Button name="$parentToken3" inherits="BackpackTokenTemplate" id="3">
 				<Anchors>
-					<Anchor point="LEFT" relativeTo="$parentToken2" relativePoint="RIGHT">
-						<Offset x="2" y="0"/>
-					</Anchor>
+					<Anchor point="LEFT" relativeTo="$parentToken2" relativePoint="RIGHT" x="0" y="0"/>
 				</Anchors>
 			</Button>
 		</Frames>

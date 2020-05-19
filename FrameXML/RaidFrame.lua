@@ -5,7 +5,7 @@ MEMBERS_PER_RAID_GROUP = 5;
 MAX_RAID_INFOS = 20;
 
 function RaidParentFrame_OnLoad(self)
-	SetPortraitToTexture(self.portrait, "Interface\\LFGFrame\\UI-LFR-PORTRAIT");
+	self:SetPortraitToAsset("Interface\\LFGFrame\\UI-LFR-PORTRAIT");
 	PanelTemplates_SetNumTabs(self, 2);
 	PanelTemplates_SetTab(self, 1);
 end
@@ -15,7 +15,6 @@ function RaidFrame_OnLoad(self)
 	self:RegisterEvent("GROUP_ROSTER_UPDATE");
 	self:RegisterEvent("UPDATE_INSTANCE_INFO");
 	self:RegisterEvent("PARTY_LEADER_CHANGED");
-	self:RegisterEvent("VOICE_STATUS_UPDATE");
 	self:RegisterEvent("PLAYER_ENTERING_WORLD");
 	self:RegisterEvent("READY_CHECK");
 	self:RegisterEvent("READY_CHECK_CONFIRM");
@@ -35,17 +34,17 @@ end
 function RaidFrame_OnShow(self)
 	ButtonFrameTemplate_ShowAttic(self:GetParent());
 	self:GetParent().TitleText:SetText(RAID);
-	
+
 	RaidFrame_Update();
-	
+
 	if ( GetNumSavedInstances() + GetNumSavedWorldBosses() > 0 ) then
 		RaidFrameRaidInfoButton:Enable();
 	else
 		RaidFrameRaidInfoButton:Disable();
 	end
-	
+
 	RequestRaidInfo();
-	
+
 	UpdateMicroButtons();
 end
 
@@ -82,8 +81,7 @@ function RaidFrame_OnEvent(self, event, ...)
 			RaidFrameRaidInfoButton:Disable();
 		end
 		RaidInfoFrame_Update(true);
-	elseif ( event == "GROUP_ROSTER_UPDATE" or event == "PARTY_LEADER_CHANGED" or
-		event == "VOICE_STATUS_UPDATE" or event == "PARTY_LFG_RESTRICTED" ) then
+	elseif ( event == "GROUP_ROSTER_UPDATE" or event == "PARTY_LEADER_CHANGED" or event == "PARTY_LFG_RESTRICTED" ) then
 		RaidFrame_Update();
 	end
 end
@@ -110,11 +108,10 @@ function RaidFrame_Update()
 	-- If not in a raid hide all the UI and just display raid explanation text
 	if ( not IsInRaid() ) then
 		RaidFrameConvertToRaidButton:Show();
-		if ( UnitExists("party1") and UnitIsGroupLeader("player") and UnitLevel("player") >= 10 and not HasLFGRestrictions() ) then
-			RaidFrameConvertToRaidButton:Enable();
-		else
-			RaidFrameConvertToRaidButton:Disable();
-		end
+		local convertToRaid = true;
+		local canConvertToRaid = C_PartyInfo.AllowedToDoPartyConversion(convertToRaid);
+		RaidFrameConvertToRaidButton:SetEnabled(canConvertToRaid);
+
 		RaidFrameNotInRaid:Show();
 		ButtonFrameTemplate_ShowButtonBar(FriendsFrame);
 	else
@@ -126,6 +123,10 @@ function RaidFrame_Update()
 	if ( RaidGroupFrame_Update ) then
 		RaidGroupFrame_Update();
 	end
+end
+
+function RaidFrame_ConvertToRaid()
+	C_PartyInfo.ConvertToRaid();
 end
 
 -- Function for raid options
@@ -142,7 +143,7 @@ end
 -- Populates Raid Info Data
 function RaidInfoFrame_Update(scrollToSelected)
 	RaidInfoFrame_UpdateSelectedIndex();
-	
+
 	local scrollFrame = RaidInfoScrollFrame;
 	local savedInstances = GetNumSavedInstances();
 	local savedWorldBosses = GetNumSavedWorldBosses();
@@ -152,7 +153,7 @@ function RaidInfoFrame_Update(scrollToSelected)
 	local buttons = scrollFrame.buttons;
 	local numButtons = #buttons;
 	local buttonHeight = buttons[1]:GetHeight();
-	
+
 	if ( scrollToSelected == true and RaidInfoFrame.selectedIndex ) then --Using == true in case the HybridScrollFrame .update is changed to pass in the parent.
 		local button = buttons[RaidInfoFrame.selectedIndex - offset]
 		if ( not button or (button:GetTop() > scrollFrame:GetTop()) or (button:GetBottom() < scrollFrame:GetBottom()) ) then
@@ -188,7 +189,7 @@ function RaidInfoFrame_Update(scrollToSelected)
 				frame.instanceID = nil;
 				frame.longInstanceID = nil;
 			end
-			
+
 			frame:SetID(index);
 
 			if ( RaidInfoFrame.selectedIndex == index ) then
@@ -206,21 +207,21 @@ function RaidInfoFrame_Update(scrollToSelected)
 				frame.reset:SetFormattedText("|cff808080%s|r", RAID_INSTANCE_EXPIRES_EXPIRED);
 				frame.name:SetFormattedText("|cff808080%s|r", instanceName);
 			end
-			
+
 			if ( extended ) then
 				frame.extended:Show();
 			else
 				frame.extended:Hide();
 			end
-			
+
 			frame:Show();
-			
+
 			if ( mouseIsOverScrollFrame and frame:IsMouseOver() ) then
 				RaidInfoInstance_OnEnter(frame);
 			end
 		else
 			frame:Hide();
-		end	
+		end
 	end
 	HybridScrollFrame_Update(scrollFrame, (savedInstances + savedWorldBosses) * buttonHeight, scrollFrame:GetHeight());
 end
@@ -341,12 +342,12 @@ function ClaimRaidFrame(parent)
 	if currentParent == parent then
 		return;
 	end
-	
+
 	RaidFrame:SetParent(parent);
 	RaidFrame:ClearAllPoints();
 	RaidFrame:SetPoint("TOPLEFT", 0, 0);
 	RaidFrame:SetPoint("BOTTOMRIGHT", 0, 0);
-	
+
 	if RaidFrame:IsShown() and currentParent then
 		-- more hackiness - Serban
 		if ( currentParent == RaidParentFrame ) then

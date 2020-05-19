@@ -33,7 +33,7 @@ function LowHealthFrameMixin:OnEvent(event, ...)
 		self:SetInCombat(true);
 	elseif event == "PLAYER_REGEN_ENABLED" then
 		self:SetInCombat(false);
-	elseif event == "UNIT_MAXHEALTH" or event == "UNIT_HEALTH" then
+	elseif event == "UNIT_MAXHEALTH" or event == "UNIT_HEALTH_FREQUENT" then
 		self:EvaluateVisibleState();
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		self.playerEntered = true;
@@ -63,12 +63,12 @@ end
 
 function LowHealthFrameMixin:ListenForHealthEvents()
 	self:RegisterUnitEvent("UNIT_MAXHEALTH", "player");
-	self:RegisterUnitEvent("UNIT_HEALTH", "player");
+	self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", "player");
 end
 
 function LowHealthFrameMixin:StopListeningForHealthEvents()
 	self:UnregisterEvent("UNIT_MAXHEALTH");
-	self:UnregisterEvent("UNIT_HEALTH");
+	self:UnregisterEvent("UNIT_HEALTH_FREQUENT");
 
 end
 
@@ -77,16 +77,24 @@ function LowHealthFrameMixin:DetermineFlashState()
 		return LOW_HEALTH_FRAME_STATE_DISABLED;
 	end
 
+	if ( CinematicFrame and CinematicFrame:IsShown() ) then
+		return LOW_HEALTH_FRAME_STATE_DISABLED;
+	end
+
+	if ( MovieFrame and MovieFrame:IsShown() ) then
+		return LOW_HEALTH_FRAME_STATE_DISABLED;
+	end
+
 	-- flash if we're in combat and can't see the world
 	if self.inCombat then
-		if GetCVarBool("screenEdgeFlash") and GetUIPanel("fullscreen") and CinematicFrame and not CinematicFrame:IsShown() then
+		if GetCVarBool("screenEdgeFlash") and GetUIPanel("fullscreen") then
 			return LOW_HEALTH_FRAME_STATE_FULLSCREEN;
 		end
 	end
 
 	-- flash if our health is low
 	if self:IsAtLowHealth() then
-		if not GetCVarBool("doNotFlashLowHealthWarning") and not GetUIPanel("fullscreen") and CinematicFrame and not CinematicFrame:IsShown() then
+		if not GetCVarBool("doNotFlashLowHealthWarning") and not GetUIPanel("fullscreen") then
 			return LOW_HEALTH_FRAME_STATE_LOW_HEALTH;
 		end
 	end
@@ -130,11 +138,9 @@ function LowHealthFrameMixin:EvaluateVisibleState()
 		if not self.pulseAnim:IsPlaying() then
 			self:Show();
 			self.pulseAnim:Play();
-			if (healthState == LOW_HEALTH_FRAME_STATE_LOW_HEALTH) then
-				self.fadeStart = GetTime() + 2;
-				self.fadeEnd = GetTime() + 3;
-				self:SetScript("OnUpdate", LowHealth_OnUpdate);
-			end
+			self.fadeStart = GetTime() + 2;
+			self.fadeEnd = GetTime() + 3;
+			self:SetScript("OnUpdate", LowHealth_OnUpdate);
 		end
 	else
 		error("Unknown Low Health Frame State");

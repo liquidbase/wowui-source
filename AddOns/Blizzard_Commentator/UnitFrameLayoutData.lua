@@ -14,6 +14,7 @@ local UNIT_FRAME_COMPONENT_NAMES = {
 
 	"DefensiveCooldownContainer",
 	"OffensiveCooldownContainer",
+	"DebuffContainer",
 
 	"OffensiveCooldownModel",
 	"DefensiveCooldownModel",
@@ -90,13 +91,11 @@ local BASE_LAYOUT = {
 	},
 
 	DeadText = {
-		justifyH = "LEFT",
-
-		fontObject = "CommentatorDeadFont",
+		justifyH = "CENTER",
 
 		points = {
 			CreatePoint("TOPLEFT", "HealthBar", "TOPLEFT", 6, 0),
-			CreatePoint("BOTTOMRIGHT", "HealthBar", "BOTTOMRIGHT", -6, 0),
+			CreatePoint("BOTTOMRIGHT", "HealthBar", "BOTTOMRIGHT", -42, 0),
 		},
 	},
 
@@ -237,7 +236,7 @@ local BASE_LAYOUT = {
 	},
 
 	DefensiveCooldownContainer = {
-		width = 182,
+		-- Width is calculated from child extents
 		height = 34,
 
 		points = {
@@ -245,13 +244,23 @@ local BASE_LAYOUT = {
 		},
 		enabled = true,
 	},
-
-	OffensiveCooldownContainer = {
-		width = 182,
+	
+	DebuffContainer = {
+		-- Width is calculated from child extents
 		height = 34,
 
 		points = {
-			CreatePoint("TOP", "DefensiveCooldownContainer", "BOTTOM", 0, -15),
+			CreatePoint("TOPLEFT", "DefensiveCooldownContainer", "TOPRIGHT", 0, 0),
+		},
+		enabled = true,
+	},
+
+	OffensiveCooldownContainer = {
+		-- Width is calculated from child extents
+		height = 34,
+
+		points = {
+			CreatePoint("TOPLEFT", "DefensiveCooldownContainer", "BOTTOMLEFT", 0, -15),
 		},
 		enabled = true,
 	},
@@ -362,7 +371,7 @@ local RIGHT_LAYOUT = {
 
 	DeadText = {
 		mirrorPointsV = true,
-		justifyH = "RIGHT",
+		justifyH = "CENTER",
 	},
 
 	DeathIcon = {
@@ -378,7 +387,19 @@ local RIGHT_LAYOUT = {
 
 	DefensiveCooldownContainer = {
 		points = {
-			CreatePoint("TOPLEFT", "UnitFrame", "BOTTOMLEFT", 5, -15),
+			CreatePoint("TOPRIGHT", "UnitFrame", "BOTTOMRIGHT", -25, -15),
+		},
+	},
+
+	DebuffContainer = {
+		points = {
+			CreatePoint("TOPRIGHT", "DefensiveCooldownContainer", "TOPLEFT", 0, 0),
+		},
+	},
+
+	OffensiveCooldownContainer = {
+		points = {
+			CreatePoint("TOPRIGHT", "DefensiveCooldownContainer", "BOTTOMRIGHT", 0, -15),
 		},
 	},
 };
@@ -462,10 +483,6 @@ local FOCUSED_LAYOUT = {
 			CreatePoint("TOPLEFT", "UnitFrame", "TOPLEFT", 84, -66),
 			CreatePoint("BOTTOMRIGHT", "UnitFrame", "BOTTOMRIGHT", 117, 2),
 		},
-	},
-
-	DeadText = {
-		fontObject = "CommentatorDeadFontLarge",
 	},
 
 	PowerBar = {

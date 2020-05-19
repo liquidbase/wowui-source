@@ -30,7 +30,13 @@ local kioskModeData = {
 			["DEMONHUNTER"] = true,
 			["DEATHKNIGHT"] = true,
 		},
-		["trial"] = { ["enabled"] = true, ["ignoreClasses"] = { "DEMONHUNTER" } },
+		["alliedRaces"] = { 
+			["LIGHTFORGEDDRAENEI"] = true,
+			["HIGHMOUNTAINTAUREN"] = true,
+			["NIGHTBORNE"] = true,
+			["VOIDELF"] = true,
+		},
+		["template"] = { ["enabled"] = true, ["index"] = 1, ["ignoreClasses"] = { } },
 	},
 	["newcharacter"] = {
 		["races"] = {
@@ -62,6 +68,12 @@ local kioskModeData = {
 			["DEMONHUNTER"] = false,
 			["DEATHKNIGHT"] = false,
 		},
+		["alliedRaces"] = { 
+			["LIGHTFORGEDDRAENEI"] = false,
+			["HIGHMOUNTAINTAUREN"] = false,
+			["NIGHTBORNE"] = false,
+			["VOIDELF"] = false,
+		},
 	}
 }
 
@@ -75,8 +87,14 @@ function KioskModeSplash_OnShow(self)
 end
 
 function KioskModeSplash_OnKeyDown(self,key)
-	if (CheckKioskModeRealmKey()) then
+	if CheckKioskModeRealmKey() then
 		C_RealmList.RequestChangeRealmList();
+	elseif CheckKioskModeQuitKey() then
+		QuitGame();
+	end
+
+	if (IsGMClient() and key == "ESCAPE") then
+		C_Login.DisconnectFromServer();
 	end
 end
 
@@ -88,11 +106,27 @@ function KioskModeSplash_GetModeData()
 	return kioskModeData[KioskModeSplash.mode];
 end
 
+function KioskModeSplash_GetMode()
+	return KioskModeSplash.mode;
+end
+
+function KioskModeSplash_GetRaceList()
+	if (not kioskModeData or not kioskModeData[KioskModeSplash.mode]) then
+		return;
+	end
+
+	if (C_CharacterCreation.GetCurrentRaceMode() == Enum.CharacterCreateRaceMode.Normal) then
+		return kioskModeData[KioskModeSplash.mode].races;
+	else
+		return kioskModeData[KioskModeSplash.mode].alliedRaces;
+	end
+end
+
 function KioskModeSplash_GetIDForSelection(type, selection)
 	if (type == "races") then
-		return RACE_NAME_BUTTON_ID_MAP[selection];
+		return C_CharacterCreation.GetRaceIDFromName(selection);
 	elseif (type == "classes") then
-		return CLASS_NAME_BUTTON_ID_MAP[selection];
+		return C_CharacterCreation.GetClassIDFromName(selection);
 	end
 
 	return nil;
@@ -107,7 +141,7 @@ function KioskModeSplash_GetAutoEnterWorld()
 end
 
 function KioskModeSplashChoice_OnClick(self, button, down)
-	PlaySound("igMainMenuOptionCheckBoxOn");
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 	if (self:GetID() == 1) then
 		KioskModeSplash_SetMode("highlevel");
 	else

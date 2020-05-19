@@ -1,14 +1,14 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
 	<Script file="LFRFrame.lua"/>
-	
+
 	<Button name="LFRBrowseFrameColumnHeaderTemplate" inherits="WhoFrameColumnHeaderTemplate" virtual="true">
 		<Scripts>
 			<OnClick>
 				if ( self.sortType ) then
 					SearchLFGSort(self.sortType);
 				end
-				PlaySound("igMainMenuOptionCheckBoxOn");
+				PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 			</OnClick>
 		</Scripts>
 	</Button>
@@ -22,7 +22,7 @@
 					</Anchors>
 				</Texture>
 			</Layer>
-		</Layers>					
+		</Layers>
 		<Scripts>
 			<OnMouseDown>
 				self.icon:SetPoint("CENTER", 1, -2);
@@ -106,7 +106,7 @@
 			</OnLoad>
 		</Scripts>
 	</Button>
-	
+
 	<Frame name="LFRFrameDungeonChoiceTemplate" inherits="LFGSpecificChoiceTemplate" virtual="true">
 		<Size x="340" y="16"/>
 		<Scripts>
@@ -140,7 +140,7 @@
 		<Scripts>
 			<OnClick>
 				LFRFrame_SetActiveTab(self:GetID());
-				PlaySound("igCharacterInfoTab");
+				PlaySound(SOUNDKIT.IG_CHARACTER_INFO_TAB);
 			</OnClick>
 			<OnEnter>
 				GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
@@ -154,12 +154,12 @@
 		<HighlightTexture file="Interface\Buttons\ButtonHilight-Square" alphaMode="ADD"/>
 		<CheckedTexture file="Interface\Buttons\CheckButtonHilight" alphaMode="ADD"/>
 	</CheckButton>
-	
+
 	<Frame name="RaidBrowserFrame" inherits="PortraitFrameTemplate" parent="UIParent" toplevel="true" hidden="true" enableMouse="true" >
 		<Size x="350" y="450"/>
 		<Anchors>
 			<Anchor point="CENTER" x="0" y="-0"/>
-		</Anchors>	
+		</Anchors>
 		<Frames>
 			<Frame name="LFRParentFrame" setAllPoints="true">
 				<Frames>
@@ -245,7 +245,7 @@
 													LFRQueueFrameCommentExplanation:Show();
 												end
 												SetLFGComment(self:GetText());
-												PlaySound("UChatScrollButton");
+												PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON);
 											</OnEditFocusLost>
 											<OnEscapePressed function="EditBox_ClearFocus"/>
 											<OnEnterPressed function="EditBox_ClearFocus"/>
@@ -380,7 +380,7 @@
 											LFRQueueFrameComment:ClearFocus();
 										else
 											--The comment is already set, so they didn't need to click this... we'll give some feedback anyway.
-											PlaySound("UChatScrollButton");
+											PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON);
 										end
 									</OnClick>
 								</Scripts>
@@ -427,9 +427,12 @@
 						</Frames>
 						<Scripts>
 							<OnShow>
-								RequestLFDPlayerLockInfo();
-								RequestLFDPartyLockInfo();
+								QueueUpdater:RequestInfo();
+								QueueUpdater:AddRef();
 							</OnShow>
+							<OnHide>
+								QueueUpdater:RemoveRef();
+							</OnHide>
 						</Scripts>
 					</Frame>
 					<Frame name="LFRBrowseFrame" useParentLevel="true" setAllPoints="true" hidden="true">
@@ -616,7 +619,7 @@
 								</Anchors>
 								<Scripts>
 									<OnClick>
-										PlaySound("UChatScrollButton");
+										PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON);
 										ChatFrame_SendTell(LFRBrowseFrame.selectedName);
 									</OnClick>
 								</Scripts>
@@ -628,8 +631,8 @@
 								</Anchors>
 								<Scripts>
 									<OnClick>
-										PlaySound("UChatScrollButton");
-										InviteToGroup(LFRBrowseFrame.selectedName);
+										PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON);
+										C_PartyInfo.InviteUnit(LFRBrowseFrame.selectedName);
 									</OnClick>
 								</Scripts>
 							</Button>
@@ -640,7 +643,7 @@
 								</Anchors>
 								<Scripts>
 									<OnClick>
-										PlaySound("UChatScrollButton");
+										PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON);
 										RefreshLFGList();
 									</OnClick>
 									<OnUpdate function="LFRBrowseFrameRefreshButton_OnUpdate"/>
@@ -690,16 +693,16 @@
 				</Scripts>
 			</Frame>
 		</Frames>
-	<Scripts>
-		<OnLoad>
-			SetPortraitToTexture(self.portrait, "Interface\\LFGFrame\\UI-LFR-PORTRAIT");
-		</OnLoad>
-		<OnShow>
-			PlaySound("igCharacterInfoTab");
-		</OnShow>
-		<OnHide>
-			PlaySound("igMainMenuClose");
-		</OnHide>
-	</Scripts>
+		<Scripts>
+			<OnLoad>
+				self:SetPortraitToAsset("Interface\\LFGFrame\\UI-LFR-PORTRAIT");
+			</OnLoad>
+			<OnShow>
+				PlaySound(SOUNDKIT.IG_CHARACTER_INFO_TAB);
+			</OnShow>
+			<OnHide>
+				PlaySound(SOUNDKIT.IG_MAINMENU_CLOSE);
+			</OnHide>
+		</Scripts>
 	</Frame>
 </Ui>

@@ -1,43 +1,4 @@
 
-function SearchBoxTemplate_OnLoad(self)
-	self.searchIcon:SetVertexColor(0.6, 0.6, 0.6);
-	self:SetTextInsets(16, 20, 0, 0);
-	self.Instructions:SetText(SEARCH);
-	self.Instructions:ClearAllPoints();
-	self.Instructions:SetPoint("TOPLEFT", self, "TOPLEFT", 16, 0);
-	self.Instructions:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -20, 0);
-end
-
-function SearchBoxTemplate_OnEditFocusLost(self)
-	if ( self:GetText() == "" ) then
-		self.searchIcon:SetVertexColor(0.6, 0.6, 0.6);
-		self.clearButton:Hide();
-	end
-end
-
-function SearchBoxTemplate_OnEditFocusGained(self)
-	self.searchIcon:SetVertexColor(1.0, 1.0, 1.0);
-	self.clearButton:Show();
-end
-
-function SearchBoxTemplate_OnTextChanged(self)
-	if ( not self:HasFocus() and self:GetText() == "" ) then
-		self.searchIcon:SetVertexColor(0.6, 0.6, 0.6);
-		self.clearButton:Hide();
-	else
-		self.searchIcon:SetVertexColor(1.0, 1.0, 1.0);
-		self.clearButton:Show();
-	end
-	InputBoxInstructions_OnTextChanged(self);
-end
-
-function SearchBoxTemplateClearButton_OnClick(self)
-	PlaySound("igMainMenuOptionCheckBoxOn");
-	local editBox = self:GetParent();
-	editBox:SetText("");
-	editBox:ClearFocus();
-end
-
 ITEM_SEARCHBAR_LIST = {
 	"BagItemSearchBox",
 	"GuildItemSearchBox",
@@ -88,6 +49,33 @@ function BagSearch_OnChar(self, text)
 			self:ClearFocus();
 		end
 	end
+end
+
+local ROLE_COUNT_EVENTS = {
+	"GROUP_ROSTER_UPDATE",
+	"PLAYER_ROLES_ASSIGNED",
+};
+
+RoleCountMixin = {};
+
+function RoleCountMixin:OnShow()
+	self:Refresh();
+	FrameUtil.RegisterFrameForEvents(self, ROLE_COUNT_EVENTS);
+end
+
+function RoleCountMixin:OnHide()
+	FrameUtil.UnregisterFrameForEvents(self, ROLE_COUNT_EVENTS);
+end
+
+function RoleCountMixin:OnEvent()
+	self:Refresh();
+end
+
+function RoleCountMixin:Refresh()
+	local counts = GetGroupMemberCountsForDisplay();
+	self.DamagerCount:SetText(counts.DAMAGER);
+	self.HealerCount:SetText(counts.HEALER);
+	self.TankCount:SetText(counts.TANK);
 end
 
 UIFrameCache = CreateFrame("FRAME");
@@ -145,24 +133,6 @@ function UIFrameCache:ReleaseFrame (frame)
 		end
 	end
 end
-
--- Truncated Button code
-
-function TruncatedButton_OnEnter(self)
-	local text = _G[self:GetName().."Text"];
-	if ( text:IsTruncated() ) then
-		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
-		GameTooltip:SetText(text:GetText());
-		GameTooltip:Show();
-	end
-end
-
-function TruncatedButton_OnLeave(self)
-	if ( GameTooltip:GetOwner() == self ) then
-		GameTooltip:Hide();
-	end
-end
-
 
 -- SquareButton template code
 SQUARE_BUTTON_TEXCOORDS = {
@@ -263,41 +233,6 @@ function CapProgressBar_Update(capBar, cap1Quantity, cap1Limit, cap2Quantity, ca
 	end
 end
 
-function InputScrollFrame_OnLoad(self)
-	local scrollBar = self.ScrollBar;
-	scrollBar:ClearAllPoints();
-	scrollBar:SetPoint("TOPLEFT", self, "TOPRIGHT", -13, -11);
-	scrollBar:SetPoint("BOTTOMLEFT", self, "BOTTOMRIGHT", -13, 9);
-	-- reposition the up and down buttons
-	self.ScrollBar.ScrollDownButton:SetPoint("TOP", scrollBar, "BOTTOM", 0, 4);
-	self.ScrollBar.ScrollUpButton:SetPoint("BOTTOM", scrollBar, "TOP", 0, -4);
-	-- make the scroll bar hideable and force it to start off hidden so positioning calculations can be done
-	-- as soon as it needs to be shown
-	self.scrollBarHideable = 1;
-	scrollBar:Hide();
-	self.EditBox:SetWidth(self:GetWidth() - 18);
-	self.EditBox:SetMaxLetters(self.maxLetters);
-	self.EditBox.Instructions:SetText(self.instructions);
-	self.EditBox.Instructions:SetWidth(self:GetWidth());
-	self.CharCount:SetShown(not self.hideCharCount);
-end
-
-function InputScrollFrame_OnTextChanged(self)
-	local scrollFrame = self:GetParent();
-	ScrollingEdit_OnTextChanged(self, scrollFrame);
-	if ( self:GetText() ~= "" ) then
-		self.Instructions:Hide();
-	else
-		self.Instructions:Show();
-	end
-	scrollFrame.CharCount:SetText(self:GetMaxLetters() - self:GetNumLetters());
-	if ( scrollFrame.ScrollBar:IsShown() ) then
-		scrollFrame.CharCount:SetPoint("BOTTOMRIGHT", -17, 0);
-	else
-		scrollFrame.CharCount:SetPoint("BOTTOMRIGHT", 0, 0);
-	end
-end
-
 --Radio button functions
 function SetCheckButtonIsRadio(button, isRadio)
 	if ( isRadio ) then
@@ -374,5 +309,106 @@ function CurrencyTemplateMixin:SetCurrencyFromID(currencyID, amount, formatStrin
 		self:SetText(formatString:format(currencyString));
 	else
 		self:SetText(currencyString);
+	end
+end
+
+UIExpandingButtonMixin = {};
+
+function UIExpandingButtonMixin:SetUp(expanded, expansionDirection)
+	self.expansionDirection = expansionDirection;
+	self.currentlyExpanded = expanded;
+	self:Update();
+end
+
+function UIExpandingButtonMixin:SetLabel(label)
+	self.Label:SetText(label);
+end
+
+local function GetOppositeDirection(direction)
+	if (direction == "RIGHT") then
+		return "LEFT";
+	else
+		return "RIGHT";
+	end
+end
+
+function UIExpandingButtonMixin:SetExpanded(expanded)
+	self.currentlyExpanded = expanded;
+	self:Update();
+end
+
+function UIExpandingButtonMixin:IsCurrentlyExpanded()
+	return self.currentlyExpanded;
+end
+
+function UIExpandingButtonMixin:Update(override)
+	if (self.currentlyExpanded == nil or not self.expansionDirection) then
+		error("The button must be set up before update.");
+		return;
+	end
+
+	if (override ~= nil) then
+		self.currentlyExpanded = override;
+	end
+	
+	local direction = self.currentlyExpanded and GetOppositeDirection(self.expansionDirection) or self.expansionDirection;
+
+	SquareButton_SetIcon(self, direction);
+
+	if (self.callback) then
+		self.callback(self, self.currentlyExpanded);
+	end
+end
+
+function UIExpandingButtonMixin:RegisterCallback(callback)
+	self.callback = callback;
+end
+
+function UIExpandingButtonMixin:OnClick(button, down)
+	self.currentlyExpanded = not self.currentlyExpanded;
+	self:Update();
+end
+
+TalentRankDisplayMixin = { };
+
+function TalentRankDisplayMixin:SetValues(currentRank, maxRank, isDisabled, isAvailable)
+	self.Text:SetFormattedText(GENERIC_FRACTION_STRING, currentRank, maxRank);
+	local atlas, textColor;
+	if isDisabled then
+		atlas = "orderhalltalents-rankborder";
+		textColor = DISABLED_FONT_COLOR;
+	elseif isAvailable and currentRank < maxRank then
+		atlas = "orderhalltalents-rankborder-green";
+		textColor = GREEN_FONT_COLOR;
+	else
+		atlas = "orderhalltalents-rankborder-yellow";
+		textColor = YELLOW_FONT_COLOR;
+	end
+
+	local useAtlasSize = true;
+	self.Background:SetAtlas(atlas, true);
+	self.Text:SetTextColor(textColor:GetRGB());
+end
+
+ButtonWithDisableMixin = {};
+
+function ButtonWithDisableMixin:SetDisableTooltip(tooltipTitle, tooltipText)
+	self.disableTooltipTitle = tooltipTitle;
+	self.disableTooltipText = tooltipText;
+	self:SetEnabled(tooltipTitle == nil);
+end
+
+function ButtonWithDisableMixin:OnEnter()
+	if self.disableTooltipTitle and not self:IsEnabled() then
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+
+		local wrap = true;
+		GameTooltip_SetTitle(GameTooltip, self.disableTooltipTitle, RED_FONT_COLOR, wrap);
+
+		if self.disableTooltipText then
+			GameTooltip_AddNormalLine(GameTooltip, self.disableTooltipText, wrap);
+		end
+
+		GameTooltip:Show();
 	end
 end

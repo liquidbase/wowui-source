@@ -15,6 +15,8 @@ SEND_MAIL_TAB_LIST[3] = "SendMailBodyEditBox";
 SEND_MAIL_TAB_LIST[4] = "SendMailMoneyGold";
 SEND_MAIL_TAB_LIST[5] = "SendMailMoneyCopper";
 
+local MAX_INBOX_SIZE = 100;
+
 function MailFrame_OnLoad(self)
 	-- Init pagenum
 	InboxFrame.pageNum = 1;
@@ -33,15 +35,18 @@ function MailFrame_OnLoad(self)
 	self:RegisterEvent("CLOSE_INBOX_ITEM");
 	self:RegisterEvent("MAIL_LOCK_SEND_ITEMS");
 	self:RegisterEvent("MAIL_UNLOCK_SEND_ITEMS");
+	self:RegisterEvent("TRIAL_STATUS_UPDATE");
 	-- Set previous and next fields
 	MoneyInputFrame_SetPreviousFocus(SendMailMoney, SendMailBodyEditBox);
 	MoneyInputFrame_SetNextFocus(SendMailMoney, SendMailNameEditBox);
 	MoneyFrame_SetMaxDisplayWidth(SendMailMoneyFrame, 160);
-	
-	if (GameLimitedMode_IsActive()) then
-		MailFrameTab2:Hide();
-		self.trialError:Show();
-	end
+	MailFrame_UpdateTrialState(self);
+end
+
+function MailFrame_UpdateTrialState(self)
+	local isTrialOrVeteran = GameLimitedMode_IsActive();
+	MailFrameTab2:SetShown(not isTrialOrVeteran);
+	self.trialError:SetShown(isTrialOrVeteran);
 end
 
 function MailFrame_OnEvent(self, event, ...)
@@ -54,22 +59,23 @@ function MailFrame_OnEvent(self, event, ...)
 
 		-- Update the roster so auto-completion works
 		if ( IsInGuild() and GetNumGuildMembers() == 0 ) then
-			GuildRoster();
+			C_GuildInfo.GuildRoster();
 		end
 
 		OpenAllBags(self);
 		SendMailFrame_Update();
 		MailFrameTab_OnClick(nil, 1);
-		CheckInbox();
+		MailFrame_RefreshInbox(self);
 		DoEmote("READ", nil, true);
 	elseif ( event == "MAIL_INBOX_UPDATE" ) then
 		InboxFrame_Update();
 		OpenMail_Update();
+		self.inboxBeingChecked = false;
 	elseif ( event == "MAIL_SEND_INFO_UPDATE" ) then
 		SendMailFrame_Update();
 	elseif ( event == "MAIL_SEND_SUCCESS" ) then
 		SendMailFrame_Reset();
-		PlaySound("igAbiliityPageTurn");
+		PlaySound(SOUNDKIT.IG_ABILITY_PAGE_TURN);
 		-- If open mail frame is open then switch the mail frame back to the inbox
 		if ( SendMailFrame.sendMode == "reply" ) then
 			MailFrameTab_OnClick(nil, 1);
@@ -101,6 +107,8 @@ function MailFrame_OnEvent(self, event, ...)
 	elseif ( event == "MAIL_UNLOCK_SEND_ITEMS") then
 		SendMailFrameLockSendMail:Hide();
 		StaticPopup_Hide("CONFIRM_MAIL_ITEM_UNREFUNDABLE");
+	elseif ( event == "TRIAL_STATUS_UPDATE" ) then
+		MailFrame_UpdateTrialState(self);
 	end
 end
 
@@ -140,15 +148,38 @@ function MailFrameTab_OnClick(self, tabID)
 		-- Set the send mode to dictate the flow after a mail is sent
 		SendMailFrame.sendMode = "send";
 	end
-	PlaySound("igSpellBookOpen");
+	PlaySound(SOUNDKIT.IG_SPELLBOOK_OPEN);
 end
 
 -- Inbox functions
 
+function MailFrame_RefreshInbox(self)
+	if self.refreshQueued or self.inboxBeingChecked then
+		return;
+	end
+
+	local canCheck, timeUntilAvailable = C_Mail.CanCheckInbox();
+	if canCheck then
+		CheckInbox();
+		self.inboxBeingChecked = true;
+	else
+		self.refreshQueued = true;
+		C_Timer.After(timeUntilAvailable, function()
+			self.refreshQueued = false;
+			MailFrame_RefreshInbox(self);
+		end);
+	end
+end
+
 function InboxFrame_Update()
 	local numItems, totalItems = GetInboxNumItems();
+
+	if numItems ~= totalItems and numItems < MAX_INBOX_SIZE then
+		MailFrame_RefreshInbox(MailFrame)
+	end
+
 	local index = ((InboxFrame.pageNum - 1) * INBOXITEMS_TO_DISPLAY) + 1;
-	local packageIcon, stationeryIcon, sender, subject, money, CODAmount, daysLeft, itemCount, wasRead, x, y, z, isGM, firstItemQuantity;
+	local packageIcon, stationeryIcon, sender, subject, money, CODAmount, daysLeft, itemCount, wasRead, x, y, z, isGM, firstItemQuantity, firstItemLink;
 	local icon, button, expireTime, senderText, subjectText, buttonIcon;
 	
 	if ( totalItems > numItems ) then
@@ -164,7 +195,7 @@ function InboxFrame_Update()
 	for i=1, INBOXITEMS_TO_DISPLAY do
 		if ( index <= numItems ) then
 			-- Setup mail item
-			packageIcon, stationeryIcon, sender, subject, money, CODAmount, daysLeft, itemCount, wasRead, x, y, z, isGM, firstItemQuantity, firstItemID = GetInboxHeaderInfo(index);
+			packageIcon, stationeryIcon, sender, subject, money, CODAmount, daysLeft, itemCount, wasRead, x, y, z, isGM, firstItemQuantity, firstItemLink = GetInboxHeaderInfo(index);
 			
 			-- Set icon
 			if ( packageIcon ) and ( not isGM ) then
@@ -185,9 +216,10 @@ function InboxFrame_Update()
 			button.itemCount = itemCount;
 			SetItemButtonCount(button, firstItemQuantity);
 			if ( firstItemQuantity ) then
-				SetItemButtonQuality(button, select(3, GetItemInfo(firstItemID)), firstItemID);
+				SetItemButtonQuality(button, select(3, GetItemInfo(firstItemLink)), firstItemLink);
 			else
 				button.IconBorder:Hide();
+				button.IconOverlay:Hide();
 			end
 			
 			buttonIcon = _G["MailItem"..i.."ButtonIcon"];
@@ -284,7 +316,7 @@ function InboxFrame_OnClick(self, index)
 		--OpenMailFrame:Show();
 		ShowUIPanel(OpenMailFrame);
 		OpenMailFrameInset:SetPoint("TOPLEFT", 4, -80);
-		PlaySound("igSpellBookOpen");
+		PlaySound(SOUNDKIT.IG_SPELLBOOK_OPEN);
 	else
 		InboxFrame.openMailID = 0;
 		HideUIPanel(OpenMailFrame);		
@@ -335,14 +367,14 @@ function InboxFrameItem_OnEnter(self)
 end
 
 function InboxNextPage()
-	PlaySound("igMainMenuOptionCheckBoxOn");
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 	InboxFrame.pageNum = InboxFrame.pageNum + 1;
 	InboxGetMoreMail();	
 	InboxFrame_Update();
 end
 
 function InboxPrevPage()
-	PlaySound("igMainMenuOptionCheckBoxOn");
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 	InboxFrame.pageNum = InboxFrame.pageNum - 1;
 	InboxGetMoreMail();	
 	InboxFrame_Update();
@@ -361,12 +393,12 @@ function OpenMailFrame_OnHide()
 	StaticPopup_Hide("DELETE_MAIL");
 	if ( not InboxFrame.openMailID ) then
 		InboxFrame_Update();
-		PlaySound("igSpellBookClose");
+		PlaySound(SOUNDKIT.IG_SPELLBOOK_CLOSE);
 		return;
 	end
 
 	-- Determine if this is an auction temp invoice
-	local bodyText, texture, isTakeable, isInvoice = GetInboxText(InboxFrame.openMailID);
+	local isInvoice = select(5, GetInboxText(InboxFrame.openMailID));
 	local isAuctionTempInvoice = false;
 	if ( isInvoice ) then
 		local invoiceType, itemName, playerName, bid, buyout, deposit, consignment, moneyDelay, etaHour, etaMin = GetInboxInvoiceInfo(InboxFrame.openMailID);
@@ -382,7 +414,7 @@ function OpenMailFrame_OnHide()
 	end
 	InboxFrame.openMailID = 0;
 	InboxFrame_Update();
-	PlaySound("igSpellBookClose");
+	PlaySound(SOUNDKIT.IG_SPELLBOOK_CLOSE);
 end
 
 function OpenMailFrame_UpdateButtonPositions(letterIsTakeable, textCreated, stationeryIcon, money)
@@ -495,35 +527,31 @@ function OpenMail_Update()
 	OpenMailSender.Name:SetText(sender);
 	OpenMailSubject:SetText(subject);
 	-- Set Text
-	local bodyText, texture, isTakeable, isInvoice = GetInboxText(InboxFrame.openMailID);
+	local bodyText, stationeryID1, stationeryID2, isTakeable, isInvoice = GetInboxText(InboxFrame.openMailID);
 	OpenMailBodyText:SetText(bodyText, true);
-	if ( texture ) then
-		OpenStationeryBackgroundLeft:SetTexture(texture.."1");
-		OpenStationeryBackgroundRight:SetTexture(texture.."2");
+	if ( stationeryID1 and stationeryID2 ) then
+		OpenStationeryBackgroundLeft:SetTexture(stationeryID1);
+		OpenStationeryBackgroundRight:SetTexture(stationeryID2);
 	end
 
 	-- Is an invoice
 	if ( isInvoice ) then
 		local invoiceType, itemName, playerName, bid, buyout, deposit, consignment, moneyDelay, etaHour, etaMin, count, commerceAuction = GetInboxInvoiceInfo(InboxFrame.openMailID);
-		if ( playerName ) then
+		if ( invoiceType ) then
+			if ( playerName == nil ) then
+				playerName = (invoiceType == "buyer") and AUCTION_HOUSE_MAIL_MULTIPLE_SELLERS or AUCTION_HOUSE_MAIL_MULTIPLE_BUYERS;
+			end
+
 			-- Setup based on whether player is the buyer or the seller
-			local buyMode;
-			if ( count and count > 1 ) then
+			local multipleSale = count and count > 1;
+			if ( multipleSale ) then
 				itemName = format(AUCTION_MAIL_ITEM_STACK, itemName, count);
 			end
 			OpenMailInvoicePurchaser:SetShown(not commerceAuction);
-			OpenMailInvoiceBuyMode:SetShown(not commerceAuction);
 			if ( invoiceType == "buyer" ) then
-				if ( bid == buyout ) then
-					buyMode = "("..BUYOUT..")";
-				else
-					buyMode = "("..HIGH_BIDDER..")";
-				end
-				OpenMailInvoiceItemLabel:SetText(ITEM_PURCHASED_COLON.." "..itemName.."  "..buyMode);
+				OpenMailInvoiceItemLabel:SetText(ITEM_PURCHASED_COLON.." "..itemName);
 				OpenMailInvoicePurchaser:SetText(SOLD_BY_COLON.." "..playerName);
 				OpenMailInvoiceAmountReceived:SetText(AMOUNT_PAID_COLON);
-				-- Clear buymode
-				OpenMailInvoiceBuyMode:SetText("");
 				-- Update purchase price
 				MoneyFrame_Update("OpenMailTransactionAmountMoneyFrame", bid);	
 				-- Position buy line
@@ -542,14 +570,15 @@ function OpenMail_Update()
 				OpenMailInvoicePurchaser:SetText(PURCHASED_BY_COLON.." "..playerName);
 				OpenMailInvoiceAmountReceived:SetText(AMOUNT_RECEIVED_COLON);
 				-- Determine if auction was bought out or bid on
-				if ( bid == buyout ) then
-					OpenMailInvoiceBuyMode:SetText("("..BUYOUT..")");
-				else
-					OpenMailInvoiceBuyMode:SetText("("..HIGH_BIDDER..")");
+
+				OpenMailSalePriceMoneyFrame.Count:SetShown(multipleSale);
+				if ( multipleSale ) then
+					OpenMailSalePriceMoneyFrame.Count:SetText(AUCTION_HOUSE_MAIL_FORMAT_COUNT:format(count));
 				end
+
 				-- Position buy line
 				OpenMailArithmeticLine:SetPoint("TOP", "OpenMailInvoiceHouseCut", "BOTTOMRIGHT", -114, -9);
-				MoneyFrame_Update("OpenMailSalePriceMoneyFrame", bid);
+				MoneyFrame_Update("OpenMailSalePriceMoneyFrame", multipleSale and (bid / count) or bid);
 				MoneyFrame_Update("OpenMailDepositMoneyFrame", deposit);
 				MoneyFrame_Update("OpenMailHouseCutMoneyFrame", consignment);
 				SetMoneyFrameColor("OpenMailHouseCutMoneyFrame", "red");
@@ -565,16 +594,9 @@ function OpenMail_Update()
 				OpenMailInvoiceNotYetSent:Hide();
 				OpenMailInvoiceMoneyDelay:Hide();
 			elseif (invoiceType == "seller_temp_invoice") then 
-				if ( bid == buyout ) then
-					buyMode = "("..BUYOUT..")";
-				else
-					buyMode = "("..HIGH_BIDDER..")";
-				end
-				OpenMailInvoiceItemLabel:SetText(ITEM_SOLD_COLON.." "..itemName.."  "..buyMode);
+				OpenMailInvoiceItemLabel:SetText(ITEM_SOLD_COLON.." "..itemName);
 				OpenMailInvoicePurchaser:SetText(PURCHASED_BY_COLON.." "..playerName);
 				OpenMailInvoiceAmountReceived:SetText(AUCTION_INVOICE_PENDING_FUNDS_COLON);
-				-- Clear buymode
-				OpenMailInvoiceBuyMode:SetText("");
 				-- Update purchase price
 				MoneyFrame_Update("OpenMailTransactionAmountMoneyFrame", bid+deposit-consignment);	
 				-- Position buy line
@@ -819,7 +841,7 @@ function OpenMailAttachment_OnClick(self, index)
 		TakeInboxItem(InboxFrame.openMailID, index);
 		OpenMailFrame.updateButtonPositions = false;
 	end
-	PlaySound("igMainMenuOptionCheckBoxOn");
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 end
 
 -- SendMail functions
@@ -1046,7 +1068,7 @@ function SendMailRadioButton_OnClick(index)
 		SendMailCODButton:SetChecked(true);
 		SendMailMoneyText:SetText(COD_AMOUNT);
 	end
-	PlaySound("igMainMenuOptionCheckBoxOn");
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 end
 
 function SendMailMoneyButton_OnClick()

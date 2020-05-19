@@ -113,8 +113,15 @@ local function SetupUnitButtonConfiguration( header, newChild, defaultConfigFunc
 	if ( type(configCode) == "string" ) then
 		local selfHandle = GetFrameHandle(newChild);
 		if ( selfHandle ) then
-			CallRestrictedClosure("self", GetManagedEnvironment(header, true),
+			CallRestrictedClosure(newChild, "self", GetManagedEnvironment(header, true),
 			                      selfHandle, configCode, selfHandle);
+		end
+	end
+
+	local copyAttributes = header:GetAttribute("_initialAttributeNames");
+	if ( type(copyAttributes) == "string" ) then
+		for name in copyAttributes:gmatch("[^,]+") do
+			newChild:SetAttribute(name, scrub(header:GetAttribute("_initialAttribute-" .. name)));
 		end
 	end
 end
@@ -206,7 +213,7 @@ local function configureChildren(self, unitTable)
 		if ( type(configCode) == "string" ) then
 			local selfHandle = GetFrameHandle(unitButton);
 			if ( selfHandle ) then
-				CallRestrictedClosure("self",
+				CallRestrictedClosure(unitButton, "self",
 				                      GetManagedEnvironment(unitButton, true),
 				                      selfHandle, configCode, selfHandle);
 			end
@@ -659,7 +666,7 @@ local function SetupAuraButtonConfiguration( header, newChild, defaultConfigFunc
 	if ( type(configCode) == "string" ) then
 		local selfHandle = GetFrameHandle(newChild);
 		if ( selfHandle ) then
-			CallRestrictedClosure("self", GetManagedEnvironment(header, true),
+			CallRestrictedClosure(newChild, "self", GetManagedEnvironment(header, true),
 			                      selfHandle, configCode, selfHandle);
 		end
 	end
@@ -670,8 +677,7 @@ function SecureAuraHeader_OnLoad(self)
 end
 
 function SecureAuraHeader_OnUpdate(self)
-	local hasMainHandEnchant, hasOffHandEnchant, _;
-	hasMainHandEnchant, _, _, hasOffHandEnchant, _, _ = GetWeaponEnchantInfo();
+	local hasMainHandEnchant, _, _, _, hasOffHandEnchant = GetWeaponEnchantInfo();
 	if ( hasMainHandEnchant ~= self:GetAttribute("_mainEnchanted") ) then
 		self:SetAttribute("_mainEnchanted", hasMainHandEnchant);
 	end
@@ -789,8 +795,7 @@ local function configureAuras(self, auraTable, consolidateTable, weaponPosition)
 		end
 	end
 	if ( weaponPosition ) then
-		local hasMainHandEnchant, hasOffHandEnchant, hasRangedEnchant, _;
-		hasMainHandEnchant, _, _, hasOffHandEnchant, _, _, hasRangedEnchant, _, _ = GetWeaponEnchantInfo();
+		local hasMainHandEnchant, _, _, _, hasOffHandEnchant, _, _, _, hasRangedEnchant = GetWeaponEnchantInfo();
 
 		for weapon=2,1,-1 do
 			local weaponAttr = "tempEnchant"..weapon
@@ -1018,24 +1023,21 @@ function SecureAuraHeader_Update(self)
 		end
 
 		local i = 1;
-		repeat
+		AuraUtil.ForEachAura(unit, fullFilter, nil, function(...)
 			local aura, _, duration = freshTable();
-			aura.name, _, _, _, _, duration, aura.expires, aura.caster, _, aura.shouldConsolidate, _ = UnitAura(unit, i, fullFilter);
-			if ( aura.name ) then
-				aura.filter = fullFilter;
-				aura.index = i;
-				local targetList = sortingTable;
-				if ( consolidateTable and aura.shouldConsolidate ) then
-					if ( not aura.expires or duration > consolidateDuration or (aura.expires - time >= max(consolidateThreshold, duration * consolidateFraction)) ) then
-						targetList = consolidateTable;
-					end
+			aura.name, _, _, _, duration, aura.expires, aura.caster, _, aura.shouldConsolidate, _ = ...;
+			aura.filter = fullFilter;
+			aura.index = i;
+			local targetList = sortingTable;
+			if ( consolidateTable and aura.shouldConsolidate ) then
+				if ( not aura.expires or duration > consolidateDuration or (aura.expires - time >= max(consolidateThreshold, duration * consolidateFraction)) ) then
+					targetList = consolidateTable;
 				end
-				tinsert(targetList, aura);
-			else
-				releaseTable(aura);
 			end
+			tinsert(targetList, aura);
 			i = i + 1;
-		until ( not aura.name );
+			return false;
+		end);
 	end
 	if ( includeWeapons and not weaponPosition ) then
 		weaponPosition = 0;

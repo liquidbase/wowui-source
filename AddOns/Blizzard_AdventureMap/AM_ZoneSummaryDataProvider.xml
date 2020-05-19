@@ -25,7 +25,7 @@
 					<Anchors>
 						<Anchor point="TOP" relativePoint="BOTTOM" y="-0" />
 					</Anchors>
-					<Color r="1.0" g="0.82" b="0"/>
+					<Color color="NORMAL_FONT_COLOR"/>
 				</FontString>
 			</Layer>
 
@@ -45,7 +45,7 @@
 		</Animations>
 	</Frame>
 
-	<Frame name="AdventureMap_ZoneSummaryInsetPinTemplate" hidden="true" frameStrata="HIGH" enableMouse="false" mixin="AdventureMap_ZoneSummaryInsetPinMixin" virtual="true">
+	<Frame name="AdventureMap_ZoneSummaryInsetPinTemplate" hidden="true" enableMouse="false" mixin="AdventureMap_ZoneSummaryInsetPinMixin" virtual="true">
 		<Size x="96" y="98"/>
 
 		<Layers>

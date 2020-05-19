@@ -1,6 +1,11 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
 	<Script file="AlertFrameSystems.lua"/>
+	<Frame name="AlertFrameSystemsRegistrar" hidden="true">
+		<Scripts>
+			<OnLoad function="AlertFrameSystems_Register"/>
+		</Scripts>
+	</Frame>
 	<Button name="DungeonCompletionAlertFrameRewardTemplate" parentArray="RewardFrames" virtual="true">
 		<Size x="36" y="36"/>
 		<Layers>
@@ -38,7 +43,7 @@
 		</Scripts>
 	</Button>
 
-	<Button name="DungeonCompletionAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
+	<ContainedAlertFrame name="DungeonCompletionAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
 		<Size x="336" y="80"/>
 		<Anchors>
 			<Anchor point="BOTTOM" x="0" y="128"/>
@@ -179,9 +184,9 @@
 		<Scripts>
 			<OnLoad inherit="prepend" function="DungeonCompletionAlertFrame_OnLoad"/>
 		</Scripts>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="AchievementAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
+	<ContainedAlertFrame name="AchievementAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
 		<Size x="300" y="88"/>
 		<Anchors>
 			<Anchor point="BOTTOM" x="0" y="128"/>
@@ -362,9 +367,9 @@
 		<Scripts>
 			<OnClick function="AchievementAlertFrame_OnClick" />
 		</Scripts>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="CriteriaAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
+	<ContainedAlertFrame name="CriteriaAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
 		<Size x="256" y="52"/>
 		<Anchors>
 			<Anchor point="BOTTOM" x="0" y="0"/>
@@ -486,9 +491,9 @@
 		<Scripts>
 			<OnClick function="AchievementAlertFrame_OnClick"/>
 		</Scripts>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="GuildChallengeAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
+	<ContainedAlertFrame name="GuildChallengeAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
 		<Size x="270" y="75"/>
 		<Anchors>
 			<Anchor point="BOTTOM" x="0" y="128"/>
@@ -536,9 +541,9 @@
 			</Layer>
 			<Layer level="ARTWORK">
 				<Texture parentKey="EmblemIcon">
-					<Size x="35" y="35"/>
+					<Size x="31" y="35"/>
 					<Anchors>
-						<Anchor point="LEFT" x="15" y="0"/>
+						<Anchor point="CENTER" relativeKey="$parent" relativePoint="LEFT" x="32" y="0"/>
 					</Anchors>
 				</Texture>
 				<FontString inherits="GameFontNormal" text="GUILD_CHALLENGE_LABEL">
@@ -600,9 +605,9 @@
 		<Scripts>
 			<OnClick function="GuildChallengeAlertFrame_OnClick"/>
 		</Scripts>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="ScenarioLegionInvasionAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
+	<ContainedAlertFrame name="ScenarioLegionInvasionAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
 		<Size x="311" y="78"/>
 		<Anchors>
 			<Anchor point="BOTTOM" x="0" y="128"/>
@@ -659,9 +664,9 @@
 				</Texture>
 			</Layer>
 		</Layers>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="ScenarioAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
+	<ContainedAlertFrame name="ScenarioAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
 		<Size x="311" y="78"/>
 		<Anchors>
 			<Anchor point="BOTTOM" x="0" y="128"/>
@@ -771,9 +776,9 @@
 				self.glow = self.glowFrame.glow;
 			</OnLoad>
 		</Scripts>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="MoneyWonAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
+	<ContainedAlertFrame name="MoneyWonAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
 		<Size x="249" y="71"/>
 		<Animations>
 			<AnimationGroup parentKey="animIn">
@@ -826,9 +831,9 @@
 				</FontString>
 			</Layer>
 		</Layers>
-	</Button>
-	
-	<Button name="HonorAwardedAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
+	</ContainedAlertFrame>
+
+	<ContainedAlertFrame name="HonorAwardedAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
 		<Size x="249" y="70"/>
 		<Animations>
 			<AnimationGroup parentKey="animIn">
@@ -881,13 +886,11 @@
 				</FontString>
 			</Layer>
 		</Layers>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="LootWonAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
+	<Texture name="LootUpgradeFrame_ArrowTemplate" hidden="false" alpha="0" alphaMode="BLEND" atlas="loottoast-arrow-blue" useAtlasSize="true" virtual ="true"/>
+	<ContainedAlertFrame name="LootWonAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" inherits="AlertFrameTemplate">
 		<Size x="276" y="96"/>
-		<KeyValues>
-			<KeyValue key="numArrows" value="5" type="number"/>
-		</KeyValues>
 		<Animations>
 			<AnimationGroup parentKey="animIn">
 				<Alpha fromAlpha="1" toAlpha="0" duration="0" order="1"/>
@@ -902,24 +905,14 @@
 					</Scripts>
 				</Alpha>
 			</AnimationGroup>
-			<AnimationGroup parentKey="animArrows" setToFinalAlpha="true">
-				<Alpha childKey="Arrow1" startDelay="0" smoothing="IN" duration="0.2" order="1" fromAlpha="0" toAlpha="1"/>
-				<Alpha childKey="Arrow1" startDelay="0.3" smoothing="OUT" duration="0.2" order="1" fromAlpha="1" toAlpha="0"/>
-				<Translation childKey="Arrow1" startDelay="0" duration="0.5" order="1" offsetX="0" offsetY="60"/>
-				<Alpha childKey="Arrow2" startDelay="0.1" smoothing="IN" duration="0.2" order="1" fromAlpha="0" toAlpha="1"/>
-				<Alpha childKey="Arrow2" startDelay="0.4" smoothing="OUT" duration="0.2" order="1" fromAlpha="1" toAlpha="0"/>
-				<Translation childKey="Arrow2" startDelay="0.1" duration="0.5" order="1" offsetX="0" offsetY="60"/>
-				<Alpha childKey="Arrow3" startDelay="0.2" smoothing="IN" duration="0.2" order="1" fromAlpha="0" toAlpha="1"/>
-				<Alpha childKey="Arrow3" startDelay="0.5" smoothing="OUT" duration="0.2" order="1" fromAlpha="1" toAlpha="0"/>
-				<Translation childKey="Arrow3" startDelay="0.2" duration="0.5" order="1" offsetX="0" offsetY="60"/>
-				<Alpha childKey="Arrow4" startDelay="0.4" smoothing="IN" duration="0.2" order="1" fromAlpha="0" toAlpha="1"/>
-				<Alpha childKey="Arrow4" startDelay="0.7" smoothing="OUT" duration="0.2" order="1" fromAlpha="1" toAlpha="0"/>
-				<Translation childKey="Arrow4" startDelay="0.4" duration="0.5" order="1" offsetX="0" offsetY="60"/>
-				<Alpha childKey="Arrow5" startDelay="0.6" smoothing="IN" duration="0.2" order="1" fromAlpha="0" toAlpha="1"/>
-				<Alpha childKey="Arrow5" startDelay="0.9" smoothing="OUT" duration="0.2" order="1" fromAlpha="1" toAlpha="0"/>
-				<Translation childKey="Arrow5" startDelay="0.6" duration="0.5" order="1" offsetX="0" offsetY="60" endDelay="360000"/>
-			</AnimationGroup>
 		</Animations>
+    <Frames>
+      <Frame parentKey="lootItem" inherits="LootItemExtended">
+        <Anchors>
+          <Anchor point="TOPLEFT" x="22" y="-23"/>
+        </Anchors>
+      </Frame>
+    </Frames>
 		<Layers>
 			<Layer level="BACKGROUND" textureSubLevel="1">
 				<Texture parentKey="Background" file="Interface\LootFrame\LootToast">
@@ -946,31 +939,17 @@
 					</Anchors>
 				</Texture>
 			</Layer>
-			<Layer level="BORDER">
-				<Texture parentKey="Icon">
-					<Size x="52" y="52"/>
-					<Anchors>
-						<Anchor point="LEFT" x="23" y="-2"/>
-					</Anchors>
-				</Texture>
-			</Layer>
 			<Layer level="ARTWORK">
-				<Texture parentKey="IconBorder" atlas="loottoast-itemborder-green">
-					<Size x="60" y="60"/>
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.Icon" relativePoint="CENTER" x="0" y="0"/>
-					</Anchors>
-				</Texture>
 				<FontString parentKey="Label" inherits="GameFontNormal" justifyH="LEFT" text="YOU_WON_LABEL">
 					<Size x="167" y="16"/>
 					<Anchors>
-						<Anchor point="TOPLEFT" relativeKey="$parent.Icon" relativePoint="TOPRIGHT" x="7" y="5"/>
+						<Anchor point="TOPLEFT" relativeKey="$parent.lootItem" relativePoint="TOPRIGHT" x="7" y="0"/>
 					</Anchors>
 				</FontString>
 				<FontString parentKey="ItemName" inherits="GameFontNormalMed3" justifyH="LEFT" justifyV="MIDDLE">
 					<Size x="167" y="33"/>
 					<Anchors>
-						<Anchor point="TOPLEFT" relativeKey="$parent.Icon" relativePoint="TOPRIGHT" x="10" y="-16"/>
+						<Anchor point="TOPLEFT" relativeKey="$parent.lootItem" relativePoint="TOPRIGHT" x="10" y="-19"/>
 					</Anchors>
 				</FontString>
 				<Texture parentKey="RollTypeIcon" file="Interface\Buttons\UI-GroupLoot-Dice-Up">
@@ -984,46 +963,6 @@
 						<Anchor point="RIGHT" relativeKey="$parent.RollTypeIcon" relativePoint="LEFT" x="-3" y="2"/>
 					</Anchors>
 				</FontString>
-			</Layer>
-			<Layer level="ARTWORK" textureSubLevel="1">
-				<Texture parentKey="SpecIcon">
-					<Size x="24" y="24"/>
-					<Anchors>
-						<Anchor point="TOPLEFT" x="8" y="-7"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-			<Layer level="ARTWORK" textureSubLevel="2">
-				<Texture parentKey="SpecRing" file="Interface/Minimap/MiniMap-TrackingBorder">
-					<Anchors>
-						<Anchor point="TOPLEFT" x="0" y="0"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Arrow1" inherits="LootUpgradeFrame_ArrowTemplate">
-					<Anchors>
-						<Anchor point="TOPLEFT" relativeKey="$parent.Background" x="39" y="-45"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Arrow2" inherits="LootUpgradeFrame_ArrowTemplate">
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.Arrow1" x="16" y="0"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Arrow3" inherits="LootUpgradeFrame_ArrowTemplate">
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.Arrow1" x="-16" y="0"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Arrow4" inherits="LootUpgradeFrame_ArrowTemplate">
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.Arrow1" x="5" y="0"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Arrow5" inherits="LootUpgradeFrame_ArrowTemplate">
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.Arrow1" x="-12" y="0"/>
-					</Anchors>
-				</Texture>
 			</Layer>
 			<Layer level="OVERLAY">
 				<!--LootWin-Glow-->
@@ -1073,7 +1012,7 @@
 				self.UpdateTooltip = LootAlertFrame_OnEnter;
 			</OnLoad>
 			<OnEnter>
-				AlertFrame_StopOutAnimation(self);
+				AlertFrame_PauseOutAnimation(self);
 				LootAlertFrame_OnEnter(self);
 			</OnEnter>
 			<OnLeave>
@@ -1082,15 +1021,14 @@
 			</OnLeave>
 			<OnClick function="LootWonAlertFrame_OnClick"/>
 		</Scripts>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Texture name="LootUpgradeFrame_ArrowTemplate" hidden="false" alpha="0" alphaMode="BLEND" atlas="loottoast-arrow-blue" useAtlasSize="true" virtual ="true"/>
 	<FontString name="LootUpgradeFrame_ItemNameTemplate" inherits="GameFontNormalMed3"  justifyH="LEFT" justifyV="MIDDLE" hidden="false" wordwrap="true" virtual ="true">
 		<Size x="160" y="34"/>
 		<Color r="1" g="1" b="1"/>
 	</FontString>
 
-	<Button name="LootUpgradeFrameTemplate" parent="UIParent" hidden="true" alpha="0" frameStrata="DIALOG" frameLevel="1" inherits="AlertFrameTemplate" virtual="true">
+	<ContainedAlertFrame name="LootUpgradeFrameTemplate" parent="UIParent" hidden="true" alpha="0" frameStrata="DIALOG" frameLevel="1" inherits="AlertFrameTemplate" virtual="true">
 		<Size x="276" y="96"/>
 		<KeyValues>
 			<KeyValue key="numArrows" value="5" type="number"/>
@@ -1250,7 +1188,7 @@
 				self.UpdateTooltip = LootAlertFrame_OnEnter;
 			</OnLoad>
 			<OnEnter>
-				AlertFrame_StopOutAnimation(self);
+				AlertFrame_PauseOutAnimation(self);
 				LootAlertFrame_OnEnter(self);
 			</OnEnter>
 			<OnLeave>
@@ -1259,9 +1197,9 @@
 			</OnLeave>
 			<OnClick function="LootUpgradeFrame_OnClick"/>
 		</Scripts>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="DigsiteCompleteToastFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
+	<ContainedAlertFrame name="DigsiteCompleteToastFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
 		<Size x="241" y="81"/>
 		<Anchors>
 			<Anchor point="BOTTOM" x="0" y="170"/>
@@ -1354,9 +1292,9 @@
 				--Overiding the alertFrame onEnter so the this alert animates out even if the player hovers their mouse over it.
 			</OnEnter>
 		</Scripts>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="StorePurchaseAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="FULLSCREEN_DIALOG" frameLevel="63" inherits="AlertFrameTemplate" virtual="true">
+	<ContainedAlertFrame name="EntitlementDeliveredAlertFrameBaseTemplate" parent="UIParent" hidden="true" frameStrata="FULLSCREEN_DIALOG" frameLevel="63" inherits="AlertFrameTemplate" virtual="true">
 		<Size x="294" y="84"/>
 		<Animations>
 			<AnimationGroup parentKey="animIn">
@@ -1374,31 +1312,6 @@
 			</AnimationGroup>
 		</Animations>
 		<Layers>
-			<Layer level="BACKGROUND">
-				<!--inherits="store-toast"-->
-				<Texture parentKey="Background" file="Interface\Store\Store-Main">
-					<TexCoords left="0.50878906" right="0.79589844" top="0.54199219" bottom="0.62402344"/>
-				</Texture>
-			</Layer>
-			<Layer level="ARTWORK">
-				<Texture parentKey="Icon">
-					<Size x="44" y="44"/>
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent" relativePoint="LEFT" x="21" y="0"/>
-					</Anchors>
-				</Texture>
-				<FontString parentKey="Title" inherits="GameFontNormalLarge" text="BLIZZARD_STORE_PURCHASE_COMPLETE" justifyV="MIDDLE">
-					<Size x="200" y="24"/>
-					<Anchors>
-						<Anchor point="TOP" relativeKey="$parent" relativePoint="TOP" x="30" y="-15"/>
-					</Anchors>
-				</FontString>
-				<FontString parentKey="Description" inherits="GameFontHighlight" text="BLIZZARD_STORE_PURCHASE_COMPLETE_DESC">
-					<Anchors>
-						<Anchor point="BOTTOM" relativeKey="$parent" relativePoint="BOTTOM" x="30" y="23"/>
-					</Anchors>
-				</FontString>
-			</Layer>
 			<Layer level="OVERLAY">
 				<Texture file="Interface\AchievementFrame\UI-Achievement-Alert-Glow" alphaMode="ADD" hidden="true" parentKey="glow">
 					<Size x="375" y="175"/>
@@ -1440,11 +1353,78 @@
 			</Layer>
 		</Layers>
 		<Scripts>
-			<OnClick function="StorePurchaseAlertFrame_OnClick"/>
+			<OnClick function="EntitlementDelivered_OnClick"/>
 		</Scripts>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="GarrisonBuildingAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
+	<ContainedAlertFrame name="EntitlementDeliveredAlertFrameTemplate" inherits="EntitlementDeliveredAlertFrameBaseTemplate" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<!--inherits="store-toast"-->
+				<Texture parentKey="Background" file="Interface\Store\Store-Main">
+					<TexCoords left="0.50878906" right="0.79589844" top="0.54199219" bottom="0.62402344"/>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture parentKey="Icon">
+					<Size x="44" y="44"/>
+					<Anchors>
+						<Anchor point="LEFT" x="21"/>
+					</Anchors>
+				</Texture>
+				<FontString parentKey="Title" inherits="GameFontNormalLarge" text="BLIZZARD_STORE_PURCHASE_COMPLETE" justifyV="MIDDLE">
+					<Size x="200" y="24"/>
+					<Anchors>
+						<Anchor point="TOP" x="30" y="-15"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="Description" inherits="GameFontHighlight" text="BLIZZARD_STORE_PURCHASE_COMPLETE_DESC">
+					<Anchors>
+						<Anchor point="BOTTOM" x="30" y="23"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</ContainedAlertFrame>
+
+	<ContainedAlertFrame name="RafRewardDeliveredAlertFrameTemplate" inherits="EntitlementDeliveredAlertFrameBaseTemplate" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="StandardBackground" atlas="RecruitAFriend_Toast_Standard" useAtlasSize="true">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="FancyBackground" atlas="RecruitAFriend_Toast_Fancy" useAtlasSize="true" hidden="true">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture parentKey="Icon">
+					<Size x="44" y="44"/>
+					<Anchors>
+						<Anchor point="LEFT" x="35" y="-3"/>
+					</Anchors>
+				</Texture>
+				<FontString parentKey="Description" inherits="GameFontNormal" text="YOU_EARNED_LABEL" justifyH="LEFT">
+					<Size x="170" y="12"/>
+					<Anchors>
+						<Anchor point="BOTTOM" x="30" y="52"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="Title" inherits="GameFontNormalLarge" justifyV="MIDDLE" justifyH="LEFT">
+					<Size x="170" y="38"/>
+					<Anchors>
+						<Anchor point="TOP" x="30" y="-34"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</ContainedAlertFrame>
+
+	<ContainedAlertFrame name="GarrisonBuildingAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
 		<Size x="317" y="82"/>
 		<Anchors>
 			<Anchor point="BOTTOM" x="0" y="170"/>
@@ -1535,9 +1515,9 @@
 		<Scripts>
 			<OnClick function="GarrisonAlertFrame_OnClick"/>
 		</Scripts>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="GarrisonRandomMissionAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
+	<ContainedAlertFrame name="GarrisonRandomMissionAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
 		<Size x="317" y="82"/>
 		<Anchors>
 			<Anchor point="BOTTOM" x="0" y="170"/>
@@ -1592,12 +1572,24 @@
 						<Anchor point="TOP" x="20" y="-18"/>
 					</Anchors>
 					<Color r="1.0" g="0.82" b="0.0"/>
+					<Shadow>
+						<Offset>
+							<AbsDimension x="1" y="-1"/>
+						</Offset>
+						<Color r="0" g="0" b="0"/>
+					</Shadow>
 				</FontString>
 				<FontString inherits="Game24Font" text="GARRISON_MISSION_ADDED_TOAST2">
 					<Anchors>
 						<Anchor point="TOP" x="20" y="-34"/>
 					</Anchors>
 					<Color r="1.0" g="0.82" b="0.0"/>
+					<Shadow>
+						<Offset>
+							<AbsDimension x="1" y="-1"/>
+						</Offset>
+						<Color r="0" g="0" b="0"/>
+					</Shadow>
 				</FontString>
 				<FontString parentKey="Level" inherits="Game24Font">
 					<Anchors>
@@ -1616,6 +1608,12 @@
 						<Anchor point="TOP" x="-115" y="-48"/>
 					</Anchors>
 					<Color r="0.098" g="0.537" b="0.969" a="1"/>
+					<Shadow>
+						<Offset>
+							<AbsDimension x="1" y="-1"/>
+						</Offset>
+						<Color r="0" g="0" b="0"/>
+					</Shadow>
 				</FontString>
 			</Layer>
 			<Layer level="OVERLAY">
@@ -1658,9 +1656,9 @@
 				</Texture>
 			</Layer>
 		</Layers>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="GarrisonMissionAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
+	<ContainedAlertFrame name="GarrisonMissionAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
 		<Size x="317" y="82"/>
 		<Anchors>
 			<Anchor point="BOTTOM" x="0" y="170"/>
@@ -1740,16 +1738,16 @@
 					GameTooltip:SetOwner(self, "ANCHOR_TOP", 0, -8);
 					GameTooltip:SetText(self.Name:GetText(), 1, 1, 1, 1, 1);
 				end
-				AlertFrame_StopOutAnimation(self);
+				AlertFrame_PauseOutAnimation(self);
 			</OnEnter>
 			<OnLeave>
 				GameTooltip:Hide();
 				AlertFrame_ResumeOutAnimation(self);
 			</OnLeave>
 		</Scripts>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="GarrisonFollowerAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
+	<ContainedAlertFrame name="GarrisonFollowerAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
 		<Size x="317" y="82"/>
 		<Anchors>
 			<Anchor point="BOTTOM" x="0" y="170"/>
@@ -1884,9 +1882,9 @@
 			<OnLeave function="GarrisonFollowerAlertFrame_OnLeave"/>
 			<OnClick function="GarrisonFollowerAlertFrame_OnClick"/>
 		</Scripts>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="GarrisonStandardFollowerAlertFrameTemplate" inherits="GarrisonFollowerAlertFrameTemplate" virtual="true">
+	<ContainedAlertFrame name="GarrisonStandardFollowerAlertFrameTemplate" inherits="GarrisonFollowerAlertFrameTemplate" virtual="true">
 		<Layers>
 			<Layer level="BACKGROUND">
 				<Texture atlas="Garr_MissionToast" useAtlasSize="true">
@@ -1924,9 +1922,9 @@
 				self.Name:ApplyFontObjects();
 			</OnShow>
 		</Scripts>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="GarrisonShipFollowerAlertFrameTemplate" inherits="GarrisonFollowerAlertFrameTemplate" virtual="true">
+	<ContainedAlertFrame name="GarrisonShipFollowerAlertFrameTemplate" inherits="GarrisonFollowerAlertFrameTemplate" virtual="true">
 		<Layers>
 			<Layer level="BACKGROUND">
 				<Texture parentKey="Background" atlas="ShipMission_Toast" useAtlasSize="true">
@@ -1962,9 +1960,9 @@
 				</FontString>
 			</Layer>
 		</Layers>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="GarrisonStandardMissionAlertFrameTemplate" inherits="GarrisonMissionAlertFrameTemplate" virtual="true">
+	<ContainedAlertFrame name="GarrisonStandardMissionAlertFrameTemplate" inherits="GarrisonMissionAlertFrameTemplate" virtual="true">
 		<Layers>
 			<Layer level="BACKGROUND">
 				<Texture parentKey="Background" atlas="Garr_MissionToast" useAtlasSize="true">
@@ -1989,9 +1987,9 @@
 				</FontString>
 			</Layer>
 		</Layers>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="GarrisonShipMissionAlertFrameTemplate" inherits="GarrisonMissionAlertFrameTemplate" virtual="true">
+	<ContainedAlertFrame name="GarrisonShipMissionAlertFrameTemplate" inherits="GarrisonMissionAlertFrameTemplate" virtual="true">
 		<Layers>
 			<Layer level="BACKGROUND">
 				<Texture parentKey="Background" atlas="ShipMission_Toast" useAtlasSize="true">
@@ -2009,9 +2007,9 @@
 				</FontString>
 			</Layer>
 		</Layers>
-	</Button>
+	</ContainedAlertFrame>
 
-    <Button name="GarrisonTalentAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
+    <ContainedAlertFrame name="GarrisonTalentAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
 		<Size x="317" y="82"/>
 		<Anchors>
 			<Anchor point="BOTTOM" x="0" y="170"/>
@@ -2102,9 +2100,9 @@
 		<Scripts>
 			<OnClick function="GarrisonAlertFrame_OnClick"/>
 		</Scripts>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="NewRecipeLearnedAlertFrameTemplate" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
+	<ContainedAlertFrame name="NewRecipeLearnedAlertFrameTemplate" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
 		<Size x="312" y="89"/>
 		<Animations>
 			<AnimationGroup parentKey="animIn">
@@ -2193,9 +2191,9 @@
 		<Scripts>
 			<OnClick function="NewRecipeLearnedAlertFrame_OnClick"/>
 		</Scripts>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="WorldQuestCompleteAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
+	<ContainedAlertFrame name="WorldQuestCompleteAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
 		<Size x="311" y="78"/>
 		<Anchors>
 			<Anchor point="BOTTOM" x="0" y="128"/>
@@ -2255,7 +2253,7 @@
 				</Texture>
 			</Layer>
 			<Layer level="ARTWORK">
-				<FontString inherits="GameFontWhiteTiny" text="WORLD_QUEST_COMPLETE">
+				<FontString parentKey="ToastText" inherits="GameFontWhiteTiny" text="WORLD_QUEST_COMPLETE">
 					<Size x="200" y="12"/>
 					<Anchors>
 						<Anchor point="TOP" x="25" y="-29"/>
@@ -2290,9 +2288,9 @@
 				</Texture>
 			</Layer>
 		</Layers>
-	</Button>
+	</ContainedAlertFrame>
 
-	<Button name="LegendaryItemAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
+	<ContainedAlertFrame name="LegendaryItemAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" inherits="AlertFrameTemplate" virtual="true">
 		<Size x="302" y="119"/>
 		<Layers>
 			<Layer level="BORDER">
@@ -2456,10 +2454,144 @@
 			<OnEnter function="LegendaryItemAlertFrame_OnEnter"/>
 			<OnLeave function="LegendaryItemAlertFrame_OnLeave"/>
 		</Scripts>
-	</Button>
-	<Frame name="AlertFrameSystemsRegistrar" hidden="true">
+	</ContainedAlertFrame>
+
+	<ContainedAlertFrame name="ItemAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" mixin="ItemAlertFrameMixin" inherits="AlertFrameTemplate">
+		<Size x="276" y="96"/>
+		<Animations>
+			<AnimationGroup parentKey="animIn">
+				<Alpha fromAlpha="1" toAlpha="0" duration="0" order="1"/>
+				<Alpha fromAlpha="0" toAlpha="1" duration="0.2" order="2"/>
+			</AnimationGroup>
+			<AnimationGroup parentKey="waitAndAnimOut">
+				<Alpha startDelay="4.05" fromAlpha="1" toAlpha="0" duration="1.5" parentKey="animOut">
+					<Scripts>
+						<OnFinished>
+							self:GetRegionParent():Hide();
+						</OnFinished>
+					</Scripts>
+				</Alpha>
+			</AnimationGroup>
+		</Animations>
+		<Layers>
+			<Layer level="BORDER">
+				<Texture parentKey="Icon">
+					<Size x="52" y="52"/>
+					<Anchors>
+						<Anchor point="LEFT" x="23" y="-2"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture parentKey="IconBorder" atlas="loottoast-itemborder-green">
+					<Size x="60" y="60"/>
+					<Anchors>
+						<Anchor point="CENTER" relativeKey="$parent.Icon" relativePoint="CENTER" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+				<FontString parentKey="Label" inherits="GameFontNormal" justifyH="LEFT" text="YOU_EARNED_LABEL">
+					<Size x="167" y="16"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Icon" relativePoint="TOPRIGHT" x="7" y="5"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="Name" inherits="GameFontNormalMed3" justifyH="LEFT" justifyV="MIDDLE">
+					<Size x="167" y="33"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Icon" relativePoint="TOPRIGHT" x="10" y="-16"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+			<Layer level="OVERLAY">
+				<!--LootWin-Glow-->
+				<Texture atlas="loottoast-glow" alphaMode="ADD" hidden="true" parentKey="glow">
+					<Size>
+						<AbsDimension x="286" y="109"/>
+					</Size>
+					<Anchors>
+						<Anchor point="CENTER" x="0" y="0"/>
+					</Anchors>
+					<Animations>
+						<AnimationGroup parentKey="animIn">
+							<Alpha fromAlpha="0" toAlpha="1" duration="0.2" order="1"/>
+							<Alpha fromAlpha="1" toAlpha="0" duration="0.5" order="2"/>
+							<Scripts>
+								<OnFinished>
+									self:GetParent():Hide();
+								</OnFinished>
+							</Scripts>
+						</AnimationGroup>
+					</Animations>
+				</Texture>
+				<!--LootWin-Sheen-->
+				<Texture file="Interface\LootFrame\LootToast" alphaMode="ADD" hidden="true" parentKey="shine">
+					<Size x="171" y="75"/>
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" x="-10" y="12"/>
+					</Anchors>
+					<Animations>
+						<AnimationGroup parentKey="animIn">
+							<Alpha fromAlpha="0" toAlpha="1" duration="0.1" order="1"/>
+							<Translation offsetX="165" offsetY="0" duration="0.425" order="2"/>
+							<Alpha startDelay="0.175" fromAlpha="1" toAlpha="0" duration="0.25" order="2"/>
+							<Scripts>
+								<OnFinished>
+									self:GetParent():Hide();
+								</OnFinished>
+							</Scripts>
+						</AnimationGroup>
+					</Animations>
+					<TexCoords left="0.56347656" right="0.73046875" top="0.57421875" bottom="0.86718750"/>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY" textureSubLevel="1">
+				<Texture parentKey="IconOverlay" hidden="true">
+					<Size x="60" y="60"/>
+					<Anchors>
+						<Anchor point="CENTER" relativeKey="$parent.Icon"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
 		<Scripts>
-			<OnLoad function="AlertFrameSystems_Register"/>
+			<OnClick method="OnClick"/>
 		</Scripts>
-	</Frame>
+	</ContainedAlertFrame>
+
+	<ContainedAlertFrame name="NewPetAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" mixin="NewPetAlertFrameMixin" inherits="ItemAlertFrameTemplate">
+		<Layers>
+			<Layer level="BACKGROUND" textureSubLevel="1">
+				<Texture parentKey="Background" atlas="PetToast-background" useAtlasSize="true">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</ContainedAlertFrame>
+
+	<ContainedAlertFrame name="NewMountAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" mixin="NewMountAlertFrameMixin" inherits="ItemAlertFrameTemplate">
+		<Layers>
+			<Layer level="BACKGROUND" textureSubLevel="1">
+				<Texture parentKey="Background" atlas="MountToast-background" useAtlasSize="true">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</ContainedAlertFrame>
+
+  <ContainedAlertFrame name="NewToyAlertFrameTemplate" parent="UIParent" hidden="true" frameStrata="DIALOG" virtual="true" mixin="NewToyAlertFrameMixin" inherits="ItemAlertFrameTemplate">
+    <Layers>
+      <Layer level="BACKGROUND" textureSubLevel="1">
+        <Texture parentKey="Background" atlas="LootToast-MoreAwesome" useAtlasSize="true">
+          <Anchors>
+            <Anchor point="CENTER"/>
+          </Anchors>
+        </Texture>
+      </Layer>
+    </Layers>
+  </ContainedAlertFrame>
+  
 </Ui>

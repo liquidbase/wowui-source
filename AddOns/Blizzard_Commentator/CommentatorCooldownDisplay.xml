@@ -1,14 +1,28 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\..\FrameXML\UI.xsd">
-	<Frame name="CommentatorCooldownTemplate" inherits="CooldownFrameTemplate" useParentLevel="true" mixin="CommentatorCooldownFrameMixin" virtual="true">
+	<Frame name="CommentatorSpellFrameMixin" inherits="CooldownFrameTemplate" useParentLevel="true" mixin="CommentatorSpellFrameMixin" virtual="true">
 		<Size x="36" y="36" />
 		<Layers>
 			<Layer level="BACKGROUND">
 				<Texture parentKey="Icon" />
-				<FontString parentKey="Time" inherits="GameFontHighlightSmall">
-					<Anchors>
-						<Anchor point="TOP" relativePoint="BOTTOM" />
-					</Anchors>
-				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Cooldown parentKey="Cooldown" inherits="CooldownFrameTemplate" >
+				<Scripts>
+					<OnLoad>
+						self:SetHideCountdownNumbers(false);
+					</OnLoad>
+				</Scripts>
+				<SwipeTexture>
+					<Color r="0" g="0" b="0" a="0.7"/>
+				</SwipeTexture>
+			</Cooldown>
+		</Frames>
+	</Frame>
+	<Frame name="CommentatorDebuffFrameTemplate" inherits="CommentatorSpellFrameMixin" mixin="CommentatorDebuffFrameMixin" virtual="true"/>
+	<Frame name="CommentatorCooldownFrameTemplate" inherits="CommentatorSpellFrameMixin" mixin="CommentatorCooldownFrameMixin" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
 				<FontString parentKey="ChargesText" inherits="NumberFontNormal" justifyH="RIGHT">
 					<Anchors>
 						<Anchor point="BOTTOMRIGHT" x="-2" y="2"/>
@@ -34,7 +48,6 @@
 			</Layer>
 		</Layers>
 		<Frames>
-			<Cooldown parentKey="Cooldown" inherits="CooldownFrameTemplate" />
 			<Cooldown parentKey="Charges" frameStrata="DIALOG" inherits="CooldownFrameTemplate">
 				<Scripts>
 					<OnLoad>
@@ -50,14 +63,6 @@
 		</Frames>
 		<Scripts>
 			<OnUpdate>
-				local timeLeft = self.enable and self.duration - (GetTime() - self.start) or 0;
-				if timeLeft >= 0.1 then
-					self.Time:SetFormattedText(SecondsToTimeAbbrev(timeLeft));
-					self.Time:Show();
-				else
-					self.Time:Hide();
-				end
-				
 				AnimateTexCoords(self.Ants, 256, 256, 48, 48, 22, elapsed, 0.01);
 			</OnUpdate>
 		</Scripts>

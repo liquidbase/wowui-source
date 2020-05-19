@@ -1,6 +1,9 @@
 -- Protecting from addons since we use this in secure code.
 local cos = math.cos;
 local sin = math.sin;
+local atan2 = math.atan2;
+local asin = math.asin;
+local sqrt = math.sqrt;
 
 function Vector3D_ScaleBy(scalar, x, y, z)
 	return x * scalar, y * scalar, z * scalar;
@@ -31,17 +34,58 @@ function Vector3D_GetLengthSquared(x, y, z)
 end
 
 function Vector3D_GetLength(x, y, z)
-	return math.sqrt(Vector3D_GetLengthSquared(x, y, z));
+	return sqrt(Vector3D_GetLengthSquared(x, y, z));
 end
 
 function Vector3D_Normalize(x, y, z)
 	return Vector3D_DivideBy(Vector3D_GetLength(x, y, z), x, y, z);
 end
 
+function Vector3D_AddVector(left, right)
+	local clone = left:Clone();
+	clone:Add(right);
+	return clone;
+end
+
+function Vector3D_SubtractVector(left, right)
+	local clone = left:Clone();
+	clone:Subtract(right);
+	return clone;
+end
+
+function Vector3D_NormalizeVector(vector)
+	local clone = vector:Clone();
+	clone:Normalize();
+	return clone;
+end
+
+function Vector3D_ScaleVector(scalar, vector)
+	local clone = vector:Clone();
+	clone:ScaleBy(scalar);
+	return clone;
+end
+
 function Vector3D_CalculateNormalFromYawPitch(yaw, pitch)
 	return	cos(-pitch) * cos(yaw),
 			cos(-pitch) * sin(yaw),
 			sin(-pitch);
+end
+
+function Vector3D_CalculateYawPitchFromNormal(x, y, z)
+	if x ~= 0 or y ~= 0 then
+		return atan2(y, x), asin(-z);
+	end
+
+	return 0, asin(-z);
+end
+
+function Vector3D_CalculateYawPitchFromNormalVector(vector)
+	return Vector3D_CalculateYawPitchFromNormal(vector:GetXYZ());
+end
+
+
+function Vector3D_CreateNormalVectorFromYawPitch(yawRadians, pitchRadians)
+	return CreateVector3D(Vector3D_CalculateNormalFromYawPitch(yawRadians, pitchRadians));
 end
 
 Vector3DMixin = {};

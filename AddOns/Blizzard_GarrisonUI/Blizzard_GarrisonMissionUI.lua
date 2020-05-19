@@ -63,23 +63,17 @@ function GarrisonFollowerMission:SetupCompleteDialog()
 		    local dialogBorderFrame = completeDialog.BorderFrame;
 		    dialogBorderFrame.Model:SetDisplayInfo(59175);
 		    dialogBorderFrame.Model:SetPosition(0.2, 1.15, -0.7);
-		    dialogBorderFrame.Stage.LocBack:SetAtlas("_GarrMissionLocation-FrostfireRidge-Back", true);
-		    dialogBorderFrame.Stage.LocMid:SetAtlas ("_GarrMissionLocation-FrostfireRidge-Mid", true);
-		    dialogBorderFrame.Stage.LocFore:SetAtlas("_GarrMissionLocation-FrostfireRidge-Fore", true);
-		    dialogBorderFrame.Stage.LocBack:SetTexCoord(0, 0.485, 0, 1);
-		    dialogBorderFrame.Stage.LocMid:SetTexCoord(0, 0.485, 0, 1);
-		    dialogBorderFrame.Stage.LocFore:SetTexCoord(0, 0.485, 0, 1);
+			GarrisonMissionStage_SetBack(dialogBorderFrame.Stage, "_GarrMissionLocation-FrostfireRidge-Back");
+			GarrisonMissionStage_SetMid(dialogBorderFrame.Stage, "_GarrMissionLocation-FrostfireRidge-Mid");
+			GarrisonMissionStage_SetFore(dialogBorderFrame.Stage, "_GarrMissionLocation-FrostfireRidge-Fore");
 	    else
 			chestDisplayID = 54912;
 		    local dialogBorderFrame = completeDialog.BorderFrame;
 		    dialogBorderFrame.Model:SetDisplayInfo(58063);
 		    dialogBorderFrame.Model:SetPosition(0.2, .75, -0.7);
-		    dialogBorderFrame.Stage.LocBack:SetAtlas("_GarrMissionLocation-ShadowmoonValley-Back", true);
-		    dialogBorderFrame.Stage.LocMid:SetAtlas ("_GarrMissionLocation-ShadowmoonValley-Mid", true);
-		    dialogBorderFrame.Stage.LocFore:SetAtlas("_GarrMissionLocation-ShadowmoonValley-Fore", true);
-		    dialogBorderFrame.Stage.LocBack:SetTexCoord(0.2, 0.685, 0, 1);
-		    dialogBorderFrame.Stage.LocMid:SetTexCoord(0.2, 0.685, 0, 1);
-		    dialogBorderFrame.Stage.LocFore:SetTexCoord(0.2, 0.685, 0, 1);
+			GarrisonMissionStage_SetBack(dialogBorderFrame.Stage, "_GarrMissionLocation-ShadowmoonValley-Back");
+			GarrisonMissionStage_SetMid(dialogBorderFrame.Stage, "_GarrMissionLocation-ShadowmoonValley-Mid");
+			GarrisonMissionStage_SetFore(dialogBorderFrame.Stage, "_GarrMissionLocation-ShadowmoonValley-Fore");
 	    end
 		if (GarrisonFollowerOptions[self.followerTypeID].missionCompleteUseNeutralChest) then
 			chestDisplayID = 71671;
@@ -135,13 +129,15 @@ end
 
 function GarrisonFollowerMission:OnShowMainFrame()
 	GarrisonMission.OnShowMainFrame(self);
+	self.abilityCountersForMechanicTypes = C_Garrison.GetFollowerAbilityCountersForMechanicTypes(self.followerTypeID);
+
 	if (self.FollowerList.followerType ~= self.followerTypeID) then
 		self.FollowerList:Initialize(self.followerTypeID);
 	end
 	self:CheckCompleteMissions(true);
 	GarrisonThreatCountersFrame:SetParent(self.FollowerTab);
 	GarrisonThreatCountersFrame:SetPoint("TOPRIGHT", -12, 30);
-	PlaySound("UI_Garrison_CommandTable_Open");
+	PlaySound(SOUNDKIT.UI_GARRISON_COMMAND_TABLE_OPEN);
 end
 
 function GarrisonFollowerMission:OnHideMainFrame()
@@ -153,7 +149,7 @@ function GarrisonFollowerMission:OnHideMainFrame()
 	HelpPlate_Hide();
 	self:HideCompleteMissions(true);
 	MissionCompletePreload_Cancel(self);
-	PlaySound("UI_Garrison_CommandTable_Close");
+	PlaySound(SOUNDKIT.UI_GARRISON_COMMAND_TABLE_CLOSE);
 	StaticPopup_Hide("DEACTIVATE_FOLLOWER");
 	StaticPopup_Hide("ACTIVATE_FOLLOWER");
 	StaticPopup_Hide("CONFIRM_FOLLOWER_TEMPORARY_ABILITY");
@@ -316,7 +312,7 @@ function GarrisonFollowerMission:OnClickStartMissionButton()
 	if (not GarrisonMission.OnClickStartMissionButton(self)) then
 		return;
 	end
-	PlaySound("UI_Garrison_CommandTable_MissionStart");
+	PlaySound(SOUNDKIT.UI_GARRISON_COMMAND_TABLE_MISSION_START);
 	if (not GetCVarBitfield("closedInfoFrames", LE_FRAME_TUTORIAL_GARRISON_LANDING)) then
 		GarrisonLandingPageTutorialBox:Show();
 	end
@@ -328,7 +324,7 @@ function GarrisonFollowerMission:AssignFollowerToMission(frame, info)
 	end
 
 	if info.slotSoundKitID then
-		PlaySoundKitID(info.slotSoundKitID);
+		PlaySound(info.slotSoundKitID);
 	end
 
 	local soundToPlay;
@@ -461,7 +457,7 @@ function GarrisonFollowerMission:MissionCompleteInitialize(missionList, index)
 	stage.MissionInfo.Location:SetText(mission.location);
 
 	-- max level
-	if ( mission.level == self.followerMaxLevel and mission.iLevel > 0 ) then
+	if ( GarrisonFollowerOptions[mission.followerTypeID].showILevelOnMission and mission.level == self.followerMaxLevel and mission.iLevel > 0 ) then
 		stage.MissionInfo.Level:SetPoint("CENTER", stage.MissionInfo, "TOPLEFT", 30, -28);
 		stage.MissionInfo.ItemLevel:Show();
 		stage.MissionInfo.ItemLevel:SetFormattedText(NUMBER_IN_PARENTHESES, mission.iLevel);
@@ -554,7 +550,7 @@ local tutorials = {
 
 -- TODO: Move these GarrisonMissionFrame_ functions to the GarrisonFollowerMission mixin
 function GarrisonFollowerMission:OnClickMissionTutorialButton()
-	PlaySound("igMainMenuOptionCheckBoxOn");
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 	self:CheckTutorials(true);
 end
 
@@ -837,7 +833,7 @@ function GarrisonMissionListMixin:OnUpdate()
 end
 
 function GarrisonMissionListTab_OnClick(self, button)
-	PlaySound("UI_Garrison_Nav_Tabs");
+	PlaySound(SOUNDKIT.UI_GARRISON_NAV_TABS);
 	GarrisonMissionListTab_SetTab(self);
 end
 
@@ -941,7 +937,7 @@ function GarrisonMissionListMixin:Update()
 				button.IconBG:SetVertexColor(0, 0, 0, 0.4)
 			end
 			local showingItemLevel = false;
-			if ( mission.isMaxLevel and mission.iLevel > 0 ) then
+			if ( GarrisonFollowerOptions[followerTypeID].showILevelOnMission and mission.isMaxLevel and mission.iLevel > 0 ) then
 				button.ItemLevel:SetFormattedText(NUMBER_IN_PARENTHESES, mission.iLevel);
 				button.ItemLevel:Show();
 				showingItemLevel = true;
@@ -949,9 +945,9 @@ function GarrisonMissionListMixin:Update()
 				button.ItemLevel:Hide();
 			end
 			if ( showingItemLevel and mission.isRare ) then
-				button.Level:SetPoint("CENTER", button, "TOPLEFT", 40, -22);
+				button.Level:SetPoint("CENTER", button, "TOPLEFT", 35, -22);
 			else
-				button.Level:SetPoint("CENTER", button, "TOPLEFT", 40, -36);
+				button.Level:SetPoint("CENTER", button, "TOPLEFT", 35, -36);
 			end
 
 			button:Enable();
@@ -1016,6 +1012,25 @@ function GarrisonMissionList_UpdateMouseOverTooltip(self)
 	end
 end
 
+function GarrisonMissionButtonRewards_OnEnter(self)
+	GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+	if (self.itemID) then
+		GameTooltip:SetItemByID(self.itemID);
+		return;
+	end
+	if (self.currencyID and self.currencyID ~= 0 and self.currencyQuantity) then
+		GameTooltip:SetCurrencyByID(self.currencyID, self.currencyQuantity);
+		return;
+	end
+	if (self.title) then
+		GameTooltip:SetText(self.title);
+	end
+	if (self.tooltip) then
+		GameTooltip:AddLine(self.tooltip, 1, 1, 1, true);
+	end
+	GameTooltip:Show();
+end
+
 function GarrisonMissionButton_SetRewards(self, rewards)
 	if (#rewards > 0) then
 		local currencyMultipliers = nil;
@@ -1063,10 +1078,24 @@ function GarrisonMissionButton_SetRewards(self, rewards)
 							quantity = quantity * currencyMultipliers[reward.currencyID];
 						end
 						Reward.currencyID = reward.currencyID;
-						Reward.Quantity:SetText(quantity);
-						local currencyColor = GetColorForCurrencyReward(reward.currencyID, quantity);
-						Reward.Quantity:SetTextColor(currencyColor:GetRGB());
-						Reward.Quantity:Show();
+						
+						local currencyName, currencyTexture, currencyQuantity, currencyQuality = CurrencyContainerUtil.GetCurrencyContainerInfo(reward.currencyID, reward.quantity, reward.title, reward.icon, nil);
+						if (currencyTexture) then 
+							Reward.Icon:SetTexture(currencyTexture);
+						end
+						
+						Reward.currencyQuantity = quantity; 
+						
+						if (currencyQuality) then
+							SetItemButtonQuality(Reward, currencyQuality, reward.currencyID); 
+						end
+						
+						if (currencyQuantity > 1) then 
+							Reward.Quantity:SetText(currencyQuantity);
+							local currencyColor = GetColorForCurrencyReward(reward.currencyID, quantity);
+							Reward.Quantity:SetTextColor(currencyColor:GetRGB());
+							Reward.Quantity:Show();
+						end
 					end
 				else
 					Reward.tooltip = reward.tooltip;
@@ -1129,7 +1158,7 @@ end
 function GarrisonMissionButton_SetInProgressTooltip(missionInfo, showRewards)
 	GameTooltip:SetText(missionInfo.name);
 	-- level
-	if ( missionInfo.isMaxLevel and missionInfo.iLevel > 0 ) then
+	if ( GarrisonFollowerOptions[missionInfo.followerTypeID].showILevelOnMission and  missionInfo.isMaxLevel and missionInfo.iLevel > 0 ) then
 		GameTooltip:AddLine(format(GARRISON_MISSION_LEVEL_ITEMLEVEL_TOOLTIP, missionInfo.level, missionInfo.iLevel), 1, 1, 1);
 	else
 		GameTooltip:AddLine(format(GARRISON_MISSION_LEVEL_TOOLTIP, missionInfo.level), 1, 1, 1);
@@ -1157,6 +1186,11 @@ function GarrisonMissionButton_SetInProgressTooltip(missionInfo, showRewards)
 				end
 			elseif (reward.followerXP) then
 				GameTooltip:AddLine(reward.title, 1, 1, 1);
+            elseif (reward.currencyID and C_CurrencyInfo.IsCurrencyContainer(reward.currencyID, reward.quantity)) then
+                local name, texture, quantity, quality = CurrencyContainerUtil.GetCurrencyContainerInfo(reward.currencyID, reward.quantity);
+                if name then
+					GameTooltip:AddLine(ITEM_QUALITY_COLORS[quality].hex..name..FONT_COLOR_CODE_CLOSE);
+				end
 			else
 				GameTooltip:AddLine(reward.title, 1, 1, 1);
 			end
@@ -1258,6 +1292,12 @@ function GarrisonMissionPageEnvironment_OnEnter(self)
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 		GameTooltip:SetText(environment);
 		GameTooltip:AddLine(environmentDesc, 1, 1, 1, 1);
+
+		if ( C_Garrison.IsEnvironmentCountered(missionPage.missionInfo.missionID) ) then
+			GameTooltip_AddBlankLineToTooltip(GameTooltip);
+			GameTooltip_AddInstructionLine(GameTooltip, GARRISON_MISSION_ENVIRONMENT_COUNTERED, 1);
+		end
+
 		GameTooltip:Show();
 	end
 end
@@ -1368,20 +1408,6 @@ end
 ---------------------------------------------------------------------------------
 --- Mission Page: Placing Followers/Starting Mission                          ---
 ---------------------------------------------------------------------------------
-function GarrisonFollowerListButton_OnDragStart(self, button)
-	local mainFrame = self:GetFollowerList():GetParent();
-	if (mainFrame.OnDragStartFollowerButton) then
-		mainFrame:OnDragStartFollowerButton(GarrisonFollowerPlacer, self, 24);
-	end
-end
-
-function GarrisonFollowerListButton_OnDragStop(self)
-	local mainFrame = self:GetFollowerList():GetParent();
-	if (mainFrame.OnDragStopFollowerButton) then
-		mainFrame:OnDragStopFollowerButton(GarrisonFollowerPlacer);
-	end
-end
-
 function GarrisonMissionPageFollowerFrame_OnDragStart(self)
 	local mainFrame = self:GetParent():GetParent():GetParent();
 	mainFrame:OnDragStartMissionFollower(GarrisonFollowerPlacer, self, 24);
@@ -1446,7 +1472,7 @@ function GarrisonFollowerMissionComplete:AnimLine(entry)
 	local mechanicsFrame = self.Stage.EncountersFrame.MechanicsFrame;
 	local numMechs, playCounteredSound = self:ShowEncounterMechanics(encountersFrame, mechanicsFrame, self.encounterIndex);
 	if ( playCounteredSound ) then
-		PlaySound("UI_Garrison_Mission_Threat_Countered");
+		PlaySound(SOUNDKIT.UI_GARRISON_MISSION_THREAT_COUNTERED);
 	end
 	mechanicsFrame:SetParent(encountersFrame.Encounters[self.encounterIndex]);
 	mechanicsFrame:SetPoint("BOTTOM", encountersFrame.Encounters[self.encounterIndex], (numMechs - 1) * -16, -5);
@@ -1472,10 +1498,10 @@ function GarrisonFollowerMissionComplete:AnimPortrait(entry)
 	else
 		if ( self.currentMission.failedEncounter == self.encounterIndex ) then
 			encounter.CheckFrame.FailureAnim:Play();
-			PlaySound("UI_Garrison_Mission_Complete_Encounter_Fail");
+			PlaySound(SOUNDKIT.UI_GARRISON_MISSION_COMPLETE_ENCOUNTER_FAIL);
 		else
 			encounter.CheckFrame.SuccessAnim:Play();
-			PlaySound("UI_Garrison_Mission_Complete_Mission_Success");
+			PlaySound(SOUNDKIT.UI_GARRISON_MISSION_COMPLETE_MISSION_SUCCESS);
 		end
 	end
 	entry.duration = 0.5;
@@ -1596,6 +1622,7 @@ local ANIMATION_CONTROL = {
 		[14] = { duration = 0,		onStartFunc = GarrisonMissionComplete.AnimSkipNext },				-- click Next button if we're in skip mode
 	}
 };
+ANIMATION_CONTROL[LE_FOLLOWER_TYPE_GARRISON_8_0] = ANIMATION_CONTROL[LE_FOLLOWER_TYPE_GARRISON_7_0];
 
 function GarrisonFollowerMissionComplete:SetAnimationControl()
 	self.animationControl = ANIMATION_CONTROL[self:GetParent().followerTypeID];

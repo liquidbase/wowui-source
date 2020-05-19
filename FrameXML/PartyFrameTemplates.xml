@@ -4,7 +4,7 @@
 		<Size x="15" y="15"/>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="$parentIcon" setAllPoints="true"/>
+				<Texture name="$parentIcon" parentKey="Icon" setAllPoints="true"/>
 			</Layer>
 		</Layers>
 		<Scripts>
@@ -26,10 +26,10 @@
 		<Size x="15" y="15"/>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="$parentIcon" setAllPoints="true"/>
+				<Texture name="$parentIcon" parentKey="Icon" setAllPoints="true"/>
 			</Layer>
 			<Layer level="OVERLAY">
-				<Texture name="$parentBorder" file="Interface\Buttons\UI-Debuff-Overlays">
+				<Texture name="$parentBorder" parentKey="Border" file="Interface\Buttons\UI-Debuff-Overlays">
 					<Size x="17" y="17"/>
 					<Anchors>
 						<Anchor point="TOPLEFT" x="-1" y="1"/>
@@ -312,12 +312,6 @@
 										<Anchor point="TOPLEFT"/>
 									</Anchors>
 									<TexCoords left="0" right="0.296875" top="0.015625" bottom="0.3125"/>
-								</Texture>
-								<Texture name="$parentMasterIcon" file="Interface\GroupFrame\UI-Group-MasterLooter" hidden="true">
-									<Size x="16" y="16"/>
-									<Anchors>
-										<Anchor point="TOPLEFT" x="32" y="0"/>
-									</Anchors>
 								</Texture>
 								<Texture name="$parentPVPIcon" hidden="true">
 									<Size x="32" y="32"/>

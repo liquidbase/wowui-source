@@ -73,9 +73,9 @@ function GuildRosterFrame_OnEvent(self, event, ...)
 		end
 	elseif ( event == "GUILD_ROSTER_UPDATE" ) then
 		if ( currentGuildView ~= "tradeskill" ) then
-			local arg1 = ...;
-			if ( arg1 ) then
-				GuildRoster();
+			local canRequestRosterUpdate = ...;
+			if ( canRequestRosterUpdate ) then
+				C_GuildInfo.GuildRoster();
 			end		
 			GuildRoster_Update();
 		end
@@ -108,7 +108,7 @@ function GuildRoster_SortByColumn(column)
 			SortGuildRoster(column.sortType);
 		end
 	end
-	PlaySound("igMainMenuOptionCheckBoxOn");
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 end
 
 --****** Guild members **********************************************************
@@ -198,8 +198,8 @@ function GuildRoster_Update()
 		end
 		
 		-- Update officer note
-		if ( CanViewOfficerNote() ) then
-			if ( CanEditOfficerNote() ) then
+		if ( C_GuildInfo.CanViewOfficerNote() ) then
+			if ( C_GuildInfo.CanEditOfficerNote() ) then
 				if ( (not officernote) or (officernote == "") ) then
 					officernote = GUILD_OFFICERNOTE_EDITLABEL;
 				end
@@ -207,7 +207,7 @@ function GuildRoster_Update()
 			else
 				OfficerNoteText:SetTextColor(0.65, 0.65, 0.65);
 			end
-			GuildMemberOfficerNoteBackground:EnableMouse(CanEditOfficerNote());
+			GuildMemberOfficerNoteBackground:EnableMouse(C_GuildInfo.CanEditOfficerNote());
 			OfficerNoteText:SetText(officernote);
 
 			-- Resize detail frame
@@ -374,12 +374,12 @@ function GuildRosterButton_OnClick(self, button)
 			if ( GuildMemberDetailFrame:IsShown() and self.guildIndex == GuildFrame.selectedGuildMember ) then
 				SetGuildRosterSelection(0);
 				GuildFrame.selectedGuildMember = 0;
-				PlaySound("igCharacterInfoClose");
+				PlaySound(SOUNDKIT.IG_CHARACTER_INFO_CLOSE);
 				GuildMemberDetailFrame:Hide();
 			else
 				SetGuildRosterSelection(self.guildIndex);
 				GuildFrame.selectedGuildMember = self.guildIndex;
-				PlaySound("igCharacterInfoOpen");
+				PlaySound(SOUNDKIT.IG_CHARACTER_INFO_OPEN);
 				GuildFramePopup_Show(GuildMemberDetailFrame);
 				CloseDropDownMenus();
 			end
@@ -508,7 +508,7 @@ function GuildRoster_UpdateTradeSkills()
 end
 
 function GuildRosterTradeSkillHeader_OnClick(self)
-	PlaySound("igMainMenuOptionCheckBoxOn");
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 	if ( self.collapsed ) then
 		ExpandGuildTradeSkillHeader(self.skillID);
 	else
@@ -627,7 +627,7 @@ end
 
 function GuildRosterViewDropdown_OnClick(self)
 	GuildRoster_SetView(self.value);
-	GuildRoster();
+	C_GuildInfo.GuildRoster();
 	GuildRoster_Update();
 	SetCVar("guildRosterView", currentGuildView);
 	UIDropDownMenu_SetSelectedValue(GuildRosterViewDropdown, currentGuildView);
@@ -647,7 +647,7 @@ function GuildFrameDemoteButton_OnClick(self)
 		dialog.data = fullName;
 	else
 		GuildDemote(GuildFrame.selectedName);
-		PlaySound("UChatScrollButton");
+		PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON);
 		GuildFrameDemoteButton:Disable();
 	end
 end
@@ -664,7 +664,7 @@ function GuildFramePromoteButton_OnClick(self)
 		dialog.data = fullName;
 	else
 		GuildPromote(GuildFrame.selectedName);
-		PlaySound("UChatScrollButton");
+		PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON);
 		GuildFramePromoteButton:Disable();
 	end
 end

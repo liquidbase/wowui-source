@@ -1,29 +1,41 @@
-RAID_CLASS_COLORS = {
-	["HUNTER"] = { r = 0.67, g = 0.83, b = 0.45, colorStr = "ffabd473" },
-	["WARLOCK"] = { r = 0.53, g = 0.53, b = 0.93, colorStr = "ff8788ee" },
-	["PRIEST"] = { r = 1.0, g = 1.0, b = 1.0, colorStr = "ffffffff" },
-	["PALADIN"] = { r = 0.96, g = 0.55, b = 0.73, colorStr = "fff58cba" },
-	["MAGE"] = { r = 0.25, g = 0.78, b = 0.92, colorStr = "ff3fc7eb" },
-	["ROGUE"] = { r = 1.0, g = 0.96, b = 0.41, colorStr = "fffff569" },
-	["DRUID"] = { r = 1.0, g = 0.49, b = 0.04, colorStr = "ffff7d0a" },
-	["SHAMAN"] = { r = 0.0, g = 0.44, b = 0.87, colorStr = "ff0070de" },
-	["WARRIOR"] = { r = 0.78, g = 0.61, b = 0.43, colorStr = "ffc79c6e" },
-	["DEATHKNIGHT"] = { r = 0.77, g = 0.12 , b = 0.23, colorStr = "ffc41f3b" },
-	["MONK"] = { r = 0.0, g = 1.00 , b = 0.59, colorStr = "ff00ff96" },
-	["DEMONHUNTER"] = { r = 0.64, g = 0.19, b = 0.79, colorStr = "ffa330c9" },
-};
-
-function GetClassColor(classFilename)
-	local color = RAID_CLASS_COLORS[classFilename];
-	if color then
-		return color.r, color.g, color.b, color.colorStr;
-	end
-
-	return 1, 1, 1, "ffffffff";
+function CanAccessObject(obj)
+	return issecure() or not obj:IsForbidden();
 end
 
-function WrapTextInColorCode(text, colorHexString)
-	return ("|c%s%s|r"):format(colorHexString, text);
+function GetTextureInfo(obj)
+	if obj:GetObjectType() == "Texture" then
+		local assetName = obj:GetAtlas();
+		local assetType = "Atlas";
+
+		if not assetName then
+			assetName = obj:GetTextureFilePath();
+			assetType = "File";
+		end
+
+		if not assetName then
+			assetName = obj:GetTextureFileID();
+			assetType = "FileID";
+		end
+
+		if not assetName then
+			assetName = "UnknownAsset";
+			assetType = "Unknown";
+		end
+
+		local ulX, ulY, blX, blY, urX, urY, brX, brY = obj:GetTexCoord();
+		return assetName, assetType, ulX, ulY, blX, blY, urX, urY, brX, brY;
+	end
+end
+
+function CalculateDistanceBetweenRegions(regionA, regionB)
+	local ax, ay = regionA:GetCenter();
+	local bx, by = regionB:GetCenter();
+	if ax and bx then
+		local dx, dy = bx - ax, by - ay;
+		return math.sqrt(dx * dx + dy * dy);
+	else
+		return 0;
+	end
 end
 
 CLASS_ICON_TCOORDS = {
@@ -123,30 +135,66 @@ function GetTexCoordsForRole(role)
 	end
 end
 
+function ConvertPixelsToUI(pixels, frameScale)
+	local physicalScreenHeight = select(2, GetPhysicalScreenSize());
+	return (pixels * 768.0)/(physicalScreenHeight * frameScale);
+end
+
 function ReloadUI()
 	C_UI.Reload();
 end
 
-function tDeleteItem(table, item)
+function tDeleteItem(tbl, item)
 	local index = 1;
-	while table[index] do
-		if ( item == table[index] ) then
-			tremove(table, index);
+	while tbl[index] do
+		if ( item == tbl[index] ) then
+			tremove(tbl, index);
 		else
 			index = index + 1;
 		end
 	end
 end
 
-function tContains(table, item)
-	local index = 1;
-	while table[index] do
-		if ( item == table[index] ) then
-			return 1;
+function tIndexOf(tbl, item)
+	for i, v in ipairs(tbl) do
+		if item == v then
+			return i;
 		end
-		index = index + 1;
 	end
-	return nil;
+end
+
+function tContains(tbl, item)
+	return tIndexOf(tbl, item) ~= nil;
+end
+
+-- This is a deep compare on the values of the table (based on depth) but not a deep comparison
+-- of the keys, as this would be an expensive check and won't be necessary in most cases.
+function tCompare(lhsTable, rhsTable, depth)
+	depth = depth or 1;
+	for key, value in pairs(lhsTable) do
+		if type(value) == "table" then
+			local rhsValue = rhsTable[key];
+			if type(rhsValue) ~= "table" then
+				return false;
+			end
+			if depth > 1 then
+				if not tCompare(value, rhsValue, depth - 1) then
+					return false;
+				end
+			end
+		elseif value ~= rhsTable[key] then
+			return false;
+		end
+	end
+
+	-- Check for any keys that are in rhsTable and not lhsTable.
+	for key, value in pairs(rhsTable) do
+		if lhsTable[key] == nil then
+			return false;
+		end
+	end
+
+	return true;
 end
 
 function tInvert(tbl)
@@ -179,6 +227,12 @@ function tFilter(tbl, pred, isIndexTable)
 	return out;
 end
 
+function tAppendAll(table, addedArray)
+	for i, element in ipairs(addedArray) do
+		tinsert(table, element);
+	end
+end
+
 function CopyTable(settings)
 	local copy = {};
 	for k, v in pairs(settings) do
@@ -201,18 +255,76 @@ function FindInTableIf(tbl, pred)
 	return nil;
 end
 
-function GetItemInfoFromHyperlink(link)
-	local hyperlink = link:match("|Hitem:.-|h");
-	if (hyperlink) then
-		local itemID, creationContext = GetItemCreationContext(hyperlink);
-		return tonumber(itemID), creationContext;
-	else
+function ExtractHyperlinkString(linkString)
+	local preString, hyperlinkString, postString = linkString:match("^(.*)|H(.+)|h(.*)$");
+	return preString ~= nil, preString, hyperlinkString, postString;
+end
+
+function ExtractLinkData(link)
+	return string.match(link, "(.-):(.*)");
+end
+
+function ExtractQuestRewardID(linkString)
+	return linkString:match("^questreward:(%d+)$");
+end
+
+function SplitTextIntoLines(text, delimiter)
+	local lines = {};
+	local startIndex = 1;
+	local foundIndex = string.find(text, delimiter);
+	while foundIndex do
+		table.insert(lines, text:sub(startIndex, foundIndex - 1));
+		startIndex = foundIndex + 2;
+		foundIndex = string.find(text, delimiter, startIndex);
+	end
+	if startIndex <= #text then
+		table.insert(lines, text:sub(startIndex));
+	end
+	return lines;
+end
+
+function SplitTextIntoHeaderAndNonHeader(text)
+	local foundIndex = string.find(text, "|n");
+	if not foundIndex then
+		-- There was no newline...the whole thing is a header
+		return text;
+	elseif #text == 2 then
+		-- There was a newline, but that was all that was in the string.
 		return nil;
+	elseif foundIndex == 1 then
+		-- There was a newline at the very beginning...the whole rest of the string is a header
+		return text:sub(3);
+	elseif foundIndex == #text - 1 then
+		-- There was a newline at the very end...the whole rest of the string is a header
+		return text:sub(1, foundIndex - 1);
+	else
+		-- There was a newline somewhere in the middle...everything before it is the header and everything after it is the non-header
+		return text:sub(1, foundIndex - 1), text:sub(foundIndex + 2);
+	end
+end
+
+function GetItemInfoFromHyperlink(link)
+	local strippedItemLink, itemID = link:match("|Hitem:((%d+).-)|h");
+	if itemID then
+		return tonumber(itemID), strippedItemLink;
 	end
 end
 
 function GetAchievementInfoFromHyperlink(link)
 	return tonumber(link:match("|Hachievement:(%d+)"));
+end
+
+function FormatValueWithSign(value)
+	local formatString = value < 0 and SYMBOLIC_NEGATIVE_NUMBER or SYMBOLIC_POSITIVE_NUMBER;
+	return formatString:format(math.abs(value));
+end
+
+function GetPlayerGuid()
+	return UnitGUID("player");
+end
+
+function IsPlayerGuid(guid)
+	return guid == GetPlayerGuid();
 end
 
 function FormatLargeNumber(amount)
@@ -226,23 +338,6 @@ function FormatLargeNumber(amount)
 	--Add everything before the first comma
 	newDisplay = amount:sub(1, (strlen % 3 == 0) and 3 or (strlen % 3))..newDisplay;
 	return newDisplay;
-end
-
--- where ... are the mixins to mixin
-function Mixin(object, ...)
-	for i = 1, select("#", ...) do
-		local mixin = select(i, ...);
-		for k, v in pairs(mixin) do
-			object[k] = v;
-		end
-	end
-
-	return object;
-end
-
--- where ... are the mixins to mixin
-function CreateFromMixins(...)
-	return Mixin({}, ...)
 end
 
 COPPER_PER_SILVER = 100;
@@ -307,11 +402,27 @@ function Saturate(value)
 	return Clamp(value, 0.0, 1.0);
 end
 
+function Wrap(value, max)
+	return (value - 1) % max + 1;
+end
+
+function ClampDegrees(value)
+	return ClampMod(value, 360);
+end
+
+function ClampMod(value, mod)
+	return ((value % mod) + mod) % mod;
+end
+
+function NegateIf(value, condition)
+	return condition and -value or value;
+end
+
 function PercentageBetween(value, startValue, endValue)
 	if startValue == endValue then
 		return 0.0;
 	end
-	return (startValue - value) / (startValue - endValue);
+	return (value - startValue) / (endValue - startValue);
 end
 
 function ClampedPercentageBetween(value, startValue, endValue)
@@ -327,6 +438,10 @@ function FrameDeltaLerp(startValue, endValue, amount)
 	return DeltaLerp(startValue, endValue, amount, GetTickTime());
 end
 
+function RandomFloatInRange(minValue, maxValue)
+	return Lerp(minValue, maxValue, math.random());
+end
+
 function GetNavigationButtonEnabledStates(count, index)
 	-- Returns indicate whether navigation for "previous" and "next" should be enabled, respectively.
 	if count > 1 then
@@ -337,7 +452,7 @@ function GetNavigationButtonEnabledStates(count, index)
 end
 
 ----------------------------------
--- TRIAL/VETERAN FUCNCTIONS
+-- TRIAL/VETERAN FUNCTIONS
 ----------------------------------
 function GameLimitedMode_IsActive()
 	return IsTrialAccount() or IsVeteranTrialAccount();
@@ -519,9 +634,10 @@ local function ProcessSmoothStatusBars()
 
 		if IsCloseEnough(bar, newValue, effectiveTargetValue) then
 			g_updatingBars[bar] = nil;
+			bar:SetValue(effectiveTargetValue);
+		else
+			bar:SetValue(newValue);
 		end
-
-		bar:SetValue(newValue);
 	end
 end
 
@@ -560,12 +676,33 @@ function SmoothStatusBarMixin:SetMinMaxSmoothedValue(min, max)
 	self.lastSmoothedMax = max;
 end
 
+function WrapTextInColorCode(text, colorHexString)
+	return ("|c%s%s|r"):format(colorHexString, text);
+end
+
 ColorMixin = {};
 
 function CreateColor(r, g, b, a)
 	local color = CreateFromMixins(ColorMixin);
 	color:OnLoad(r, g, b, a);
 	return color;
+end
+
+local function ExtractColorValueFromHex(str, index)
+	return tonumber(str:sub(index, index + 1), 16) / 255;
+end
+
+function CreateColorFromHexString(hexColor)
+	if #hexColor == 8 then
+		local a, r, g, b = ExtractColorValueFromHex(hexColor, 1), ExtractColorValueFromHex(hexColor, 3), ExtractColorValueFromHex(hexColor, 5), ExtractColorValueFromHex(hexColor, 7);
+		return CreateColor(r, g, b, a);
+	else
+		GMError("CreateColorFromHexString input must be hexadecimal digits in this format: AARRGGBB.");
+	end
+end
+
+function CreateColorFromBytes(r, g, b, a)
+	return CreateColor(r / 255, g / 255, b / 255, a / 255);
 end
 
 function AreColorsEqual(left, right)
@@ -599,7 +736,7 @@ function ColorMixin:GetRGBA()
 end
 
 function ColorMixin:GetRGBAAsBytes()
-	return self.r * 255, self.g * 255, self.b * 255, self.a * 255;
+	return self.r * 255, self.g * 255, self.b * 255, (self.a or 1) * 255;
 end
 
 function ColorMixin:SetRGBA(r, g, b, a)
@@ -617,59 +754,65 @@ function ColorMixin:GenerateHexColor()
 	return ("ff%.2x%.2x%.2x"):format(self:GetRGBAsBytes());
 end
 
+function ColorMixin:GenerateHexColorMarkup()
+	return "|c"..self:GenerateHexColor();
+end
+
 function ColorMixin:WrapTextInColorCode(text)
 	return WrapTextInColorCode(text, self:GenerateHexColor());
 end
 
--- Mix this into a FontString to have it resize until it stops truncating, or gets too small
-ShrinkUntilTruncateFontStringMixin = {};
+RAID_CLASS_COLORS = {};
+do
+	local classes = {"HUNTER", "WARLOCK", "PRIEST", "PALADIN", "MAGE", "ROGUE", "DRUID", "SHAMAN", "WARRIOR", "DEATHKNIGHT", "MONK", "DEMONHUNTER"};
 
--- From largest to smallest
-function ShrinkUntilTruncateFontStringMixin:SetFontObjectsToTry(...)
-	self.fontObjectsToTry = { ... };
-	if self:GetText() then
-		self:ApplyFontObjects();
+	for i, className in ipairs(classes) do
+		RAID_CLASS_COLORS[className] = C_ClassColor.GetClassColor(className);
 	end
 end
 
-function ShrinkUntilTruncateFontStringMixin:ApplyFontObjects()
-	if not self.fontObjectsToTry then
-		error("No fonts applied to ShrinkUntilTruncateFontStringMixin, call SetFontObjectsToTry first");
-	end
-
-	for i, fontObject in ipairs(self.fontObjectsToTry) do
-		self:SetFontObject(fontObject);
-		if not self:IsTruncated() then
-			break;
-		end
-	end
+for k, v in pairs(RAID_CLASS_COLORS) do
+	v.colorStr = v:GenerateHexColor();
 end
 
-function ShrinkUntilTruncateFontStringMixin:SetText(text)
-	if not self:GetFont() then
-		if not self.fontObjectsToTry then
-			error("No fonts applied to ShrinkUntilTruncateFontStringMixin, call SetFontObjectsToTry first");
-		end
-		self:SetFontObject(self.fontObjectsToTry[1]);
+function GetClassColor(classFilename)
+	local color = RAID_CLASS_COLORS[classFilename];
+	if color then
+		return color.r, color.g, color.b, color.colorStr;
 	end
 
-	getmetatable(self).__index.SetText(self, text);
-	self:ApplyFontObjects();
+	return 1, 1, 1, "ffffffff";
 end
 
-function ShrinkUntilTruncateFontStringMixin:SetFormattedText(format, ...)
-	if not self:GetFont() then
-		if not self.fontObjectsToTry then
-			error("No fonts applied to ShrinkUntilTruncateFontStringMixin, call SetFontObjectsToTry first");
-		end
-		self:SetFontObject(self.fontObjectsToTry[1]);
-	end
+function GetClassColorObj(classFilename)
+	-- TODO: Remove this, convert everything that's using GetClassColor to use the object instead, then begin using that again
+	return RAID_CLASS_COLORS[classFilename];
+end
 
-	getmetatable(self).__index.SetFormattedText(self, format, ...);
-	self:ApplyFontObjects();
+function GetClassColoredTextForUnit(unit, text)
+	local classFilename = select(2, UnitClass(unit));
+	local color = GetClassColorObj(classFilename);
+	return color:WrapTextInColorCode(text);
+end
+
+function GetFactionColor(factionGroupTag)
+	return PLAYER_FACTION_COLORS[PLAYER_FACTION_GROUP[factionGroupTag]];
 end
 
 -- Time --
+function SecondsToClock(seconds, displayZeroHours)
+	seconds = math.max(seconds, 0);
+	local hours = math.floor(seconds / 3600);
+	seconds = seconds - (hours * 3600);
+	local minutes = math.floor(seconds / 60);
+	seconds = seconds % 60;
+	if hours > 0 or displayZeroHours then
+		return format(HOURS_MINUTES_SECONDS, hours, minutes, seconds);
+	else
+		return format(MINUTES_SECONDS, minutes, seconds);
+	end
+end
+
 function SecondsToTime(seconds, noSeconds, notAbbreviated, maxCount, roundUp)
 	local time = "";
 	local count = 0;
@@ -787,11 +930,17 @@ function FormatPercentage(percentage, roundToNearestInteger)
 	return PERCENTAGE_STRING:format(percentage);
 end
 
-function CreateTextureMarkup(file, fileWidth, fileHeight, width, height, left, right, top, bottom)
-	return ("|T%s:%d:%d:0:0:%d:%d:%d:%d:%d:%d|t"):format(
+function FormatFraction(numerator, denominator)
+	return GENERIC_FRACTION_STRING:format(numerator, denominator);
+end
+
+function CreateTextureMarkup(file, fileWidth, fileHeight, width, height, left, right, top, bottom, xOffset, yOffset)
+	return ("|T%s:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d|t"):format(
 		  file
 		, height
 		, width
+		, xOffset or 0
+		, yOffset or 0
 		, fileWidth
 		, fileHeight
 		, left * fileWidth
@@ -801,7 +950,7 @@ function CreateTextureMarkup(file, fileWidth, fileHeight, width, height, left, r
 	);
 end
 
-function CreateAtlasMarkup(atlasName, height, width, offsetX, offsetY)
+function CreateAtlasMarkup(atlasName, width, height, offsetX, offsetY)
 	return ("|A:%s:%d:%d:%d:%d|a"):format(
 		  atlasName
 		, height or 0
@@ -809,6 +958,141 @@ function CreateAtlasMarkup(atlasName, height, width, offsetX, offsetY)
 		, offsetX or 0
 		, offsetY or 0
 	);
+end
+
+-- NOTE: Many of the TextureKit functions below use the following parameters
+-- If setVisibilityOfRegions is true, the frame will be shown or hidden based on whether the textureKit and atlas element were found
+-- If useAtlasSize is true, the frame will be resized to be the same size as the atlas element.
+-- Use the constants in TextureKitConstants for both
+
+TextureKitConstants = {
+	SetVisiblity = true;
+	DoNotSetVisibility = false;
+
+	UseAtlasSize = true;
+	IgnoreAtlasSize = false;
+}
+
+-- Pass in a frame and a table containing parentKeys (on frame) as keys and atlas member names as the values
+function SetupAtlasesOnRegions(frame, regionsToAtlases, useAtlasSize)
+	for region, atlas in pairs(regionsToAtlases) do
+		if frame[region] then
+			if frame[region]:GetObjectType() == "StatusBar" then
+				frame[region]:SetStatusBarAtlas(atlas);
+			elseif frame[region].SetAtlas then
+				frame[region]:SetAtlas(atlas, useAtlasSize);
+			end
+		end
+	end
+end
+
+function GetFinalNameFromTextureKit(fmt, textureKits)
+	if type(textureKits) == "table" then
+		return fmt:format(unpack(textureKits));
+	else
+		return fmt:format(textureKits);
+	end
+end
+
+-- Pass in a TextureKit ID, a frame and a formatting string.
+-- The TextureKit name will be inserted into fmt (at the first %s). The resulting atlas name will be set on frame
+-- Use "%s" for fmt if the TextureKit name is the entire atlas element name
+function SetupTextureKitOnFrameByID(textureKitID, frame, fmt, setVisibilityOfRegions, useAtlasSize)
+	local textureKit = GetUITextureKitInfo(textureKitID);
+	SetupTextureKitOnFrame(textureKit, frame, fmt, setVisibilityOfRegions, useAtlasSize);
+end
+
+-- Pass in a TextureKit name, a frame and a formatting string.
+-- The TextureKit name will be inserted into fmt (at the first %s). The resulting atlas name will be set on frame
+-- Use "%s" for fmt if the TextureKit name is the entire atlas element name
+function SetupTextureKitOnFrame(textureKit, frame, fmt, setVisibility, useAtlasSize)
+	if not frame then
+		return;
+	end
+
+	local success = false;
+
+	if textureKit then
+		if frame:GetObjectType() == "StatusBar" then
+			success = frame:SetStatusBarAtlas(GetFinalNameFromTextureKit(fmt, textureKit));
+		elseif frame.SetAtlas then
+			success = frame:SetAtlas(GetFinalNameFromTextureKit(fmt, textureKit), useAtlasSize);
+		end
+	end
+
+	if setVisibility then
+		frame:SetShown(success);
+	end
+end
+
+-- Pass in a TextureKit name and a table containing frames as keys and formatting strings as values
+-- For each frame key in frames, the TextureKit name will be inserted into fmt (at the first %s). The resulting atlas name will be set on frame
+-- Use "%s" for fmt if the TextureKit name is the entire atlas element name
+function SetupTextureKitOnFrames(textureKit, frames, setVisibilityOfRegions, useAtlasSize)
+	if not textureKit and not setVisibilityOfRegions then
+		return;
+	end
+
+	for frame, fmt in pairs(frames) do
+		SetupTextureKitOnFrame(textureKit, frame, fmt, setVisibilityOfRegions, useAtlasSize);
+	end
+end
+
+-- Pass in a TextureKit ID and a table containing frames as keys and formatting strings as values
+-- For each frame key in frames, the TextureKit name will be inserted into fmt (at the first %s). The resulting atlas name will be set on frame
+-- Use "%s" for fmt if the TextureKit name is the entire atlas element name
+function SetupTextureKitsOnFrames(textureKitID, frames, setVisibilityOfRegions, useAtlasSize)
+	local textureKit = GetUITextureKitInfo(textureKitID);
+	SetupTextureKitOnFrames(textureKit, frames, setVisibilityOfRegions, useAtlasSize);
+end
+
+-- Pass in a TextureKit name, a frame and a table containing parentKeys (on frame) as keys and formatting strings as values
+-- For each frame key in frames, the TextureKit name will be inserted into fmt (at the first %s). The resulting atlas name will be set on frame
+-- Use "%s" for fmt if the TextureKit name is the entire atlas element name
+function SetupTextureKitOnRegions(textureKit, frame, regions, setVisibilityOfRegions, useAtlasSize)
+	if not textureKit and not setVisibilityOfRegions then
+		return;
+	end
+
+	local frames = {};
+	for region, fmt in pairs(regions) do
+		if frame[region] then
+			frames[frame[region]] = fmt;
+		end
+	end
+
+	return SetupTextureKitOnFrames(textureKit, frames, setVisibilityOfRegions, useAtlasSize);
+end
+
+-- Pass in a TextureKit ID, a frame and a table containing parentKeys (on frame) as keys and formatting strings as values
+-- For each frame key in frames, the TextureKit name will be inserted into fmt (at the first %s). The resulting atlas name will be set on frame
+-- Use "%s" for fmt if the TextureKit name is the entire atlas element name
+function SetupTextureKits(textureKitID, frame, regions, setVisibilityOfRegions, useAtlasSize)
+	local textureKit = GetUITextureKitInfo(textureKitID);
+	SetupTextureKitOnRegions(textureKit, frame, regions, setVisibilityOfRegions, useAtlasSize);
+end
+
+-- Pass in a TextureKit name, a frame and a table containing parentKeys (on frame) as keys and a table as values
+-- The values table should contain formatString as a member (setVisibility and useAtlasSize can also be added if desired)
+-- For each frame key in frames, the TextureKit name will be inserted into formatString (at the first %s). The resulting atlas name will be set on frame
+-- Use "%s" for formatString if the TextureKit name is the entire atlas element name
+function SetupTextureKitsFromRegionInfo(textureKit, frame, regionInfoList)
+	if not frame or not regionInfoList then
+		return;
+	end
+
+	for region, regionInfo in pairs(regionInfoList) do
+		SetupTextureKitOnFrame(textureKit, frame[region], regionInfo.formatString, regionInfo.setVisibility, regionInfo.useAtlasSize);
+	end
+end
+
+-- Pass in a TextureKit ID, a frame and a table containing parentKeys (on frame) as keys and a table as values
+-- The values table should contain formatString as a member (setVisibility and useAtlasSize can also be added if desired)
+-- For each frame key in frames, the TextureKit name will be inserted into formatString (at the first %s). The resulting atlas name will be set on frame
+-- Use "%s" for formatString if the TextureKit name is the entire atlas element name
+function SetupTextureKitsFromRegionInfoByID(textureKitID, frame, regionInfoList)
+	local textureKit = GetUITextureKitInfo(textureKitID);
+	SetupTextureKitsFromRegionInfo(textureKit, frame, regionInfoList);
 end
 
 CallbackRegistryBaseMixin = {};
@@ -837,5 +1121,486 @@ function CallbackRegistryBaseMixin:TriggerEvent(event, ...)
 		for callback in pairs(registry) do
 			callback(event, ...);
 		end
+	end
+end
+
+--[[static]] function CallbackRegistryBaseMixin:GenerateCallbackEvents(events)
+	self.Event = tInvert(events);
+end
+
+EventRegistrationHelper = {};
+
+function EventRegistrationHelper:AddEvent(event)
+	self.containedEvents = self.containedEvents or {};
+	self.containedEvents[event] = true;
+end
+
+function EventRegistrationHelper:AddEvents(...)
+	self.containedEvents = self.containedEvents or {};
+	for i = 1, select("#", ...) do
+		self.containedEvents[select(i, ...)] = true;
+	end
+end
+
+function EventRegistrationHelper:RemoveEvent(event)
+	if self.containedEvents then
+		self.containedEvents[event] = nil;
+	end
+end
+
+function EventRegistrationHelper:ClearEvents()
+	self.containedEvents = nil;
+end
+
+function EventRegistrationHelper:SetEventsRegistered(registered)
+	local events = self.containedEvents;
+	if events then
+		local func = registered and self.RegisterEvent or self.UnregisterEvent;
+		for event in pairs(self.containedEvents) do
+			func(self, event);
+		end
+	end
+end
+
+TabGroupMixin = {};
+
+function TabGroupMixin:OnLoad(...)
+	self.frames = { ... };
+end
+
+function TabGroupMixin:AddFrame(frame)
+	table.insert(self.frames, frame);
+end
+
+function TabGroupMixin:OnTabPressed()
+	for focusIndex, frame in ipairs(self.frames) do
+		if frame:HasFocus() then
+			local nextFocusIndex = IsShiftKeyDown() and (focusIndex - 1) or (focusIndex + 1);
+
+			if nextFocusIndex == 0 then
+				nextFocusIndex = #self.frames;
+			elseif nextFocusIndex > #self.frames then
+				nextFocusIndex = 1;
+			end
+
+			self.frames[nextFocusIndex]:SetFocus();
+			return;
+		end
+	end
+end
+
+function CreateTabGroup(...)
+	local tabGroup = CreateFromMixins(TabGroupMixin);
+	tabGroup:OnLoad(...);
+	return tabGroup;
+end
+
+function ExecuteFrameScript(frame, scriptName, ...)
+	local script = frame:GetScript(scriptName);
+	if script then
+		securecall(script, frame, ...);
+	end
+end
+
+function Flags_CreateMask(...)
+	local mask = 0;
+	for i = 1, select("#", ...) do
+		mask = bit.bor(mask, select(i, ...));
+	end
+
+	return mask;
+end
+
+function Flags_CreateMaskFromTable(flagsTable)
+	local mask = 0;
+	for flagName, flagValue in pairs(flagsTable) do
+		mask = bit.bor(mask, flagValue);
+	end
+
+	return mask;
+end
+
+FlagsMixin = {};
+
+function FlagsMixin:OnLoad()
+	self:ClearAll();
+end
+
+function FlagsMixin:AddNamedFlagsFromTable(flagsTable)
+	assert(flagsTable.flags == nil);
+	Mixin(self, flagsTable);
+end
+
+function FlagsMixin:AddNamedMask(flagName, mask)
+	assert(self[flagName] == nil);
+	self[flagName] = mask;
+end
+
+function FlagsMixin:Set(flag)
+	self.flags = bit.bor(self.flags, flag);
+end
+
+function FlagsMixin:Clear(flag)
+	self.flags = bit.band(self.flags, bit.bnot(flag));
+end
+
+function FlagsMixin:SetOrClear(flag, isSet)
+	if isSet then
+		self:Set(flag);
+	else
+		self:Clear(flag);
+	end
+end
+
+function FlagsMixin:ClearAll()
+	self.flags = 0;
+end
+
+function FlagsMixin:IsAnySet()
+	return self.flags ~= 0;
+end
+
+function FlagsMixin:IsSet(flagOrMask)
+	return bit.band(self.flags, flagOrMask) == flagOrMask;
+end
+
+function FlagsMixin:GetFlags()
+	return self.flags;
+end
+
+DirtyFlagsMixin = CreateFromMixins(FlagsMixin);
+
+function DirtyFlagsMixin:OnLoad()
+	FlagsMixin.OnLoad(self);
+	self.isDirty = false;
+end
+
+function DirtyFlagsMixin:MarkDirty(flag)
+	if flag ~= nil then
+		self:Set(flag);
+	end
+
+	self.isDirty = true;
+end
+
+function DirtyFlagsMixin:MarkClean()
+	self:ClearAll();
+	self.isDirty = false;
+end
+
+function DirtyFlagsMixin:IsDirty(flag)
+	if flag ~= nil then
+		return self:IsSet(flag);
+	else
+		return self.isDirty;
+	end
+end
+
+function CallErrorHandler(...)
+	return geterrorhandler()(...);
+end
+
+TabGroupMixin = {};
+
+function TabGroupMixin:OnLoad(...)
+	self.isTabGroup = true;
+	self.frames = { ... };
+end
+
+function TabGroupMixin:AddFrame(frame)
+	table.insert(self.frames, frame);
+end
+
+function TabGroupMixin:HasFocus()
+	return self:GetFocusIndex() ~= nil;
+end
+
+function TabGroupMixin:SetFocus()
+	-- focusing the first frame/subgroup for now...actually depends on whether or not we were going backwards or forwards through the groups
+	local frame = self.frames[1];
+	if frame then
+		frame:SetFocus();
+	end
+end
+
+function TabGroupMixin:GetFocusIndex()
+	return self.focusIndex or self:DiscoverFocusIndex();
+end
+
+function TabGroupMixin:DiscoverFocusIndex()
+	self.focusIndex = nil;
+
+	for focusIndex, frame in ipairs(self.frames) do
+		if frame:HasFocus() then
+			self.focusIndex = focusIndex;
+			return focusIndex;
+		end
+	end
+end
+
+function TabGroupMixin:IsValidFocusIndex(focusIndex)
+	return focusIndex > 0 and focusIndex <= #self.frames;
+end
+
+function TabGroupMixin:WrapFocusIndex(focusIndex)
+	if focusIndex == 0 then
+		return #self.frames;
+	elseif focusIndex > #self.frames then
+		return 1;
+	end
+
+	return focusIndex;
+end
+
+function TabGroupMixin:OnTabPressed(preventFocusWrap)
+	local focusIndex = self:GetFocusIndex();
+
+	local frameAtIndex = self.frames[focusIndex];
+	if frameAtIndex.isTabGroup then
+		if frameAtIndex:OnTabPressed(true) then
+			return true;
+		end
+	end
+
+	local nextFocusIndex = IsShiftKeyDown() and (focusIndex - 1) or (focusIndex + 1);
+
+	if preventFocusWrap and not self:IsValidFocusIndex(nextFocusIndex) then
+		return false;
+	end
+
+	nextFocusIndex = Wrap(nextFocusIndex, #self.frames);
+	self.focusIndex = nextFocusIndex;
+	self.frames[nextFocusIndex]:SetFocus();
+end
+
+function CreateTabGroup(...)
+	local tabGroup = CreateFromMixins(TabGroupMixin);
+	tabGroup:OnLoad(...);
+	return tabGroup;
+end
+
+function ExecuteFrameScript(frame, scriptName, ...)
+	local script = frame:GetScript(scriptName);
+	if script then
+		xpcall(script, CallErrorHandler, frame, ...);
+	end
+end
+
+PredictedSettingBaseMixin = {};
+
+-- The wrapTable here should have functions to specific keys based on which type of setting you are wrapping.
+-- All tables must have a getFunction key that returns the "real" value.
+-- The PredictedSetting wrapTable should have a setFunction key with a function that takes a value and sets the real value to this value.
+--   This function can return a true/false value noting if the set succeeded or not.
+-- The PredictedToggle wrapTable should have a toggleFunction key that is the function to call to toggle the real value.
+function PredictedSettingBaseMixin:SetUp(wrapTable)
+	self.wrapTable = wrapTable;
+end
+
+function PredictedSettingBaseMixin:Clear()
+	self.predictedValue = nil;
+end
+
+function PredictedSettingBaseMixin:Get()
+	if (self.predictedValue ~= nil) then
+		return self.predictedValue;
+	end
+	return self.wrapTable.getFunction();
+end
+
+PredictedSettingMixin = CreateFromMixins(PredictedSettingBaseMixin);
+
+function PredictedSettingMixin:Set(value)
+	local validated = self.wrapTable.setFunction(value);
+	if (validated ~= false) then
+		self.predictedValue = value;
+	end
+end
+
+function CreatePredictedSetting(wrapTable)
+	local predictedSetting = CreateFromMixins(PredictedSettingMixin);
+	predictedSetting:SetUp(wrapTable);
+	return predictedSetting;
+end
+
+PredictedToggleMixin = CreateFromMixins(PredictedSettingBaseMixin)
+
+function PredictedToggleMixin:SetUp(wrapTable)
+	PredictedSettingBaseMixin.SetUp(self, wrapTable);
+	self.currentValue = self.wrapTable.getFunction();
+end
+
+function PredictedToggleMixin:Toggle()
+	self.predictedValue = not self.currentValue;
+	self.wrapTable.toggleFunction();
+end
+
+function PredictedToggleMixin:UpdateCurrentValue()
+	self.currentValue = self.wrapTable.getFunction();
+end
+
+function CreatePredictedToggle(wrapTable)
+	local predictedToggle = CreateFromMixins(PredictedToggleMixin);
+	predictedToggle:SetUp(wrapTable);
+	return predictedToggle;
+end
+
+LayoutIndexManagerMixin = {}
+
+function LayoutIndexManagerMixin:AddManagedLayoutIndex(key, startingIndex)
+	if (not self.managedLayoutIndexes) then
+		self.managedLayoutIndexes = {};
+		self.startingLayoutIndexes = {};
+	end
+	self.managedLayoutIndexes[key] = startingIndex;
+	self.startingLayoutIndexes[key] = startingIndex;
+end
+
+function LayoutIndexManagerMixin:GetManagedLayoutIndex(key)
+	if (not self.managedLayoutIndexes or not self.managedLayoutIndexes[key]) then
+		return 0;
+	end
+
+	local layoutIndex = self.managedLayoutIndexes[key];
+	self.managedLayoutIndexes[key] = self.managedLayoutIndexes[key] + 1;
+	return layoutIndex;
+end
+
+function LayoutIndexManagerMixin:Reset()
+	for k, _ in pairs(self.managedLayoutIndexes) do
+		self.managedLayoutIndexes[k] = self.startingLayoutIndexes[k];
+	end
+end
+
+function CreateLayoutIndexManager()
+	return CreateFromMixins(LayoutIndexManagerMixin);
+end
+
+function CallMethodOnNearestAncestor(self, methodName, ...)
+	local ancestor = self:GetParent();
+	while ancestor and not ancestor[methodName] do
+		ancestor = ancestor:GetParent();
+	end
+
+	if ancestor then
+		return true, ancestor[methodName](ancestor, ...);
+	end
+
+	return false;
+end
+
+function DoesAncestryInclude(ancestry, frame)
+	if ancestry then
+		local currentFrame = frame;
+		while currentFrame do
+			if currentFrame == ancestry then
+				return true;
+			end
+			currentFrame = currentFrame:GetParent();
+		end
+	end
+	return false;
+end
+
+function GetClampedCurrentExpansionLevel()
+	return math.min(GetClientDisplayExpansionLevel(), math.max(GetAccountExpansionLevel(), GetExpansionLevel()));
+end
+
+function GetHighlightedNumberDifferenceString(baseString, newString)
+	local outputString = "";
+	-- output string is being built from the new string
+	local newStringIndex = 1;
+	-- find a stretch of digits (including . and , because of different locales) - but has to end in a digit
+	local PATTERN = "([,%.%d]*%d+)";
+	local start1, end1, baseNumberString = string.find(baseString, PATTERN);
+	local start2, end2, newNumberString = string.find(newString, PATTERN);
+	while start1 and start2 do
+		-- add from the new string until the matched spot
+		outputString = outputString .. string.sub(newString, newStringIndex, start2 - 1);
+		newStringIndex = end2 + 1;
+
+		if baseNumberString ~= newNumberString then
+			-- need to remove , and . before comparing numbers because of locales
+			local scrubbedBaseNumberString = gsub(baseNumberString, "[,%.]", "");
+			local scrubbedNewNumberString = gsub(newNumberString, "[,%.]", "");
+			local baseNumber = tonumber(scrubbedBaseNumberString);
+			local newNumber = tonumber(scrubbedNewNumberString);
+			if baseNumber and newNumber then
+				local delta = newNumber - baseNumber;
+				if delta > 0 then
+					newNumberString = GREEN_FONT_COLOR_CODE..string.format(newNumberString)..FONT_COLOR_CODE_CLOSE;
+				elseif delta < 0 then
+					newNumberString = RED_FONT_COLOR_CODE..string.format(newNumberString)..FONT_COLOR_CODE_CLOSE;
+				end
+			end
+		end
+
+		outputString = outputString..newNumberString;
+
+		start1, end1, baseNumberString = string.find(baseString, PATTERN, end1 + 1);
+		start2, end2, newNumberString = string.find(newString, PATTERN, end2 + 1);
+	end
+
+	outputString = outputString .. string.sub(newString, newStringIndex, string.len(newString));
+	return outputString;
+end
+
+function GetUnscaledFrameRect(frame, scale)
+	local frameLeft, frameBottom, frameWidth, frameHeight = frame:GetScaledRect();
+	if frameLeft == nil then
+		return 1, 1, 1, 1;
+	end
+
+	return frameLeft / scale, frameBottom / scale, frameWidth / scale, frameHeight / scale;
+end
+
+-- CVar script wrappers
+function RegisterCVar(name, value)
+	C_CVar.RegisterCVar(name, value);
+end
+
+function ResetTestCvars()
+	C_CVar.ResetTestCVars();
+end
+
+function SetCVar(name, value, eventName)
+	if type(value) == "boolean" then
+		return C_CVar.SetCVar(name, value and "1" or "0", eventName);
+	else
+		return C_CVar.SetCVar(name, value and tostring(value) or nil, eventName);
+	end
+end
+
+function GetCVar(name)
+	return C_CVar.GetCVar(name);
+end
+
+function SetCVarBitfield(name, index, value, scriptCVar)
+	return C_CVar.SetCVarBitfield(name, index, value, scriptCVar);
+end
+
+function GetCVarBitfield(name, index)
+	return C_CVar.GetCVarBitfield(name, index);
+end
+
+function GetCVarBool(name)
+	return C_CVar.GetCVarBool(name);
+end
+
+function GetCVarDefault(name)
+	return C_CVar.GetCVarDefault(name);
+end
+
+function GetGroupMemberCountsForDisplay()
+	local data = GetGroupMemberCounts();
+	data.DAMAGER = data.DAMAGER + data.NOROLE; --People without a role count as damage
+	data.NOROLE = 0;
+	return data;
+end
+
+function GetURLIndexAndLoadURL(self, link)
+	local linkType, index = string.split(":", link);
+	if ( linkType == "urlIndex" ) then
+		LoadURLIndex(tonumber(index));
 	end
 end

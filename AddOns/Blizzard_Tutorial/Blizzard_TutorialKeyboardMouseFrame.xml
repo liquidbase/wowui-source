@@ -135,11 +135,11 @@
 		</Animations>
 		<Scripts>
 			<OnHide>
-				PlaySound("igCharacterInfoClose");
+				PlaySound(SOUNDKIT.IG_CHARACTER_INFO_CLOSE);
 				NPE_TutorialKeyboardMouseFrame:MainFrame_OnHide();
 			</OnHide>
 			<OnShow>
-				PlaySound("igCharacterInfoOpen");
+				PlaySound(SOUNDKIT.IG_CHARACTER_INFO_OPEN);
 				self.TitleText:SetText(NPE_KEYBOARDANDMOUSETITLE);
 				self.portrait:SetMask("Interface\\CharacterFrame\\TempPortraitAlphaMask");
 				self.portrait:SetAtlas("NPE_Icon");
@@ -151,7 +151,7 @@
 	<Frame name="NPE_TutorialInterfaceHelp" parent="UIParent" hidden="true" frameStrata="MEDIUM">
 		<Size x="200" y="50" />
 		<Anchors>
-			<Anchor point="BOTTOM" relativeTo="GuildMicroButton" relativePoint="TOP" y="-10" />
+			<Anchor point="BOTTOMRIGHT" relativeTo="ActionButton12" relativePoint="TOPRIGHT" x="4" y="10" />
 		</Anchors>
 		<Backdrop edgeFile="Interface\Glues\Common\TextPanel-Border" tile="true">
 			<EdgeSize val="16" />
@@ -177,7 +177,7 @@
 		</Layers>
 
 		<Frames>
-			<Button parentKey="btnOpen" inherits="ItemButtonTemplate" name="xx">
+			<ItemButton parentKey="btnOpen" name="xx">
 				<Anchors>
 					<Anchor point="RIGHT" x="-5" y="1"/>
 				</Anchors>
@@ -188,7 +188,7 @@
 						self.icon:SetAtlas("NPE_Icon");
 					</OnLoad>
 				</Scripts>
-			</Button>
+			</ItemButton>
 		</Frames>
 
 		<Animations>

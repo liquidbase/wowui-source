@@ -1,84 +1,70 @@
 local MAINMENU_SLIDETIME = 0.30;
 local MAINMENU_GONEYPOS = 130;	--Distance off screen for MainMenuBar to be completely hidden
 local MAINMENU_XPOS = 0;
+MAIN_MENU_BAR_MARGIN = 75;		-- number of art pixels on one side, used by UIParent_ManageFramePositions. It's not the art's full size, don't care about the gryphon's tail.
 
-function ExpBar_Update()
-	local currXP = UnitXP("player");
-	local nextXP = UnitXPMax("player");
-	local level = UnitLevel("player");
-
-	local min, max = math.min(0, currXP), nextXP;
-	MainMenuExpBar:SetAnimatedValues(currXP, min, max, level);
+MainMenuBarMixin = { };
+function MainMenuBarMixin:OnStatusBarsUpdated()
+	self:SetPositionForStatusBars();
 end
 
-
-function MainMenuBar_OnLoad(self)
+function MainMenuBarMixin:OnLoad()
 	self:RegisterEvent("ACTIONBAR_PAGE_CHANGED");
 	self:RegisterEvent("CURRENCY_DISPLAY_UPDATE");
 	self:RegisterEvent("UNIT_LEVEL");
-	
-	MainMenuBar.state = "player";
-	MainMenuBarPageNumber:SetText(GetActionBarPage());
+	self:RegisterEvent("PLAYER_ENTERING_WORLD");
+	self:RegisterEvent("TRIAL_STATUS_UPDATE");
+	self:RegisterEvent("DISPLAY_SIZE_CHANGED");
+	self:RegisterEvent("UI_SCALE_CHANGED");
+
+	CreateFrame("FRAME", "StatusTrackingBarManager", self, "StatusTrackingBarManagerTemplate");
+
+	MAX_PLAYER_LEVEL = MAX_PLAYER_LEVEL_TABLE[GetExpansionLevel()];
+
+	self.state = "player";
+	MainMenuBarArtFrame.PageNumber:SetText(GetActionBarPage());
+	MicroButtonAndBagsBar:SetFrameLevel(self:GetFrameLevel()+2);
 end
 
-
-function MainMenuBar_ArtifactUpdateOverlayFrameText()
-	if ArtifactWatchBar.OverlayFrame.Text:IsShown() then
-		local xp = ArtifactWatchBar.StatusBar:GetAnimatedValue();
-		local _, xpForNextPoint = ArtifactWatchBar.StatusBar:GetMinMaxValues();
-		if xpForNextPoint > 0 then
-			ArtifactWatchBar.OverlayFrame.Text:SetFormattedText(ARTIFACT_POWER_BAR, BreakUpLargeNumbers(xp), BreakUpLargeNumbers(xpForNextPoint));
-		end
-	end
+function MainMenuBarMixin:OnShow()
+	UpdateMicroButtonsParent(MainMenuBarArtFrame);
+	MoveMicroButtons("BOTTOMLEFT", MicroButtonAndBagsBar, "BOTTOMLEFT", 6, 3, false);
 end
 
-function MainMenuBar_ArtifactUpdateTick()
-	if ArtifactWatchBar.Tick:IsShown() then
-		local xp = ArtifactWatchBar.StatusBar:GetValue();
-		local _, xpForNextPoint = ArtifactWatchBar.StatusBar:GetMinMaxValues();
-		if xpForNextPoint > 0 then
-			ArtifactWatchBar.Tick:SetPoint("CENTER", ArtifactWatchBar, "LEFT", (xp / xpForNextPoint) * ArtifactWatchBar:GetWidth(), 0);
-		end
-	end
+function MainMenuBarMixin:SetYOffset(yOffset)
+	self.yOffset = yOffset;
 end
 
-function MainMenuBar_ArtifactOnAnimatedValueChangedCallback()
-	MainMenuBar_ArtifactUpdateOverlayFrameText();
-	MainMenuBar_ArtifactUpdateTick();
+function MainMenuBarMixin:GetYOffset()
+	return self.yOffset;
 end
 
-function MainMenuBar_ArtifactTick_OnEnter(self)
-	GameTooltip_SetDefaultAnchor(GameTooltip, UIParent);
-	GameTooltip:SetText(ARTIFACT_POWER_TOOLTIP_TITLE:format(BreakUpLargeNumbers(ArtifactWatchBar.totalXP, true), BreakUpLargeNumbers(ArtifactWatchBar.xp, true), BreakUpLargeNumbers(ArtifactWatchBar.xpForNextPoint, true)), HIGHLIGHT_FONT_COLOR:GetRGB());
-	GameTooltip:AddLine(ARTIFACT_POWER_TOOLTIP_BODY:format(ArtifactWatchBar.numPointsAvailableToSpend), nil, nil, nil, true);
-
-	GameTooltip:Show();
-end
-
-function MainMenuBar_HonorUpdateOverlayFrameText()
-	local current = UnitHonor("player");
-	local max = UnitHonorMax("player");
-
-	if (not current or not max) then
-		return;
-	end
-
-	local level = UnitHonorLevel("player");
-	local levelmax = GetMaxPlayerHonorLevel();
-
-	if (CanPrestige()) then
-		HonorWatchBar.OverlayFrame.Text:SetText(PVP_HONOR_PRESTIGE_AVAILABLE);
-	elseif (level == levelmax) then
-		HonorWatchBar.OverlayFrame.Text:SetText(MAX_HONOR_LEVEL);
+function MainMenuBarMixin:SetPositionForStatusBars()
+	MainMenuBar:ClearAllPoints();
+	MainMenuBarArtFrame.LeftEndCap:ClearAllPoints();
+	MainMenuBarArtFrame.RightEndCap:ClearAllPoints();
+	if ( StatusTrackingBarManager:GetNumberVisibleBars() == 2 ) then
+		self:SetYOffset(19);
+		MainMenuBarArtFrame.LeftEndCap:SetPoint("BOTTOMLEFT", MainMenuBar, -98, -19);
+		MainMenuBarArtFrame.RightEndCap:SetPoint("BOTTOMRIGHT", MainMenuBar, 98, -19);
+	elseif ( StatusTrackingBarManager:GetNumberVisibleBars() == 1 ) then
+		self:SetYOffset(14);
+		MainMenuBarArtFrame.LeftEndCap:SetPoint("BOTTOMLEFT", MainMenuBar, -98, -14);
+		MainMenuBarArtFrame.RightEndCap:SetPoint("BOTTOMRIGHT", MainMenuBar, 98, -14);
 	else
-		HonorWatchBar.OverlayFrame.Text:SetText(HONOR_BAR:format(current, max));
+		self:SetYOffset(0);
+		MainMenuBarArtFrame.LeftEndCap:SetPoint("BOTTOMLEFT", MainMenuBar, -98, 0);
+		MainMenuBarArtFrame.RightEndCap:SetPoint("BOTTOMRIGHT", MainMenuBar, 98, 0);
+	end
+	if ( IsPlayerInWorld() ) then
+		UIParent_ManageFramePositions();
 	end
 end
 
 local firstEnteringWorld = true;
-function MainMenuBar_OnEvent(self, event, ...)
+function MainMenuBarMixin:OnEvent(event, ...)
 	if ( event == "ACTIONBAR_PAGE_CHANGED" ) then
-		MainMenuBarPageNumber:SetText(GetActionBarPage());
+		MainMenuBarArtFrame.PageNumber:SetText(GetActionBarPage());
 	elseif ( event == "CURRENCY_DISPLAY_UPDATE" ) then
 		local showTokenFrame, showTokenFrameHonor = GetCVarBool("showTokenFrame"), GetCVarBool("showTokenFrameHonor");
 		if ( not showTokenFrame or not showTokenFrameHonor ) then
@@ -86,7 +72,7 @@ function MainMenuBar_OnEvent(self, event, ...)
 			local hasNormalTokens;
 			for index=1, GetCurrencyListSize() do
 				name, isHeader, isExpanded, isUnused, isWatched, count, icon = GetCurrencyListInfo(index);
-				if ( (not isHeader) and (count>0) ) then
+				if ( (not isHeader) and count and (count > 0) ) then
 					hasNormalTokens = true;
 				end
 			end
@@ -99,7 +85,7 @@ function MainMenuBar_OnEvent(self, event, ...)
 					SetButtonPulse(CharacterFrameTab3, 60, 1);
 				end
 			end
-			
+
 			if ( hasNormalTokens or showTokenFrame or showTokenFrameHonor ) then
 				TokenFrame_LoadUI();
 				TokenFrame_Update();
@@ -117,235 +103,23 @@ function MainMenuBar_OnEvent(self, event, ...)
 		if ( unitToken == "player" ) then
 			UpdateMicroButtons();
 		end
-	end
-end
-
-function MainMenuBar_GetNumArtifactTraitsPurchasableFromXP(pointsSpent, artifactXP, artifactTier)
-	local numPoints = 0;
-	local xpForNextPoint = C_ArtifactUI.GetCostForPointAtRank(pointsSpent, artifactTier);
-	while artifactXP >= xpForNextPoint and xpForNextPoint > 0 do
-		artifactXP = artifactXP - xpForNextPoint;
-
-		pointsSpent = pointsSpent + 1;
-		numPoints = numPoints + 1;
-
-		xpForNextPoint = C_ArtifactUI.GetCostForPointAtRank(pointsSpent, artifactTier);
-	end
-	return numPoints, artifactXP, xpForNextPoint;
-end
-
-function MainMenuBar_UpdateExperienceBars(newLevel)
-	local name, reaction, min, max, value, factionID = GetWatchedFactionInfo();
-	local visibilityChanged = nil;
-	if ( not newLevel ) then
-		newLevel = UnitLevel("player");
-	end
-	local artifactItemID, _, _, _, artifactTotalXP, artifactPointsSpent, _, _, _, _, _, _, artifactTier = C_ArtifactUI.GetEquippedArtifactInfo();
-	local showArtifact = artifactItemID and (UnitLevel("player") >= MAX_PLAYER_LEVEL or GetCVarBool("showArtifactXPBar")) and not C_ArtifactUI.IsEquippedArtifactMaxed();
-	local showXP = newLevel < MAX_PLAYER_LEVEL and not IsXPUserDisabled();
-	local showHonor = newLevel >= MAX_PLAYER_LEVEL and (IsWatchingHonorAsXP() or InActiveBattlefield() or IsInActiveWorldPVP());
-	local showRep = name;
-	local numBarsShowing = 0;
-	--******************* EXPERIENCE **************************************
-	if ( showXP ~= MainMenuExpBar:IsShown() ) then
-		visibilityChanged = true;
-	end
-	if ( showXP ) then
-		MainMenuExpBar:Show();
-		MainMenuExpBar.pauseUpdates = nil;
-		numBarsShowing = numBarsShowing + 1;
-	else
-		MainMenuExpBar:Hide();
-		MainMenuExpBar.pauseUpdates = true;
-		ExhaustionTick:Hide();
-	end
-	--******************* ARTIFACT ****************************************
-	if ( showArtifact ~= ArtifactWatchBar:IsShown() ) then
-		visibilityChanged = true;
-	end
-	if ( showArtifact ) then
-		if (UnitLevel("player") < MAX_PLAYER_LEVEL) then
-			SetWatchedFactionIndex(0);
+	elseif ( event == "PLAYER_ENTERING_WORLD" ) then
+		local initialLogin, reloadingUI = ...;
+		if ( initialLogin or reloadingUI ) then
+			StatusTrackingBarManager:AddBarFromTemplate("FRAME", "ReputationStatusBarTemplate");
+			StatusTrackingBarManager:AddBarFromTemplate("FRAME", "HonorStatusBarTemplate");
+			StatusTrackingBarManager:AddBarFromTemplate("FRAME", "ArtifactStatusBarTemplate");
+			StatusTrackingBarManager:AddBarFromTemplate("FRAME", "ExpStatusBarTemplate");
+			StatusTrackingBarManager:AddBarFromTemplate("FRAME", "AzeriteBarTemplate");
+			UIParent_ManageFramePositions();
 		end
-		local statusBar = ArtifactWatchBar.StatusBar;
-		local numPointsAvailableToSpend, xp, xpForNextPoint = MainMenuBar_GetNumArtifactTraitsPurchasableFromXP(artifactPointsSpent, artifactTotalXP, artifactTier);
-
-		statusBar:SetAnimatedValues(xp, 0, xpForNextPoint, numPointsAvailableToSpend + artifactPointsSpent);
-		if visibilityChanged or statusBar.artifactItemID ~= artifactItemID or C_ArtifactUI.IsAtForge() then
-			statusBar:Reset();
-		end
-		statusBar.artifactItemID = artifactItemID;
-		ArtifactWatchBar.xp = xp;
-		ArtifactWatchBar.totalXP = artifactTotalXP;
-		ArtifactWatchBar.xpForNextPoint = xpForNextPoint;
-		ArtifactWatchBar.numPointsAvailableToSpend = numPointsAvailableToSpend;
-		ArtifactWatchBar:Show();
-		ArtifactWatchBar.Tick:SetShown(numPointsAvailableToSpend > 0);
-		statusBar.Underlay:SetShown(numPointsAvailableToSpend > 0);
-		statusBar.Overlay:Show();
-		statusBar.Overlay:SetAlpha(numPointsAvailableToSpend > 0 and .5 or .25);
-		MainMenuTrackingBar_Configure(ArtifactWatchBar, numBarsShowing > 0);
-		numBarsShowing = numBarsShowing + 1;
-		MainMenuBar_ArtifactUpdateTick();
-	else
-		ArtifactWatchBar:Hide();	
-	end
-	--******************* HONOR *******************************************
-	if ( showHonor and numBarsShowing < 2 ) then
-		if ( showHonor ~= HonorWatchBar:IsShown() ) then
-			visibilityChanged = true;
-		end
-		local statusBar = HonorWatchBar.StatusBar;
-		local current = UnitHonor("player");
-		local max = UnitHonorMax("player");
-
-		local level = UnitHonorLevel("player");
-        local levelmax = GetMaxPlayerHonorLevel();
-        
-        if (level == levelmax) then
-			-- Force the bar to full for the max level
-			statusBar:SetAnimatedValues(1, 0, 1, level);
-		else
-			statusBar:SetAnimatedValues(current, 0, max, level);
-		end
-        
-        HonorExhaustionTick_Update(HonorWatchBar.ExhaustionTick, true);
-		
-		if ( visibilityChanged ) then
-			statusBar:Reset();
-		end
-        local exhaustionStateID = GetHonorRestState();
-	    if (exhaustionStateID == 1) then
-            statusBar:SetStatusBarColor(1.0, 0.71, 0);
-            statusBar:SetAnimatedTextureColors(1.0, 0.71, 0);
-        else
-            statusBar:SetStatusBarColor(1.0, 0.24, 0);
-            statusBar:SetAnimatedTextureColors(1.0, 0.24, 0);
-        end
-		HonorWatchBar:Show();
-		MainMenuTrackingBar_Configure(HonorWatchBar, numBarsShowing > 0);
-		numBarsShowing = numBarsShowing + 1;
-	else
-		HonorWatchBar:Hide();	
-	end
-	--******************* REPUTATION **************************************
-	if ( showRep and numBarsShowing < 2 ) then
-		local colorIndex = reaction;
-		-- if it's a different faction, save possible friendship id
-		if ( ReputationWatchBar.factionID ~= factionID ) then
-			ReputationWatchBar.factionID = factionID;
-			ReputationWatchBar.friendshipID = GetFriendshipReputation(factionID);
-			ReputationWatchBar.StatusBar:Reset();
-		end
-
-		local isCapped;
-		-- do something different for friendships
-		local level;
-		if ( ReputationWatchBar.friendshipID ) then
-			local friendID, friendRep, friendMaxRep, friendName, friendText, friendTexture, friendTextLevel, friendThreshold, nextFriendThreshold = GetFriendshipReputation(factionID);
-			level = GetFriendshipReputationRanks(factionID);
-			if ( nextFriendThreshold ) then
-				min, max, value = friendThreshold, nextFriendThreshold, friendRep;
-			else
-				-- max rank, make it look like a full bar
-				min, max, value = 0, 1, 1;
-				isCapped = true;
-			end
-			colorIndex = 5;		-- always color friendships green
-		elseif (C_Reputation.IsFactionParagon(factionID)) then
-			local currentValue, threshold, _, hasRewardPending = C_Reputation.GetFactionParagonInfo(factionID);
-			min, max  = 0, threshold;
-			value = currentValue % threshold;
-			if hasRewardPending then 
-				value = value + threshold;
-			end
-		else
-			level = reaction;
-			if (reaction == MAX_REPUTATION_REACTION) then
-				isCapped = true;
-			end
-		end
-
-		-- See if it was already shown or not
-		if ( not ReputationWatchBar:IsShown() ) then
-			visibilityChanged = true;
-		end
-		
-		-- Normalize values
-		max = max - min;
-		value = value - min;
-		if ( isCapped and max == 0 ) then
-			max = 1;
-			value = 1;
-		end
-		min = 0;
-		local statusBar = ReputationWatchBar.StatusBar;
-		statusBar:SetAnimatedValues(value, min, max, level);
-		if ( isCapped ) then
-			ReputationWatchBar.OverlayFrame.Text:SetText(name);
-		else
-			ReputationWatchBar.OverlayFrame.Text:SetText(name.." "..value.." / "..max);
-		end
-		local color = FACTION_BAR_COLORS[colorIndex];
-		statusBar:SetStatusBarColor(color.r, color.g, color.b);
-		statusBar:SetAnimatedTextureColors(color.r, color.g, color.b);
-		ReputationWatchBar:Show();
-		MainMenuTrackingBar_Configure(ReputationWatchBar, numBarsShowing > 0);
-		numBarsShowing = numBarsShowing + 1;
-	else
-		if ( ReputationWatchBar:IsShown() ) then
-			visibilityChanged = true;
-		end
-		ReputationWatchBar:Hide();	
-	end
-	if ( numBarsShowing > 0 ) then
-		MainMenuBarMaxLevelBar:Hide();
-	else
-		MainMenuBarMaxLevelBar:Show();
+	elseif ( event == "TRIAL_STATUS_UPDATE" ) then
+		UpdateMicroButtons();
+	elseif ( event == "DISPLAY_SIZE_CHANGED" or event == "UI_SCALE_CHANGED" ) then
+		self:ChangeMenuBarSizeAndPosition(SHOW_MULTI_ACTIONBAR_2 and IsNormalActionBarState());
 	end
 
-	-- update the xp bar
-	TextStatusBar_UpdateTextString(MainMenuExpBar);
-	ExpBar_Update();
-	
-	if ( visibilityChanged ) then
-		UIParent_ManageFramePositions();
-		UpdateContainerFrameAnchors();
-	end
-end
-
-function MainMenuTrackingBar_Configure(frame, isOnTop)
-	local statusBar = frame.StatusBar;
-	statusBar:SetFrameLevel(MainMenuBarArtFrame:GetFrameLevel()-1);
-	if ( isOnTop ) then
-		statusBar:SetHeight(8);
-		frame:ClearAllPoints();
-		frame:SetPoint("BOTTOM", MainMenuBar, "TOP", 0, -3);
-		frame.OverlayFrame.Text:SetPoint("CENTER", frame.OverlayFrame, "CENTER", 0, 3);
-		statusBar.WatchBarTexture0:Show();
-		statusBar.WatchBarTexture1:Show();
-		statusBar.WatchBarTexture2:Show();
-		statusBar.WatchBarTexture3:Show();
-
-		statusBar.XPBarTexture0:Hide();
-		statusBar.XPBarTexture1:Hide();
-		statusBar.XPBarTexture2:Hide();
-		statusBar.XPBarTexture3:Hide();	
-	else
-		statusBar:SetHeight(13);
-		frame:ClearAllPoints();
-		frame:SetPoint("TOP", MainMenuBar, "TOP", 0, 0);
-		frame.OverlayFrame.Text:SetPoint("CENTER", frame.OverlayFrame, "CENTER", 0, 1);
-		statusBar.WatchBarTexture0:Hide();
-		statusBar.WatchBarTexture1:Hide();
-		statusBar.WatchBarTexture2:Hide();
-		statusBar.WatchBarTexture3:Hide();
-
-		statusBar.XPBarTexture0:Show();
-		statusBar.XPBarTexture1:Show();
-		statusBar.XPBarTexture2:Show();
-		statusBar.XPBarTexture3:Show();
-	end
+	self:SetPositionForStatusBars();
 end
 
 function MainMenuBarVehicleLeaveButton_OnLoad(self)
@@ -364,7 +138,8 @@ function MainMenuBarVehicleLeaveButton_OnEnter(self)
 		GameTooltip:AddLine(TAXI_CANCEL_DESCRIPTION, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
 		GameTooltip:Show();
 	else
-		GameTooltip_AddNewbieTip(self, LEAVE_VEHICLE, 1.0, 1.0, 1.0, nil);
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+		GameTooltip_SetTitle(GameTooltip, LEAVE_VEHICLE);
 	end
 end
 
@@ -401,7 +176,7 @@ end
 function MainMenuBarVehicleLeaveButton_OnClicked(self)
 	if ( UnitOnTaxi("player") ) then
 		TaxiRequestEarlyLanding();
-		
+
 		-- Show that the request for landing has been received.
 		self:Disable();
 		self:SetHighlightTexture([[Interface\Buttons\CheckButtonHilight]], "ADD");
@@ -410,121 +185,6 @@ function MainMenuBarVehicleLeaveButton_OnClicked(self)
 		VehicleExit();
 	end
 end
-
-function ExhaustionTick_OnLoad(self)
-	self:RegisterEvent("PLAYER_ENTERING_WORLD");
-	self:RegisterEvent("PLAYER_XP_UPDATE");
-	self:RegisterEvent("UPDATE_EXHAUSTION");
-	self:RegisterEvent("PLAYER_LEVEL_UP");
-	self:RegisterEvent("PLAYER_UPDATE_RESTING");
-end
-
-function ExhaustionTick_OnEvent(self, event, ...)
-	if ((event == "PLAYER_ENTERING_WORLD") or (event == "PLAYER_XP_UPDATE") or (event == "UPDATE_EXHAUSTION") or (event == "PLAYER_LEVEL_UP")) then
-		local playerCurrXP = UnitXP("player");
-		local playerMaxXP = UnitXPMax("player");
-		local exhaustionThreshold = GetXPExhaustion();
-		local exhaustionStateID, exhaustionStateName, exhaustionStateMultiplier;
-		exhaustionStateID, exhaustionStateName, exhaustionStateMultiplier = GetRestState();
-		if (exhaustionStateID >= 3) then
-			ExhaustionTick:SetPoint("CENTER", "MainMenuExpBar", "RIGHT", 0, 0);
-		end
-
-		if (not exhaustionThreshold) then
-			ExhaustionTick:Hide();
-			ExhaustionLevelFillBar:Hide();
-		else
-			local exhaustionTickSet = max(((playerCurrXP + exhaustionThreshold) / playerMaxXP) * MainMenuExpBar:GetWidth(), 0);
-			ExhaustionTick:ClearAllPoints();
-			if (exhaustionTickSet > MainMenuExpBar:GetWidth() or MainMenuBarMaxLevelBar:IsShown()) then
-				ExhaustionTick:Hide();
-				ExhaustionLevelFillBar:Hide();
-			else
-				ExhaustionTick:Show();
-				ExhaustionTick:SetPoint("CENTER", "MainMenuExpBar", "LEFT", exhaustionTickSet, 0);
-				ExhaustionLevelFillBar:Show();
-				ExhaustionLevelFillBar:SetPoint("TOPRIGHT", "MainMenuExpBar", "TOPLEFT", exhaustionTickSet, 0);
-			end
-		end
-
-		-- Hide exhaustion tick if player is max level or XP is turned off
-		if ( UnitLevel("player") == MAX_PLAYER_LEVEL or IsXPUserDisabled() ) then
-			ExhaustionTick:Hide();
-		end
-	end
-	if ((event == "PLAYER_ENTERING_WORLD") or (event == "UPDATE_EXHAUSTION")) then
-		local exhaustionStateID = GetRestState();
-		if (exhaustionStateID == 1) then
-			MainMenuExpBar:SetStatusBarColor(0.0, 0.39, 0.88, 1.0);
-			MainMenuExpBar:SetAnimatedTextureColors(0.0, 0.39, 0.88, 1.0);
-			ExhaustionLevelFillBar:SetVertexColor(0.0, 0.39, 0.88, 0.15);
-			ExhaustionTickHighlight:SetVertexColor(0.0, 0.39, 0.88);
-		elseif (exhaustionStateID == 2) then
-			MainMenuExpBar:SetStatusBarColor(0.58, 0.0, 0.55, 1.0);
-			MainMenuExpBar:SetAnimatedTextureColors(0.58, 0.0, 0.55, 1.0);
-			ExhaustionLevelFillBar:SetVertexColor(0.58, 0.0, 0.55, 0.15);
-			ExhaustionTickHighlight:SetVertexColor(0.58, 0.0, 0.55);
-		end
-
-	end
-	if ( not MainMenuExpBar:IsShown() ) then
-		ExhaustionTick:Hide();
-	end
-end
-
-function ExhaustionToolTipText()
-	GameTooltip_SetDefaultAnchor(GameTooltip, UIParent);
-
-	local exhaustionStateID, exhaustionStateName, exhaustionStateMultiplier = GetRestState();
-
-	local exhaustionCurrXP, exhaustionMaxXP;
-	local exhaustionThreshold = GetXPExhaustion();
-	exhaustionStateMultiplier = exhaustionStateMultiplier * 100;
-	local exhaustionCountdown = nil;
-	if ( GetTimeToWellRested() ) then
-		exhaustionCountdown = GetTimeToWellRested() / 60;
-	end
-	
-	local currXP = UnitXP("player");
-	local nextXP = UnitXPMax("player");
-	local percentXP = math.ceil(currXP/nextXP*100);
-	local XPText = format( XP_TEXT, BreakUpLargeNumbers(currXP), BreakUpLargeNumbers(nextXP), percentXP );
-	local tooltipText = XPText..format(EXHAUST_TOOLTIP1, exhaustionStateName, exhaustionStateMultiplier);
-	local append = nil;
-	if ( IsResting() ) then
-		if ( exhaustionThreshold and exhaustionCountdown ) then
-			append = format(EXHAUST_TOOLTIP4, exhaustionCountdown);
-		end
-	elseif ( (exhaustionStateID == 4) or (exhaustionStateID == 5) ) then
-		append = EXHAUST_TOOLTIP2;
-	end
-
-	if ( append ) then
-		tooltipText = tooltipText..append;
-	end
-
-	if ( SHOW_NEWBIE_TIPS ~= "1" ) then
-		GameTooltip:SetText(tooltipText);
-	else
-		if ( GameTooltip.canAddRestStateLine ) then
-			GameTooltip:AddLine("\n"..tooltipText);
-			GameTooltip:Show();
-			GameTooltip.canAddRestStateLine = nil;
-		end
-	end
-end
-
-function ExhaustionTick_OnUpdate(self, elapsed)
-	if ( self.timer ) then
-		if ( self.timer < 0 ) then
-			ExhaustionToolTipText();
-			self.timer = nil;
-		else
-			self.timer = self.timer - elapsed;
-		end
-	end
-end
-
 
 -- latency bar
 
@@ -554,7 +214,7 @@ local MovieList = {
 function MainMenu_GetMovieDownloadProgress(id)
 	local movieList = MovieList[id];
 	if (not movieList) then return; end
-	
+
 	local anyInProgress = false;
 	local allDownloaded = 0;
 	local allTotal = 0;
@@ -564,7 +224,7 @@ function MainMenu_GetMovieDownloadProgress(id)
 		allDownloaded = allDownloaded + downloaded;
 		allTotal = allTotal + total;
 	end
-	
+
 	return anyInProgress, allDownloaded, allTotal;
 end
 
@@ -575,63 +235,43 @@ function MainMenuBarPerformanceBarFrame_OnEnter(self)
 	local i, j, k = 0, 0, 0;
 
 	GameTooltip_SetDefaultAnchor(GameTooltip, self);
-	
-	GameTooltip_AddNewbieTip(self, self.tooltipText, 1.0, 1.0, 1.0, self.newbieText);
-	
+	GameTooltip_SetTitle(GameTooltip, self.tooltipText);
+
 	-- latency
 	local bandwidthIn, bandwidthOut, latencyHome, latencyWorld = GetNetStats();
 	string = format(MAINMENUBAR_LATENCY_LABEL, latencyHome, latencyWorld);
 	GameTooltip:AddLine(" ");
 	GameTooltip:AddLine(string, 1.0, 1.0, 1.0);
-	if ( SHOW_NEWBIE_TIPS == "1" ) then
-		GameTooltip:AddLine(NEWBIE_TOOLTIP_LATENCY, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
-	end
 	GameTooltip:AddLine(" ");
-	
+
 	-- protocol types
-	if GetCVarBool("useIPv6") then
+	if ( GetCVarBool("useIPv6") ) then
 		local ipTypeHome, ipTypeWorld = GetNetIpTypes();
 		string = format(MAINMENUBAR_PROTOCOLS_LABEL, ipTypes[ipTypeHome or 0] or UNKNOWN, ipTypes[ipTypeWorld or 0] or UNKNOWN);
 		GameTooltip:AddLine(" ");
 		GameTooltip:AddLine(string, 1.0, 1.0, 1.0);
-		if ( SHOW_NEWBIE_TIPS == "1" ) then
-			GameTooltip:AddLine(NEWBIE_TOOLTIP_PROTOCOLS, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
-		end
 		GameTooltip:AddLine(" ");
 	end
 
 	-- framerate
 	string = format(MAINMENUBAR_FPS_LABEL, GetFramerate());
 	GameTooltip:AddLine(string, 1.0, 1.0, 1.0);
-	if ( SHOW_NEWBIE_TIPS == "1" ) then
-		GameTooltip:AddLine(NEWBIE_TOOLTIP_FRAMERATE, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
-	end
 	GameTooltip:AddLine(" ");
 
 	string = format(MAINMENUBAR_BANDWIDTH_LABEL, GetAvailableBandwidth());
 	GameTooltip:AddLine(string, 1.0, 1.0, 1.0);
-	if ( SHOW_NEWBIE_TIPS == "1" ) then
-		GameTooltip:AddLine(NEWBIE_TOOLTIP_BANDWIDTH, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
-	end
 	GameTooltip:AddLine(" ");
 
 	local percent = floor(GetDownloadedPercentage()*100+0.5);
 	string = format(MAINMENUBAR_DOWNLOAD_PERCENT_LABEL, percent);
 	GameTooltip:AddLine(string, 1.0, 1.0, 1.0);
-	if ( SHOW_NEWBIE_TIPS == "1" ) then
-		GameTooltip:AddLine(NEWBIE_TOOLTIP_DOWNLOAD_PERCENT, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
-	end
-	
+
 	-- Downloaded cinematics
 	local firstMovie = true;
 	for i, movieList in next, MovieList do
 		local inProgress, downloaded, total = MainMenu_GetMovieDownloadProgress(i);
-		if (inProgress) then
-			if (firstMovie) then
-				if ( SHOW_NEWBIE_TIPS == "1" ) then
-					-- The "Cinematics" header looks bad when it's next to the newbie tooltip text, so add an extra line break
-					GameTooltip:AddLine(" ");
-				end
+		if ( inProgress ) then
+			if ( firstMovie ) then
 				GameTooltip:AddLine("   "..CINEMATICS, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
 				firstMovie = false;
 			end
@@ -651,13 +291,13 @@ function MainMenuBarPerformanceBarFrame_OnEnter(self)
 		local mem = GetAddOnMemoryUsage(i);
 		totalMem = totalMem + mem;
 		for j=1, NUM_ADDONS_TO_DISPLAY, 1 do
-			if(mem > topAddOns[j].value) then
+			if( mem > topAddOns[j].value ) then
 				for k=NUM_ADDONS_TO_DISPLAY, 1, -1 do
-					if(k == j) then
+					if( k == j ) then
 						topAddOns[k].value = mem;
 						topAddOns[k].name = GetAddOnInfo(i);
 						break;
-					elseif(k ~= 1) then
+					elseif( k ~= 1 ) then
 						topAddOns[k].value = topAddOns[k-1].value;
 						topAddOns[k].name = topAddOns[k-1].name;
 					end
@@ -677,10 +317,7 @@ function MainMenuBarPerformanceBarFrame_OnEnter(self)
 
 		GameTooltip:AddLine("\n");
 		GameTooltip:AddLine(string, 1.0, 1.0, 1.0);
-		if ( SHOW_NEWBIE_TIPS == "1" ) then
-			GameTooltip:AddLine(NEWBIE_TOOLTIP_MEMORY, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, true);
-		end
-		
+
 		local size;
 		for i=1, NUM_ADDONS_TO_DISPLAY, 1 do
 			if ( topAddOns[i].value == 0 ) then
@@ -696,65 +333,33 @@ function MainMenuBarPerformanceBarFrame_OnEnter(self)
 			GameTooltip:AddLine(string, 1.0, 1.0, 1.0);
 		end
 	end
-
 	GameTooltip:Show();
 end
 
+function MainMenuBarMixin:ChangeMenuBarSizeAndPosition(rightMultiBarShowing)
+	local atlasInfo;
 
-
-function MainMenuExpBar_SetWidth(width)
-	MainMenuXPBarTextureMid:SetWidth(width-28);
-	
-	local divWidth = width/20;
-	local xpos = divWidth - 4.5;	
-	for i=1,19 do
-		local texture = _G["MainMenuXPBarDiv"..i];
-		if not texture then
-			texture = MainMenuExpBar:CreateTexture("MainMenuXPBarDiv"..i, "OVERLAY");
-			texture:SetTexture("Interface\\MainMenuBar\\UI-XP-Bar");
-			texture:SetSize(9,9);
-			texture:SetTexCoord( 0.01562500, 0.15625000, 0.01562500, 0.17187500);
-		end
-		local xalign = floor(xpos);
-		texture:SetPoint("LEFT", xalign, 1);
-		xpos = xpos + divWidth;
-	end		
-	MainMenuExpBar:SetWidth(width);
-	if ExhaustionTick then
-		ExhaustionTick_OnEvent(ExhaustionTick, "UPDATE_EXHAUSTION");
-	end
-end
-
-function HonorWatchBar_OnLoad(self)
-	self:RegisterEvent("PLAYER_ENTERING_WORLD");
-	self:RegisterEvent("HONOR_XP_UPDATE");
-	self:RegisterEvent("CVAR_UPDATE");
-	self:RegisterEvent("ZONE_CHANGED");
-	self:RegisterEvent("ZONE_CHANGED_NEW_AREA");
-    self.OverlayFrame.Text:SetPoint("CENTER", 0, -1);
-	self.StatusBar:SetOnAnimatedValueChangedCallback(MainMenuBar_HonorUpdateOverlayFrameText);
-	self.StatusBar.OnFinishedCallback = function(...)
-		self.StatusBar:OnAnimFinished(...);
-		HonorExhaustionTick_Update(self.ExhaustionTick, true);
-	end
-end
-
-function ShowWatchBarText(bar, lock)
-	if ( lock ) then
-		bar.cvarLocked = lock;
-	end
-	if ( bar:IsShown() ) then
-		bar.OverlayFrame.Text:Show();
-		bar.textLocked = 1;
+	if( rightMultiBarShowing ) then
+		atlasInfo = C_Texture.GetAtlasInfo("hud-MainMenuBar-large");
 	else
-		HideWatchBarText(bar);
+		atlasInfo = C_Texture.GetAtlasInfo("hud-MainMenuBar-small");
 	end
-end
 
-function HideWatchBarText(bar, unlock)
-	if ( unlock or not bar.cvarLocked ) then
-		bar.cvarLocked = nil;
-		bar.OverlayFrame.Text:Hide();
-		bar.textLocked = nil;
+	local width = atlasInfo and atlasInfo.width or 0;
+	local height = atlasInfo and atlasInfo.height or 0;
+	self:SetSize(width, height);
+	MainMenuBarArtFrame:SetSize(width, height);
+	MainMenuBarArtFrameBackground:SetSize(width, height);
+	MainMenuBarArtFrameBackground.BackgroundLarge:SetShown(rightMultiBarShowing);
+	MainMenuBarArtFrameBackground.BackgroundSmall:SetShown(not rightMultiBarShowing);
+	MainMenuBarArtFrame.PageNumber:ClearAllPoints();
+
+	if rightMultiBarShowing then
+		MainMenuBarArtFrame.PageNumber:SetPoint("CENTER", MainMenuBarArtFrameBackground, "CENTER", 138, -3);
+	else
+		MainMenuBarArtFrame.PageNumber:SetPoint("RIGHT", MainMenuBarArtFrameBackground, "RIGHT", -6, -3);
 	end
+
+	local isLargeSize = rightMultiBarShowing;
+	StatusTrackingBarManager:SetBarSize(isLargeSize);
 end

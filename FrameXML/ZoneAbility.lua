@@ -13,6 +13,7 @@ ZONE_SPELL_ABILITY_TEXTURES_BASE = {
 	[164222] = "Interface\\ExtraButton\\GarrZoneAbility-Stables",
 	[160240] = "Interface\\ExtraButton\\GarrZoneAbility-Workshop",
 	[160241] = "Interface\\ExtraButton\\GarrZoneAbility-Workshop",
+	[307870] = "Interface\\ExtraButton\\Championlight",
 };
 
 ZONE_SPELL_ABILITY_TEXTURES_BASE_FALLBACK = "Interface\\ExtraButton\\GarrZoneAbility-Armory";
@@ -28,28 +29,33 @@ function ZoneAbilityFrame_OnLoad(self)
 	ZoneAbilityFrame_Update(self);
 end
 
-function ZoneAbilityFrame_OnEvent(self, event)
-	local spellID, garrisonType = GetZoneAbilitySpellInfo();
+function ZoneAbilityFrame_OnEvent(self, event, ...)
+	-- Ask for the generic constant spell ID, based on our Aura. Then turn around
+	-- and use that spell's name to look up the correct faction-specific spell ID
+	-- that is relevant for our own player.
+	local spellID, type = GetZoneAbilitySpellInfo();
 	if ((event == "SPELLS_CHANGED" or event=="UNIT_AURA")) then
-		self.baseName = GetSpellInfo(spellID);
+		self.spellID = nil;
+		self.baseSpellID = spellID;
+		local baseName = spellID and GetSpellInfo(spellID) or nil;
+		if baseName then
+			self.spellID = select(7, GetSpellInfo(baseName));
+		end
 	end
 
-	if (not self.baseName) then
-		self:Hide();
-		return;
-	end
-
-	self.SpellButton.spellID = spellID;
+	self.SpellButton.baseSpellID = self.baseSpellID;
+	self.SpellButton.spellID = self.spellID;
 	local lastState = self.buffSeen;
-	self.buffSeen = (spellID ~= 0);
+	self.buffSeen = false;
 
-	if (self.buffSeen) then
+	if self.spellID and self.spellID ~= 0 then
 		if (not HasZoneAbilitySpellOnBar(self)) then
-			if ( not GetCVarBitfield("closedInfoFrames", LE_FRAME_TUTORIAL_GARRISON_ZONE_ABILITY) and garrisonType == LE_GARRISON_TYPE_6_0 ) then
+			if ( not GetCVarBitfield("closedInfoFrames", LE_FRAME_TUTORIAL_GARRISON_ZONE_ABILITY) and type == Enum.ZoneAbilityType.Garrison ) then
 				ZoneAbilityButtonAlert:SetHeight(ZoneAbilityButtonAlert.Text:GetHeight()+42);
 				ZoneAbilityButtonAlert:Show();
 				SetCVarBitfield( "closedInfoFrames", LE_FRAME_TUTORIAL_GARRISON_ZONE_ABILITY, true );
 			end
+			self.buffSeen = true;
 			self:Show();
 		else
 			ZoneAbilityButtonAlert:Hide();
@@ -58,9 +64,6 @@ function ZoneAbilityFrame_OnEvent(self, event)
 
 		ZoneAbilityFrame_Update(self);
 	else
-		if (not self.CurrentTexture) then
-			self.CurrentTexture = select(3, GetSpellInfo(self.baseName));
-		end
 		self:Hide();
 	end
 
@@ -79,53 +82,62 @@ function ZoneAbilityFrame_OnHide(self)
 end
 
 function ZoneAbilityFrame_Update(self)
-	if (not self.baseName) then
+	if (not self.spellID) then
 		return;
 	end
-	local name, _, tex, _, _, _, spellID = GetSpellInfo(self.baseName);
+	local name, _, tex = GetSpellInfo(self.spellID);
 
 	self.CurrentTexture = tex;
 	self.CurrentSpell = name;
 
-	self.SpellButton.Style:SetTexture(ZONE_SPELL_ABILITY_TEXTURES_BASE[spellID] or ZONE_SPELL_ABILITY_TEXTURES_BASE_FALLBACK);
+	self.SpellButton.Style:SetTexture(ZONE_SPELL_ABILITY_TEXTURES_BASE[self.spellID] or ZONE_SPELL_ABILITY_TEXTURES_BASE_FALLBACK);
 	self.SpellButton.Icon:SetTexture(tex);
 
-	local charges, maxCharges, chargeStart, chargeDuration = GetSpellCharges(spellID);
+	local charges, maxCharges, chargeStart, chargeDuration = GetSpellCharges(self.spellID);
+	local start, duration, enable = GetSpellCooldown(self.spellID);
+	local usesCount = GetSpellCount(self.spellID);
 
-	local usesCharges = false;
+	local showSpellCount = false;
+	local spellCount = 0;
+
+	-- Show Spell Charges, then Spell Uses, then Nothing
 	if (maxCharges and maxCharges > 1) then
-		self.SpellButton.Count:SetText(charges);
-		usesCharges = true;
+		showSpellCount = true;
+		spellCount = charges;
+
+		if (charges < maxCharges) then
+			StartChargeCooldown(self.SpellButton, chargeStart, chargeDuration, enable);
+		end
+	elseif (usesCount > 0) then
+		showSpellCount = true;
+		spellCount = usesCount;
+	end
+
+	if showSpellCount then
+		self.SpellButton.Count:SetText(spellCount);
 	else
 		self.SpellButton.Count:SetText("");
 	end
 
-	local start, duration, enable = GetSpellCooldown(name);
-	
-	if (usesCharges and charges < maxCharges) then
-		StartChargeCooldown(self.SpellButton, chargeStart, chargeDuration, enable);
-	end
 	if (start) then
 		CooldownFrame_Set(self.SpellButton.Cooldown, start, duration, enable);
 	end
 
 	self.SpellButton.spellName = self.CurrentSpell;
-	self.SpellButton.currentSpellID = spellID;
+	self.SpellButton.currentSpellID = self.spellID;
 end
 
 function HasZoneAbilitySpellOnBar(self)
-	if (not self.baseName) then
+	if (not self.spellID) then
 		return false;
 	end
 
-	local name = GetSpellInfo(self.baseName);
+	local name = GetSpellInfo(self.spellID);
 	for i = 1, (LE_NUM_NORMAL_ACTION_PAGES * LE_NUM_ACTIONS_PER_PAGE) + 1, 1 do
 		local type, id = GetActionInfo(i);
 
 		if (type == "spell" or type == "companion") then
-			local actionName = GetSpellInfo(id);
-
-			if (name == actionName) then
+			if (id == self.spellID) then
 				return true;
 			end
 		end
@@ -137,9 +149,7 @@ function HasZoneAbilitySpellOnBar(self)
 			local type, id = GetActionInfo(i);
 
 			if (type == "spell" or type == "companion") then
-				local actionName = GetSpellInfo(id);
-
-				if (name == actionName) then
+				if (id == self.spellID) then
 					return true;
 				end
 			end
@@ -151,9 +161,17 @@ end
 
 function HasZoneAbility()
 	local spellID, garrisonType = GetZoneAbilitySpellInfo();
-	return (spellID ~= 0);
+	return (spellID ~= nil);
 end
 
 function GetLastZoneAbilitySpellTexture()
 	return ZoneAbilityFrame.CurrentTexture;
+end
+
+function ZoneAbilityFrame_OnClick(self)
+	CastSpellByID(self.baseSpellID);
+end
+
+function ZoneAbilityFrame_OnDragStart(self)
+	PickupSpell(self.baseSpellID);
 end

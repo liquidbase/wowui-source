@@ -1,7 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
-	<Script file="Blizzard_QuestChoice.lua"/>
-
 	<!-- Art pieces to hide border seams -->
 	<Texture name="QuestChoiceLeftHide" file="Interface\QuestionFrame\Question-Main" virtual="true">
 		<Size x="86" y="39"/>
@@ -20,7 +18,19 @@
 		<TexCoords left="0.82617188" right="0.89062500" top="0.30468750" bottom="0.48046875"/>
 	</Texture>
 
-	<Button name="QuestChoiceItemTemplate" virtual="true">
+	<Button name="QuestChoiceOptionButtonTemplate" parentArray="Buttons" mixin="QuestChoiceOptionButtonMixin" inherits="UIPanelButtonTemplate" motionScriptsWhileDisabled="true" virtual="true">
+		<Size x="175" y="22"/>
+		<Anchors>
+			<Anchor point="TOPLEFT"/>
+		</Anchors>
+		<Scripts>
+			<OnClick method="OnClick"/>
+			<OnEnter method="OnEnter"/>
+			<OnLeave method="OnLeave"/>
+		</Scripts>
+	</Button>
+	
+	<Button name="QuestChoiceItemTemplate" mixin="QuestChoiceItemButtonMixin" virtual="true">
 		<Size x="167" y="41"/>
 		<Layers>
 			<Layer level="BACKGROUND">
@@ -52,12 +62,20 @@
 					</Anchors>
 				</Texture>
 			</Layer>
+			<Layer level="OVERLAY" textureSubLevel="1">
+				<Texture parentKey="IconOverlay" hidden="true">
+					<Size x="37" y="37"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
 		</Layers>
 		<Scripts>
-			<OnEnter function="QuestChoiceFrame_OnItemEnter" />
+			<OnEnter method="OnEnter" />
 			<OnLeave function="GameTooltip_Hide"/>
-			<OnUpdate function="QuestChoiceFrame_OnItemUpdate"/>
-			<OnClick function="QuestChoiceFrame_OnItemModifiedClick"/>
+			<OnUpdate method="OnUpdate"/>
+			<OnClick method="OnModifiedClick"/>
 		</Scripts>
 	</Button>
 	<Frame name="QuestChoiceCurrencyTemplate" virtual="true">
@@ -175,7 +193,7 @@
 			</Frame>
 		</Frames>
 	</Frame>
-	<Button name="QuestChoiceOptionTemplate" virtual="true">
+	<Button name="QuestChoiceOptionTemplate" inherits="ResizeLayoutFrame" mixin="QuestChoiceOptionFrameMixin" virtual="true">
 		<Size x="210" y="268"/>
 		<Layers>
 			<Layer level="OVERLAY">
@@ -189,65 +207,78 @@
 			</Layer>
 		</Layers>
 		<Frames>
-			<Button parentKey="OptionButton" inherits="UIPanelButtonTemplate">
-				<Size x="175" y="22"/>
-				<Anchors>
-					<Anchor point="BOTTOM"/>
-				</Anchors>
-				<ButtonText name="$parentText" parentKey="Text">
-					<Anchors>
-						<Anchor point="TOPLEFT" x="4" y="0"/>
-						<Anchor point="BOTTOMRIGHT" x="-4" y="0"/>
-					</Anchors>
-				</ButtonText>
-				<Scripts>
-					<OnClick function="QuestChoiceFrameOptionButton_OnClick"/>
-					<OnEnter function="QuestChoiceFrameOptionButton_OnEnter"/>
-					<OnLeave function="QuestChoiceFrameOptionButton_OnLeave"/>
-				</Scripts>
-			</Button>
-			<Frame parentKey="Rewards" inherits="QuestChoiceRewardsTemplate">
-				<Anchors>
-					<Anchor point="BOTTOM" relativeKey="$parent.OptionButton" relativePoint="TOP" y="5"/>
-				</Anchors>
-			</Frame>
-			<Frame parentKey="Header">
-				<Size x="256" y="32"/>
+			<Frame parentKey="Header" inherits="HorizontalLayoutFrame" hidden="true">
+				<KeyValues>
+					<KeyValue key="ignoreInLayout" value="true" type="boolean"/>
+					<KeyValue key="fixedHeight" value="32" type="number"/>
+					<KeyValue key="spacing" value="5" type="number"/>
+				</KeyValues>
 				<Anchors>
 					<Anchor point="TOP" y="10"/>
 				</Anchors>
 				<Layers>
 					<Layer level="BORDER">
 						<Texture parentKey="Background" file="Interface\QuestionFrame\TitleBanner">
+							<Size x="256" y="32"/>
 							<TexCoords top="0" left="0" bottom=".5" right="1" />
+							<Anchors>
+								<Anchor point="CENTER" />
+							</Anchors>
 						</Texture>
 					</Layer>
 					<Layer level="ARTWORK">
-						<FontString parentKey="Text" font="SystemFont_Large" justifyH="CENTER" justifyV="MIDDLE" maxLines="1">
+						<Texture parentKey="Icon">
 							<Anchors>
-								<Anchor point="TOPLEFT" x="25"/>
-								<Anchor point="BOTTOMRIGHT" x="-25" y="2"/>
+								<Anchor point="TOPLEFT" />
 							</Anchors>
+							<KeyValues>
+								<KeyValue key="layoutIndex" value="1" type="number"/>
+							</KeyValues>
+						</Texture>
+						<FontString parentKey="Text" font="Game16Font" justifyV="MIDDLE" maxLines="1" mixin="ShrinkUntilTruncateFontStringMixin">
+							<Size y="30"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" />
+							</Anchors>
+							<KeyValues>
+								<KeyValue key="layoutIndex" value="2" type="number"/>
+							</KeyValues>
 							<Color r="0" g="0" b="0"/>
 						</FontString>
 					</Layer>
 				</Layers>
+				<Scripts>
+					<OnLoad>
+						self.Text:SetFontObjectsToTry("SystemFont_Large", "SystemFont_Med3", "SystemFont_Med2", "SystemFont_Med1", "Game11Font");
+					</OnLoad>
+				</Scripts>
 			</Frame>
-			<SimpleHTML parentKey="OptionText" inherits="InlineHyperlinkFrameTemplate">
-				<Size x="200"/>
+			<SimpleHTML parentKey="OptionText" inherits="InlineHyperlinkFrameTemplate" resizeToFitContents="true">
+				<Size x="200" y="10"/>
 				<Anchors>
 					<Anchor point="TOP" relativeKey="$parent.Artwork" relativePoint="BOTTOM" y="-8"/>
-					<Anchor point="BOTTOM" relativeKey="$parent.Rewards" relativePoint="TOP" y="35"/>
 				</Anchors>
-				<Scripts>
-					<OnSizeChanged>QuestChoiceFrame_SetPendingUpdate(self:GetParent():GetParent());</OnSizeChanged>
-				</Scripts>
 				<FontString inherits="GameFontBlack" justifyH="LEFT" justifyV="TOP"/>
 			</SimpleHTML>
+			<Frame parentKey="Rewards" inherits="QuestChoiceRewardsTemplate">
+				<Anchors>
+					<Anchor point="TOP" relativeKey="$parent.OptionText" relativePoint="BOTTOM" y="-5"/>
+				</Anchors>
+			</Frame>
+			<Frame parentKey="OptionButtonsContainer">
+				<Size x="175" y="22"/>
+				<Anchors>
+					<Anchor point="TOP" relativeKey="$parent.Rewards" relativePoint="BOTTOM" y="-5"/>
+				</Anchors>
+				<Frames>
+					<Button parentKey="OptionButton1" inherits="QuestChoiceOptionButtonTemplate"/>
+					<Button parentKey="OptionButton2" inherits="QuestChoiceOptionButtonTemplate" hidden="true" />
+				</Frames>
+			</Frame>
 		</Frames>
 	</Button>
 
-	<Frame name="QuestChoiceFrame" frameStrata="HIGH" hidden="true" enableMouse="true" parent="UIParent" toplevel="true" inherits="HorizontalLayoutFrame">
+	<Frame name="QuestChoiceFrame" frameStrata="HIGH" mixin="QuestChoiceFrameMixin" hidden="true" enableMouse="true" parent="UIParent" toplevel="true" inherits="HorizontalLayoutFrame">
 		<Size x="600" y="480"/>
 		<Anchors>
 			<Anchor point="CENTER" />
@@ -433,17 +464,11 @@
 			</Button>
 		</Frames>
 		<Scripts>
-			<OnLoad function="QuestChoiceFrame_OnLoad"/>
-			<OnEvent function="QuestChoiceFrame_OnEvent"/>
-			<OnUpdate function="QuestChoiceFrame_OnUpdate"/>
-			<OnShow>
-				PlaySound("igQuestListOpen");
-			</OnShow>
-			<OnHide>
-				PlaySound("igQuestListClose");
-				CloseQuestChoice();
-				StaticPopup_Hide("CONFIRM_GORGROND_GARRISON_CHOICE");
-			</OnHide>
+			<OnLoad method="OnLoad"/>
+			<OnEvent method="OnEvent"/>
+			<OnUpdate method="OnUpdate"/>
+			<OnShow method="OnShow" />
+			<OnHide method="OnHide" />
 		</Scripts>
 	</Frame>
 </Ui>

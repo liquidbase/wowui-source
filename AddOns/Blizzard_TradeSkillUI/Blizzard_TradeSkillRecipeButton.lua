@@ -43,7 +43,7 @@ function TradeSkillRecipeButtonMixin:SetUpHeader(textWidth, tradeSkillInfo)
 
 	self:SetBaseColor(TradeSkillTypeColor[tradeSkillInfo.type]);
 
-	if tradeSkillInfo.hasProgressBar then
+	if tradeSkillInfo.hasProgressBar and not (C_TradeSkillUI.IsTradeSkillGuild() or C_TradeSkillUI.IsTradeSkillGuildMember()) then
 		self.SubSkillRankBar:Show();
 		self.SubSkillRankBar:SetMinMaxValues(tradeSkillInfo.skillLineStartingRank, tradeSkillInfo.skillLineMaxLevel);
 		self.SubSkillRankBar:SetValue(tradeSkillInfo.skillLineCurrentLevel);
@@ -61,12 +61,17 @@ function TradeSkillRecipeButtonMixin:SetUpHeader(textWidth, tradeSkillInfo)
 	self:SetText(tradeSkillInfo.name);
 	self.Count:SetText("");
 
-	if tradeSkillInfo.collapsed then
-		self:SetNormalTexture("Interface\\Buttons\\UI-PlusButton-Up");
+	if (C_TradeSkillUI.IsEmptySkillLineCategory(tradeSkillInfo.categoryID)) then
+		self:SetNormalTexture("");
+		self.Highlight:SetTexture("")
 	else
-		self:SetNormalTexture("Interface\\Buttons\\UI-MinusButton-Up");
+		if tradeSkillInfo.collapsed then
+			self:SetNormalTexture("Interface\\Buttons\\UI-PlusButton-Up");
+		else
+			self:SetNormalTexture("Interface\\Buttons\\UI-MinusButton-Up");
+		end
+		self.Highlight:SetTexture("Interface\\Buttons\\UI-PlusButton-Hilight");
 	end
-	self.Highlight:SetTexture("Interface\\Buttons\\UI-PlusButton-Hilight");
 
 	self.SelectedTexture:Hide();
 	self:UnlockHighlight()
@@ -77,7 +82,7 @@ TradeSkillTypePrefix = {
 	optimal			= " [+++] ",
 	medium			= " [++] ",
 	easy			= " [+] ",
-	trivial			= " ", 
+	trivial			= " ",
 	header			= " ",
 	subheader		= " ",
 	nodifficulty	= " ",
@@ -153,7 +158,7 @@ function TradeSkillRecipeButtonMixin:SetUpRecipe(textWidth, tradeSkillInfo)
 		textWidth = textWidth - usedWidth;
 	else
 		self.Count:SetFormattedText("[%d]", tradeSkillInfo.numAvailable);
-		
+
 		local nameWidth = self.Text:GetWidth();
 		local countWidth = self.Count:GetWidth();
 
@@ -187,7 +192,7 @@ function TradeSkillRecipeButtonMixin:SetSelected(selected)
 
 		self.Text:SetVertexColor(HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b);
 		self.Count:SetVertexColor(HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b);
-			
+
 		self.SkillUps.Text:SetVertexColor(HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b);
 		self.SkillUps.Icon:SetVertexColor(HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b);
 		self:LockHighlight();
@@ -203,7 +208,7 @@ function TradeSkillRecipeButtonMixin:OnMouseEnter()
 	self.Count:SetVertexColor(HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b);
 	self.SkillUps.Icon:SetVertexColor(HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b);
 	self.SkillUps.Text:SetVertexColor(HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b);
-	
+
 	self.Text:SetFontObject(GameFontHighlightLeft);
 	self.Text:SetVertexColor(HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b);
 	if self.SubSkillRankBar.currentRank and self.SubSkillRankBar.maxRank then
@@ -217,7 +222,7 @@ function TradeSkillRecipeButtonMixin:OnMouseLeave()
 		self.Count:SetVertexColor(self.r, self.g, self.b);
 		self.SkillUps.Icon:SetVertexColor(self.r, self.g, self.b);
 		self.SkillUps.Text:SetVertexColor(self.r, self.g, self.b);
-		
+
 		self.Text:SetFontObject(self.font);
 		self.Text:SetVertexColor(self.r, self.g, self.b);
 	end

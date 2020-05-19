@@ -2,66 +2,10 @@
 ..\..\FrameXML\UI.xsd">
 	<Script file="Blizzard_ArtifactPerks.lua"/>
 
-	<Frame name="ArtifactDependencyLineTemplate" frameLevel="1200" parentArray="DependencyLines" mixin="ArtifactLineMixin" virtual="true">
-		<Layers>
-			<Layer level="OVERLAY" textureSubLevel="-3">
-				<Line parentKey="Background" file="Interface/Artifacts/_Artifacts-DependencyBar-BG" thickness="12" hWrapMode="REPEAT" alpha="0" />
-			</Layer>
-			<Layer level="OVERLAY" textureSubLevel="-2">
-				<Line parentKey="Fill" file="Interface/Artifacts/_Artifacts-DependencyBar-Fill" thickness="12" hWrapMode="REPEAT" alpha="0" />
-			</Layer>
-			<Layer level="OVERLAY" textureSubLevel="-1">
-				<Line parentKey="FillScroll1" file="Interface/Artifacts/_Artifacts-DependencyBar-FillScroll1" thickness="12" hWrapMode="REPEAT" alphaMode="ADD" alpha="0" />
-				<Line parentKey="FillScroll2" file="Interface/Artifacts/_Artifacts-DependencyBar-FillScroll2" thickness="12" hWrapMode="REPEAT" alphaMode="ADD" alpha="0" />
-			</Layer>
-		</Layers>
-		<Animations>
-			<AnimationGroup parentKey="ScrollAnim" setToFinalAlpha="true" looping="REPEAT">
-				<TextureCoordTranslation childKey="FillScroll1" duration="8" order="1" offsetU="1" offsetV="0" />
-				<TextureCoordTranslation childKey="FillScroll2" duration="8" order="1" offsetU="-1" offsetV="0" />
-			</AnimationGroup>
-			<AnimationGroup parentKey="FadeAnim" setToFinalAlpha="true">
-				<Alpha parentKey="Background" childKey="Background" duration=".25" order="0"/>
-				<Alpha parentKey="Fill" childKey="Fill" duration=".25" order="0"/>
-				<Alpha parentKey="FillScroll1" childKey="FillScroll1" duration=".25" order="0"/>
-				<Alpha parentKey="FillScroll2" childKey="FillScroll2" duration=".25" order="0"/>
-			</AnimationGroup>
-			<AnimationGroup parentKey="RevealAnim" setToFinalAlpha="true">
-				<Alpha parentKey="Start1" childKey="FillScroll1" duration=".001" order="1" fromAlpha="0" toAlpha="0"/>
-				<Alpha parentKey="Start2" childKey="FillScroll2" duration=".001" order="1" fromAlpha="0" toAlpha="0"/>
-				
-				<Alpha childKey="Fill" duration="0.1" order="2" fromAlpha="0" toAlpha="1"/>
-				<LineScale parentKey="LineScale" childKey="Fill" smoothing="IN" duration="0.75" order="2" fromScaleX="0.001" fromScaleY="1" toScaleX="1" toScaleY="1"/>
-				<Alpha childKey="Fill" duration="1" order="3" fromAlpha="1" toAlpha="0"/>
-				<Alpha childKey="Background" smoothing="OUT" duration="0.75" order="3" fromAlpha="0" toAlpha="1"/>
-			</AnimationGroup>
-		</Animations>
-	</Frame>
+	<Frame name="ArtifactDependencyLineTemplate" frameLevel="1200" parentArray="DependencyLines" inherits="PowerDependencyLineTemplate" mixin="ArtifactLineMixin" virtual="true"/>
 
-	<Frame name="ArtifactCurvedDependencyLineTemplate" frameLevel="1200" parentArray="CurvedDependencyLines" mixin="ArtifactLineMixin" virtual="true">
-		<KeyValues>
-			<KeyValue key="IsCurved" type="boolean" value="true"/>
-		</KeyValues>
-		<Layers>
-			<Layer level="OVERLAY" textureSubLevel="-3">
-				<Texture parentKey="Background" file="Interface/Artifacts/_Artifacts-DependencyBar-BG" hWrapMode="REPEAT" alpha="0" />
-			</Layer>
-			<Layer level="OVERLAY" textureSubLevel="-2">
-				<Texture parentKey="Fill" file="Interface/Artifacts/_Artifacts-DependencyBar-Fill" hWrapMode="REPEAT" alpha="0" />
-			</Layer>
-			<Layer level="OVERLAY" textureSubLevel="-1">
-				<Texture parentKey="FillScroll1" file="Interface/Artifacts/_Artifacts-DependencyBar-FillScroll1" hWrapMode="REPEAT" alphaMode="ADD" alpha="0" />
-			</Layer>
-		</Layers>
+	<Frame name="ArtifactCurvedDependencyLineTemplate" frameLevel="1200" parentArray="CurvedDependencyLines" inherits="PowerDependencyCurvedLineTemplate" mixin="ArtifactLineMixin" virtual="true">
 		<Animations>
-			<AnimationGroup parentKey="ScrollAnim" setToFinalAlpha="true" looping="REPEAT">
-				<TextureCoordTranslation childKey="FillScroll1" duration="8" order="1" offsetU="1" offsetV="0" />
-			</AnimationGroup>
-			<AnimationGroup parentKey="FadeAnim" setToFinalAlpha="true">
-				<Alpha parentKey="Background" childKey="Background" duration=".25" order="0"/>
-				<Alpha parentKey="Fill" childKey="Fill" duration=".25" order="0"/>
-				<Alpha parentKey="FillScroll1" childKey="FillScroll1" duration=".25" order="0"/>
-			</AnimationGroup>
 			<AnimationGroup parentKey="Tier2FadeInAnim" setToFinalAlpha="true">
 				<Alpha parentKey="Background" childKey="Background" fromAlpha="0" toAlpha="1" duration=".5" order="0"/>
 				<Alpha parentKey="Fill" childKey="Fill" fromAlpha="0" toAlpha="1" duration=".5" order="0"/>
@@ -70,6 +14,39 @@
 						self:GetParent():SetState(self:GetParent().lineState);
 					</OnFinished>	
 				</Scripts>
+			</AnimationGroup>
+		</Animations>
+	</Frame>
+
+	<Frame name="ArtifactRelicRankTemplate" virtual="true">
+		<Size x="23" y="23"/>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Glow" atlas="Relic-Rankframe-glow" useAtlasSize="true" alpha="0">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BORDER">
+				<Texture parentKey="Background" atlas="Relic-Rankframe" useAtlasSize="true">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString parentKey="Text" inherits="GameFontNormalSmall">
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Animations>
+			<AnimationGroup parentKey="GlowAnim" setToFinalAlpha="true" looping="REPEAT">
+				<Alpha childKey="Glow" smoothing="NONE" duration="1" order="1" fromAlpha="1" toAlpha="0"/>
+				<Alpha childKey="Glow" startDelay="1" smoothing="NONE" duration="1" order="1" fromAlpha="0" toAlpha="1"/>
 			</AnimationGroup>
 		</Animations>
 	</Frame>
@@ -127,6 +104,9 @@
 		<HighlightTexture parentKey="HighlightTexture" alphaMode="ADD" />
 
 		<Scripts>
+			<OnLoad>
+				self.UpdateTooltip = self:GetScript("OnEnter");
+			</OnLoad>
 			<OnEnter>
 				self:GetParent():OnRelicSlotMouseEnter(self);
 			</OnEnter>
@@ -209,6 +189,7 @@
 			</OnEvent>
 			<OnModelLoaded function="ArtifactsModelTemplate_OnModelLoaded" />
 		</Scripts>
+		<ViewInsets left="88" right="88" top="0" bottom="0"/>
 	</PlayerModel>
 
 	<Frame name="ArtifactPerksTabTemplate" mixin="ArtifactPerksMixin" virtual="true" useParentLevel="true">
@@ -271,10 +252,9 @@
 					<OnShow method="OnShow" />
 					<OnHide method="OnHide" />
 					<OnEvent method="OnEvent" />
-					<OnUpdate method="OnUpdate" />
 				</Scripts>
 			</Frame>
-				<ModelScene parentKey="Tier2ForgingScene" setAllPoints="true" inherits="ModelSceneMixinTemplate" frameLevel="300">
+			<ModelScene parentKey="Tier2ForgingScene" setAllPoints="true" inherits="NonInteractableModelSceneMixinTemplate" frameLevel="300">
 				<Layers>
 					<Layer level="OVERLAY" textureSubLevel="-1">
 						<Texture parentKey="BackgroundMiddle" alpha="0">
@@ -617,7 +597,6 @@
 						<Alpha childKey="CrestRune14" startDelay="0.53" smoothing="IN_OUT" duration="1" order="1" fromAlpha="1" toAlpha="0"/>
 						<Scripts>
 							<OnFinished>
-								self:GetParent():GetParent().Tier2ModelScene:Show();
 								self:GetParent().RunePulse:Play();
 							</OnFinished>
 						</Scripts>
@@ -667,18 +646,62 @@
 					</AnimationGroup>
 				</Animations>
 			</Frame>
-			<ModelScene parentKey="Tier2ModelScene" inherits="ModelSceneMixinTemplate" frameLevel="700">
-				<Size x="350" y="350"/>
+			<ModelScene parentKey="Tier2SlamEffectModelScene" inherits="NonInteractableModelSceneMixinTemplate" hidden="true" frameLevel="700">
+				<Size x="500" y="500"/>
 				<Anchors>
 					<Anchor point="CENTER" relativeKey="$parent.CrestFrame" relativePoint="CENTER" x="0" y="0"/>
 				</Anchors>
 			</ModelScene>
-			<ModelScene parentKey="Tier2SlamEffectModelScene" inherits="ModelSceneMixinTemplate" hidden="true" frameLevel="700">
-				<Size x="500" y="500"/>
-				<Anchors>
-					<Anchor point="CENTER" relativeKey="$parent.Tier2ModelScene" relativePoint="CENTER" x="0" y="0"/>
-				</Anchors>
-			</ModelScene>
+			<Frame parentKey="DisabledFrame" hidden="false" setAllPoints="true" frameLevel="2000">
+				<Layers>
+					<Layer level="BACKGROUND" textureSubLevel="-1">
+						<Texture parentKey="Background">
+							<Anchors>
+								<Anchor point="TOP" relativeKey="$parent.TitleContainer.Background"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="BACKGROUND">
+						<FontString parentKey="ArtifactName" inherits="Fancy24Font">
+							<Anchors>
+								<Anchor point="TOP" relativeKey="$parent.$parent.TitleContainer.ArtifactName"/>
+							</Anchors>
+							<Shadow>
+								<Offset x="1" y="-1" />
+								<Color r="0" g="0" b="0"/>
+							</Shadow>
+						</FontString>
+					</Layer>
+					<Layer level="BORDER">
+						<Texture setAllPoints="true" alpha="0.1">
+							<Color r="0.902" g="0.8" b="0.5"/>
+						</Texture>
+					</Layer>
+					<Layer level="ARTWORK">
+						<Texture setAllPoints="true" alpha="0.2">
+							<Color r="0" g="0" b="0"/>
+						</Texture>
+					</Layer>
+					<Layer level="OVERLAY" textureSubLevel="-1">
+						<Texture atlas="Artifacts-Retiring-Gradient" useAtlasSize="true">
+							<Size x="0" y="0"/>
+							<Anchors>
+								<Anchor point="BOTTOMLEFT"/>
+								<Anchor point="BOTTOMRIGHT"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="OVERLAY">
+						<FontString inherits="Fancy22Font" text="ARTIFACT_RETIRED">
+							<Size x="670"/>
+							<Anchors>
+								<Anchor point="BOTTOM" y="36"/>
+							</Anchors>
+							<Color r="0.902" g="0.8" b="0.5" a="1"/>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
 		</Frames>
 		<Scripts>
 			<OnLoad method="OnLoad" />

@@ -46,16 +46,16 @@ function GarrisonMonuntmentFrame_SaveSelection()
 end
 
 function GarrisonMonuntmentFrame_OnShow(self)
-	PlaySound("UI_Garrison_Monuments_Open");
+	PlaySound(SOUNDKIT.UI_GARRISON_MONUMENTS_OPEN);
 end
 
 function GarrisonMonuntmentFrame_OnHide(self)
 	GarrisonMonuntmentFrame_SaveSelection();
-	PlaySound("UI_Garrison_Monuments_Close");
+	PlaySound(SOUNDKIT.UI_GARRISON_MONUMENTS_CLOSE);
 end
 
 function GarrisonMonuntmentLeftBtn_OnMouseDown(self)
-	PlaySound("UI_Garrison_Monuments_Nav");
+	PlaySound(SOUNDKIT.UI_GARRISON_MONUMENTS_NAV);
 	GarrisonMonumentFrame.LeftBtn.Texture:SetAtlas("Monuments-LeftButton-Down");
 	GarrisonMonuntmentFrame_UpdateSelectedTrophyID( -1 );
 end
@@ -65,7 +65,7 @@ function GarrisonMonuntmentLeftBtn_OnMouseUp(self)
 end
 
 function GarrisonMonuntmentRightBtn_OnMouseDown(self)
-	PlaySound("UI_Garrison_Monuments_Nav");
+	PlaySound(SOUNDKIT.UI_GARRISON_MONUMENTS_NAV);
 	GarrisonMonumentFrame.RightBtn.Texture:SetAtlas("Monuments-RightButton-Down");
 	GarrisonMonuntmentFrame_UpdateSelectedTrophyID( 1 );
 end
@@ -94,6 +94,7 @@ end
 function GarrisonMonuntmentFrame_UpdateDisplay(trophy_id, trophy_name, lock_code)
 	local frame = GarrisonMonumentFrame;
 	if( not trophy_id ) then
+		local _;
 		trophy_id, lock_code,_, trophy_name = C_Trophy.MonumentGetTrophyInfoByIndex(frame.monumentID);
 	end
 	frame.Text:SetText( trophy_name or EMPTY ) -- set trophy name;

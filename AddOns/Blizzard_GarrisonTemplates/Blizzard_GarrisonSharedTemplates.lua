@@ -230,7 +230,7 @@ function GarrisonFollowerList:OnEvent(event, ...)
 			local followerID = ...;
 			if ( followerID == self.followerTab.followerID ) then
 				self.followerTab.ModelCluster.Child.Model[1]:SetSpellVisualKit(6375);	-- level up visual;
-				PlaySound("UI_Garrison_CommandTable_Follower_LevelUp");
+				PlaySound(SOUNDKIT.UI_GARRISON_COMMAND_TABLE_FOLLOWER_LEVEL_UP);
 			end
 		end
 	elseif (event == "CURRENT_SPELL_CAST_CHANGED" or event == "CURSOR_UPDATE") then
@@ -304,6 +304,20 @@ function GarrisonFollowerListButton:GetFollowerList()
 	return self:GetParent():GetParent():GetParent();
 end
 
+function GarrisonFollowerListButton_OnDragStart(self, button)
+	local mainFrame = self:GetFollowerList():GetParent();
+	if (mainFrame.OnDragStartFollowerButton) then
+		mainFrame:OnDragStartFollowerButton(GarrisonFollowerPlacer, self, 24);
+	end
+end
+
+function GarrisonFollowerListButton_OnDragStop(self)
+	local mainFrame = self:GetFollowerList():GetParent();
+	if (mainFrame.OnDragStopFollowerButton) then
+		mainFrame:OnDragStopFollowerButton(GarrisonFollowerPlacer);
+	end
+end
+
 GarrisonMissionFollowerOrCategoryListButtonMixin = { }
 
 function GarrisonMissionFollowerOrCategoryListButtonMixin:GetFollowerList()
@@ -367,7 +381,7 @@ function GarrisonFollowerList:UpdateFollowers()
 		end
 	end
 
-	if ( self.followerTab ) then
+	if ( self.followerTab and GarrisonFollowerOptions[self.followerType].showNumFollowers) then
 		local maxFollowers = C_Garrison.GetFollowerSoftCap(self.followerType);
 		local numActiveFollowers = C_Garrison.GetNumActiveFollowers(self.followerType) or 0;
 		if ( self.isLandingPage ) then
@@ -548,7 +562,7 @@ function GarrisonFollowerList:UpdateData()
 						button.Follower.ILevel:SetPoint("TOPLEFT", button.Follower.Name, "BOTTOMLEFT", 0, -4);
 						button.Follower.Status:SetPoint("TOPLEFT", button.Follower.ILevel, "BOTTOMLEFT", -1, -2);
 					end
-					button.Follower.ILevel:SetText(ITEM_LEVEL_ABBR.." "..follower.iLevel);
+					button.Follower.ILevel:SetText(POWER_LEVEL_ABBR.." "..follower.iLevel);
 					button.Follower.ILevel:Show();
 				else
 					button.Follower.ILevel:SetText(nil);
@@ -708,10 +722,12 @@ function GarrisonFollowerButton_SetCounterButton(button, followerID, index, info
 		counter = button.Counters[index];
 	end
 	local numPerRow, innerSpacing, outerSpacingX, outerSpacingY, scale = GetFollowerButtonCounterSpacings(followerTypeID);
-	if ((index - 1) % numPerRow ~= 0) then
-		counter:SetPoint("RIGHT", button.Counters[index-1], "LEFT", -innerSpacing, 0);
-	else
-		counter:SetPoint("TOP", button.Counters[index-2], "BOTTOM", 0, -innerSpacing);
+	if index > 1 then
+		if ((index - 1) % numPerRow ~= 0) then
+			counter:SetPoint("RIGHT", button.Counters[index-1], "LEFT", -innerSpacing, 0);
+		else
+			counter:SetPoint("TOP", button.Counters[index-numPerRow], "BOTTOM", 0, -innerSpacing);
+		end
 	end
 	counter:SetScale(scale);
 	counter.info = info;
@@ -847,7 +863,7 @@ function GarrisonFollowerListButton_OnClick(self, button)
 	local followerFrame = followerList.listScroll.followerFrame;
 	if ( button == "LeftButton" ) then
 		if ( followerFrame.selectedFollower ~= self.id ) then
-			PlaySound("UI_Garrison_CommandTable_SelectFollower");
+			PlaySound(SOUNDKIT.UI_GARRISON_COMMAND_TABLE_SELECT_FOLLOWER);
 			followerFrame.selectedFollower = self.id;
 		end
 
@@ -859,14 +875,14 @@ function GarrisonFollowerListButton_OnClick(self, button)
 			if ( self.isCollected ) then
 				if (followerList.expandedFollower == self.id) then
 					followerList.expandedFollower = nil;
-					PlaySound("UI_Garrison_CommandTable_FollowerAbilityClose");
+					PlaySound(SOUNDKIT.UI_GARRISON_COMMAND_TABLE_FOLLOWER_ABILITY_CLOSE);
 				else
 					followerList.expandedFollower = self.id;
-					PlaySound("UI_Garrison_CommandTable_FollowerAbilityOpen");
+					PlaySound(SOUNDKIT.UI_GARRISON_COMMAND_TABLE_FOLLOWER_ABILITY_OPEN);
 				end
 			else
 				followerList.expandedFollower = nil;
-				PlaySound("UI_Garrison_CommandTable_FollowerAbilityClose");
+				PlaySound(SOUNDKIT.UI_GARRISON_COMMAND_TABLE_FOLLOWER_ABILITY_CLOSE);
 			end
 		else
 			if ( not followerList.canExpand and followerList.expandedFollower ~= self.id ) then
@@ -911,7 +927,7 @@ function GarrisonFollowerListButton_OnClick(self, button)
 				end
 				followerList.OptionDropDown.followerID = self.id;
 				ToggleDropDownMenu(1, nil, followerList.OptionDropDown, "cursor", 0, 0);
-				PlaySound("igMainMenuOptionCheckBoxOn");
+				PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 			else
 				followerList.OptionDropDown.followerID = nil;
 				CloseDropDownMenus();
@@ -1249,41 +1265,6 @@ function GarrisonFollowerPage_AnchorAbility(abilityFrame, lastAnchor, headerStri
 		abilityFrame:SetPoint("TOPLEFT", headerString, "BOTTOMLEFT", 2, isLandingPage and -5 or -12);
 	end
 	return abilityFrame;
-end
-
-function GarrisonFollowerPageModel_SpellCast_OnMouseDown(self, button)
-	local followerList = self:GetParent().followerList;
-	if ( button == "LeftButton" and followerList.canCastSpellsOnFollowers and SpellCanTargetGarrisonFollower(self.followerID) ) then
-		-- no rotation if you can upgrade this follower
-		local followerInfo = self.followerID and C_Garrison.GetFollowerInfo(self.followerID);
-		if ( followerInfo and followerInfo.isCollected and followerInfo.status ~= GARRISON_FOLLOWER_ON_MISSION ) then
-			return true;
-		end
-	end
-	return false;
-end
-
-function GarrisonFollowerPageModel_OnMouseDown(self, button)
-	if (not GarrisonFollowerPageModel_SpellCast_OnMouseDown(self, button)) then
-		Model_OnMouseDown(self, button);
-	end
-end
-
-function GarrisonFollowerPageModel_SpellCast_OnMouseUp(self, button)
-	local followerList = self:GetParent().followerList;
-	if ( button == "LeftButton" and followerList.canCastSpellsOnFollowers and SpellCanTargetGarrisonFollower(self.followerID) ) then
-		-- no rotation if you can upgrade this follower, bring up confirmation dialog
-		if ( GarrisonFollower_AttemptUpgrade(self.followerID) ) then
-			return true;
-		end
-	end
-	return false;
-end
-
-function GarrisonFollowerPageModel_OnMouseUp(self, button)
-	if (not GarrisonFollowerPageModel_SpellCast_OnMouseUp(self, button)) then
-		Model_OnMouseUp(self, button);
-	end
 end
 
 function GarrisonFollowerPageModelUpgrade_OnLoad(self)
@@ -1792,7 +1773,7 @@ function GarrisonFollowerTabMixin:ShowAbilities(followerInfo)
 		if ( followerInfo.isCollected and GarrisonFollowerAbilities_IsNew(self.lastUpdate, followerInfo.followerID, ability.id, GARRISON_FOLLOWER_ABILITY_TYPE_EITHER) ) then
 			if ( ability.temporary ) then
 				abilityFrame.LargeAbilityFeedbackGlowAnim:Play();
-				PlaySoundKitID(51324);
+				PlaySound(SOUNDKIT.UI_GARRISON_FOLLOWER_LEARN_TRAIT);
 			else
 				abilityFrame.IconButton.Icon:SetAlpha(0);
 				abilityFrame.IconButton.OldIcon:SetAlpha(1);
@@ -1956,25 +1937,31 @@ function GarrisonFollowerTabMixin:ShowEquipment(followerInfo)
 		equipmentFrame.followerList = self:GetFollowerList();
 		equipmentFrame.abilityID = equipment.id;
 		equipmentFrame.followerID = followerInfo.followerID;
-		if (equipment.icon) then
-			equipmentFrame.Icon:SetTexture(equipment.icon);
-			equipmentFrame.Icon:Show();
+
+		if equipmentFrame.Icon then
+			equipmentFrame.Icon:SetShown(equipment.icon ~= nil);
+
+			if (equipment.icon) then
+				equipmentFrame.Icon:SetTexture(equipment.icon);
+
+				if (followerInfo.isCollected and GarrisonFollowerAbilities_IsNew(self.lastUpdate, followerID, equipment.id, GARRISON_FOLLOWER_ABILITY_TYPE_EITHER)) then
+					equipmentFrame.EquipAnim:Play();
+				else
+					GarrisonEquipment_StopAnimations(equipmentFrame);
+				end
+			end
+		end
+
+		if equipmentFrame.Counter then
 			local id, counter = next(equipment.counters, nil);
+			equipmentFrame.Counter:SetShown(GarrisonFollowerOptions[followerInfo.followerTypeID].allowEquipmentCounterToShow and counter);
+
 			if (counter) then
 				equipmentFrame.Counter.Icon:SetTexture(counter.icon);
 				equipmentFrame.Counter.tooltip = counter.name;
 				equipmentFrame.Counter.mainFrame = self:GetParent();
 				equipmentFrame.Counter.info = counter;
-				equipmentFrame.Counter:Show();
 			end
-
-			if (followerInfo.isCollected and GarrisonFollowerAbilities_IsNew(self.lastUpdate, followerID, equipment.id, GARRISON_FOLLOWER_ABILITY_TYPE_EITHER)) then
-				equipmentFrame.EquipAnim:Play();
-			else
-				GarrisonEquipment_StopAnimations(equipmentFrame);
-			end
-		else
-			equipmentFrame.Icon:Hide();
 		end
 
 		local tooltipText;
@@ -2067,8 +2054,8 @@ function GarrisonFollowerTabMixin:ShowFollower(followerID, followerList)
 		local weaponItemID, weaponItemLevel, armorItemID, armorItemLevel = C_Garrison.GetFollowerItems(followerInfo.followerID);
 		GarrisonFollowerPage_SetItem(self.ItemWeapon, weaponItemID, weaponItemLevel);
 		GarrisonFollowerPage_SetItem(self.ItemArmor, armorItemID, armorItemLevel);
-		if ( followerInfo.isMaxLevel ) then
-			self.ItemAverageLevel.Level:SetText(ITEM_LEVEL_ABBR .. " " .. followerInfo.iLevel);
+		if ( ShouldShowILevelInFollowerList(followerInfo) ) then
+			self.ItemAverageLevel.Level:SetText(POWER_LEVEL_ABBR .. " " .. followerInfo.iLevel);
 			self.ItemAverageLevel.Level:Show();
 		else
 			self.ItemWeapon:Hide();

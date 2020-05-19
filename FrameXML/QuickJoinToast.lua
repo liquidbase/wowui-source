@@ -17,7 +17,9 @@ function QuickJoinToastMixin:OnLoad()
 		self.throttle:Init();
 	end
 
-	self:SetPoint("BOTTOMLEFT", DEFAULT_CHAT_FRAME.buttonFrame, "TOPLEFT", -1, 27);
+	local alertSystem = ChatAlertFrame:AddAutoAnchoredSubSystem(self);
+	ChatAlertFrame:SetSubSystemAnchorPriority(alertSystem, 0);
+
 	self.FriendCount:SetShadowOffset(1, 1);
 
 	self:UpdateDisplayedFriendCount();
@@ -34,6 +36,9 @@ end
 
 function QuickJoinToastMixin:OnShow()
 	self:RegisterEvent("PVP_BRAWL_INFO_UPDATED");
+	if RecruitAFriendFrame then
+		RecruitAFriendFrame:UpdateRAFTutorialTips();
+	end
 end
 
 function QuickJoinToastMixin:OnHide()
@@ -56,7 +61,7 @@ function QuickJoinToastMixin:OnEvent(event, ...)
 		local index, guid = ...;
 		self:ProcessOrQueueUpdate(guid);
 	elseif ( event == "GROUP_LEFT" ) then
-		local guid = ...;
+		local index, guid = ...;
 		self:ProcessOrQueueUpdate(guid);
 		self:CheckShowToast();
 	elseif ( event == "PVP_BRAWL_INFO_UPDATED") then
@@ -110,10 +115,10 @@ function QuickJoinToastMixin:ProcessUpdate(guid)
 		self.groups[guid] = group;
 	end
 
-	if ( group:GetPriority() > 0 ) then
+	if ( group:GetPriority() > 0 and not group:ShouldSuppressToast() ) then
 		if ( not self.groupsAwaitingDisplay[guid] ) then
 			self.groupsAwaitingDisplay[guid] = true;
-			GuildRoster();
+			C_GuildInfo.GuildRoster();
 			group:DelayUntil(GetTime() + QUICK_JOIN_CONFIG.DELAY_DURATION);
 		end
 	else
@@ -150,7 +155,7 @@ end
 
 function QuickJoinToastMixin:UpdateDisplayedFriendCount()
 	local _, numBNetOnline = BNGetNumFriends();
-	local _, numWoWOnline = GetNumFriends();
+	local numWoWOnline = C_FriendList.GetNumOnlineFriends() or 0;
 	self.FriendCount:SetText(numBNetOnline + numWoWOnline);
 end
 
@@ -285,7 +290,7 @@ function QuickJoinToastMixin:ShowToast(group, priority)
 		self:SetHitRectInsets(0, -self.Toast:GetWidth(), 0, 0);
 	end
 	self:UpdateQueueIcon();
-	PlaySoundKitID(79739); --UI_71_Social_Queueing_Toast
+	PlaySound(SOUNDKIT.UI_71_SOCIAL_QUEUEING_TOAST);
 	C_SocialQueue.SignalToastDisplayed(group.guid, priority);
 end
 
@@ -301,7 +306,7 @@ function QuickJoinToastMixin:OnClick(button)
 		QuickJoinFrame:SelectGroup(self.displayedToast.guid);
 		QuickJoinFrame:ScrollToGroup(self.displayedToast.guid);
 	else
-		ToggleFriendsFrame(1);
+		ToggleFriendsFrame(FRIEND_TAB_FRIENDS);
 	end
 end
 
@@ -346,13 +351,14 @@ function QuickJoinToastMixin:OnEnter()
 			local knowsLeader = SocialQueueUtil_HasRelationshipWithLeader(self.displayedToast.guid);
 
 			GameTooltip:SetOwner(self.Toast, self.isOnRight and "ANCHOR_LEFT" or "ANCHOR_RIGHT");
-			SocialQueueUtil_SetTooltip(GameTooltip, SOCIAL_QUEUE_TOOLTIP_HEADER, queues, true, knowsLeader);
+			SocialQueueUtil_SetTooltip(GameTooltip, SocialQueueUtil_GetHeaderName(self.displayedToast.guid), queues, true, knowsLeader);
 			GameTooltip:AddLine(" ");
 			GameTooltip:AddLine(SOCIAL_QUEUE_CLICK_TO_JOIN, GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b);
 			GameTooltip:Show();
 		end
 	else
-		GameTooltip_AddNewbieTip(self, MicroButtonTooltipText(SOCIAL_BUTTON, "TOGGLESOCIAL"), 1.0, 1.0, 1.0, NEWBIE_TOOLTIP_SOCIAL);
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+		GameTooltip_SetTitle(GameTooltip, MicroButtonTooltipText(SOCIAL_BUTTON, "TOGGLESOCIAL"));
 	end
 end
 
@@ -390,15 +396,6 @@ end
 
 function QuickJoinToastMixin:GetCurrentText(updateQueues)
 	local group = self.displayedToast;
-
-	local members = SocialQueueUtil_SortGroupMembers(C_SocialQueue.GetGroupMembers(group.guid));
-	local playerName, color = SocialQueueUtil_GetNameAndColor(members[1]);
-
-	if ( #members > 1 ) then
-		playerName = string.format(QUICK_JOIN_TOAST_EXTRA_PLAYERS, playerName, #members - 1);
-	end
-	playerName = color..playerName..FONT_COLOR_CODE_CLOSE;
-
 	local queues;
 	if (updateQueues) then
 		queues = group:GetNewQueues();
@@ -414,9 +411,9 @@ function QuickJoinToastMixin:GetCurrentText(updateQueues)
 	end
 
 	if ( queues[1].queueData.queueType == "lfglist" ) then
-		return string.format(QUICK_JOIN_TOAST_LFGLIST_MESSAGE, playerName, queueName);
+		return string.format(QUICK_JOIN_TOAST_LFGLIST_MESSAGE, SocialQueueUtil_GetHeaderName(group.guid), queueName);
 	else
-		return string.format(QUICK_JOIN_TOAST_MESSAGE, playerName, queueName);
+		return string.format(QUICK_JOIN_TOAST_MESSAGE, SocialQueueUtil_GetHeaderName(group.guid), queueName);
 	end
 end
 
@@ -531,8 +528,8 @@ function QuickJoinToast_GetPriorityFromQueue(queue)
 
 	local itemLevel = GetAverageItemLevel();
 	if ( queueData.queueType == "lfglist" ) then
-		local id, activityID, name, comment, voiceChat, iLvl, honorLevel, age, numBNetFriends, numCharFriends, numGuildMates, isDelisted = C_LFGList.GetSearchResultInfo(queueData.lfgListID);
-		local fullName, shortName, categoryID, groupID, iLevel, filters, minLevel, maxPlayers, displayType, orderIndex, useHonorLevel, showQuickJoin = C_LFGList.GetActivityInfo(activityID);
+		local searchResultInfo = C_LFGList.GetSearchResultInfo(queueData.lfgListID);
+		local fullName, shortName, categoryID, groupID, iLevel, filters, minLevel, maxPlayers, displayType, orderIndex, useHonorLevel, showQuickJoin = C_LFGList.GetActivityInfo(searchResultInfo.activityID);
 		--Filter by activity flags
 		if ( not showQuickJoin ) then
 			return 0;
@@ -586,7 +583,7 @@ function QuickJoinToast_GetPriorityFromQueue(queue)
 			return math.max(1, QUICK_JOIN_CONFIG.THROTTLE_RF_PRIORITY_ABOVE - ilvldiff);
 		elseif ( subtypeID == LFG_SUBTYPEID_WORLDPVP ) then
 			--If the player is below honor level 10, assume they aren't interested in PvP
-			if ( UnitHonorLevel("player") < QUICK_JOIN_CONFIG.THROTTLE_PVP_HONOR_THRESHOLD and UnitPrestige("player") <= 0 ) then
+			if ( UnitHonorLevel("player") < QUICK_JOIN_CONFIG.THROTTLE_PVP_HONOR_THRESHOLD) then
 				return QUICK_JOIN_CONFIG.THROTTLE_PVP_PRIORITY_LOW;
 			else
 				return QUICK_JOIN_CONFIG.THROTTLE_PVP_PRIORITY_NORMAL;
@@ -597,7 +594,7 @@ function QuickJoinToast_GetPriorityFromQueue(queue)
 		end
 	elseif ( queueData.queueType == "pvp" ) then
 		--If the player is below honor level 10, assume they aren't interested in PvP
-		if ( UnitHonorLevel("player") < QUICK_JOIN_CONFIG.THROTTLE_PVP_HONOR_THRESHOLD and UnitPrestige("player") <= 0 ) then
+		if ( UnitHonorLevel("player") < QUICK_JOIN_CONFIG.THROTTLE_PVP_HONOR_THRESHOLD) then
 			return QUICK_JOIN_CONFIG.THROTTLE_PVP_PRIORITY_LOW;
 		else
 			return QUICK_JOIN_CONFIG.THROTTLE_PVP_PRIORITY_NORMAL;
@@ -609,8 +606,8 @@ end
 function QuickJoinToast_GetPriorityFromPlayers(players)
 	local priority = 0;
 	for i=1, #players do
-		local player = players[i];
-		if ( BNGetGameAccountInfoByGUID(player) or IsCharacterFriend(player) ) then
+		local player = players[i].guid;
+		if ( C_BattleNet.GetGameAccountInfoByGUID(player) or C_FriendList.IsFriend(player) ) then
 			priority = priority + QUICK_JOIN_CONFIG.PLAYER_FRIEND_VALUE;
 		end
 		if ( IsGuildMember(player) ) then
@@ -624,6 +621,22 @@ function QuickJoinToastGroupMixin:Update()
 	local canJoin = C_SocialQueue.GetGroupInfo(self.guid);
 	local queues = C_SocialQueue.GetGroupQueues(self.guid);
 	local players = C_SocialQueue.GetGroupMembers(self.guid);
+	
+	self.suppressToast = true;
+	if players then
+		for i, player in ipairs(players) do
+			if not player.clubId then
+				self.suppressToast = false;
+				break;
+			else
+				local clubInfo = C_Club.GetClubInfo(player.clubId);
+				if clubInfo and clubInfo.socialQueueingEnabled then
+					self.suppressToast = false;
+					break;
+				end
+			end
+		end
+	end
 
 	if ( queues and players and canJoin ) then
 		self.priority = QuickJoinToast_GetPriority(self, queues, players);
@@ -642,6 +655,10 @@ function QuickJoinToastGroupMixin:Update()
 	end
 
 	self.displayedQueues = newDisplayedQueues;
+end
+
+function QuickJoinToastGroupMixin:ShouldSuppressToast()
+	return self.suppressToast;
 end
 
 function QuickJoinToastGroupMixin:GetPriority()

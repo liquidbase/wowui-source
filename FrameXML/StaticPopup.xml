@@ -25,7 +25,7 @@
 				StaticPopup_OnClick(self:GetParent(), self:GetID());
 			</OnClick>
 		</Scripts>
-		<ButtonText name="$parentText">
+		<ButtonText name="$parentText" parentKey="Text">
 			<Anchors>
 				<Anchor point="CENTER">
 					<Offset x="0" y="1"/>
@@ -52,17 +52,6 @@
 		<Size>
 			<AbsDimension x="320" y="72"/>
 		</Size>
-		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
-			<BackgroundInsets>
-				<AbsInset left="11" right="12" top="12" bottom="11"/>
-			</BackgroundInsets>
-			<TileSize>
-				<AbsValue val="32"/>
-			</TileSize>
-			<EdgeSize>
-				<AbsValue val="32"/>
-			</EdgeSize>
-		</Backdrop>
 		<Layers>
 			<Layer level="ARTWORK">
 				<FontString name="$parentText" parentKey="text" inherits="GameFontHighlight">
@@ -77,6 +66,12 @@
 						</Anchor>
 					</Anchors>
 				</FontString>
+				<FontString parentKey="SubText" inherits="GameFontNormalSmall">
+					<Size x="290" y="0"/>
+					<Anchors>
+						<Anchor point="TOP" relativeKey="$parent.text" relativePoint="BOTTOM" x="0" y="-6"/>
+					</Anchors>
+				</FontString>
 				<Texture name="$parentAlertIcon">
 					<Size>
 						<AbsDimension x="36" y="36"/>
@@ -85,9 +80,36 @@
 						<Anchor point="LEFT" x="24" y="0"/>
 					</Anchors>
 				</Texture>
+				<Texture parentKey="Separator" hidden="true">
+					<Size x="0" y="1"/>
+					<Anchors>
+						<Anchor point="LEFT" x="30" y="0"/>
+						<Anchor point="RIGHT" x="-30" y="0"/>
+						<Anchor point="BOTTOM" x="0" y="56"/>
+					</Anchors>
+					<Color r="1" g="1" b="1" a="0.2"/>
+				</Texture>
 			</Layer>
 		</Layers>
 		<Frames>
+			<Frame parentKey="Border" inherits="DialogBorderDarkTemplate"/>
+			<Frame parentKey="CoverFrame" frameLevel="1" enableMouse="true" enableKeyboard="true" hidden="true">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="UIParent"/>
+					<Anchor point="BOTTOMRIGHT" relativeTo="UIParent"/>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND" textureSubLevel="-1">
+						<Texture setAllPoints="true">
+							<Color r="0" g="0" b="0" a="0.5"/>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnKeyDown function="nop"/>
+					<OnKeyUp function="nop"/>
+				</Scripts>
+			</Frame>
 			<Frame name="$parentExtraFrame" parentKey="extraFrame" enableMouse="true"/>
 			<Button name="$parentCloseButton" inherits="UIPanelCloseButton">
 				<Anchors>
@@ -101,6 +123,8 @@
 			<Button name="$parentButton1" inherits="StaticPopupButtonTemplate" parentKey="button1" id="1"/>
 			<Button name="$parentButton2" inherits="StaticPopupButtonTemplate" parentKey="button2" id="2"/>
 			<Button name="$parentButton3" inherits="StaticPopupButtonTemplate" parentKey="button3" id="3"/>
+			<Button name="$parentButton4" inherits="StaticPopupButtonTemplate" parentKey="button4" id="4"/>
+			<Button name="$parentExtraButton" inherits="StaticPopupButtonTemplate" parentKey="extraButton" id="5"/>
 			<EditBox name="$parentEditBox" historyLines="1" hidden="true" inherits="AutoCompleteEditBoxTemplate">
 				<Size>
 					<AbsDimension x="130" y="32"/>
@@ -148,6 +172,11 @@
 							</Anchors>
 						</Texture>
 					</Layer>
+					<Layer level="ARTWORK">
+						<FontString parentKey="Instructions" justifyH="LEFT" justifyV="MIDDLE" inherits="GameFontDisableSmall" setAllPoints="true">
+							<Color r="0.35" g="0.35" b="0.35"/>
+						</FontString>
+					</Layer>
 				</Layers>
 				<Scripts>
 					<OnEnterPressed>
@@ -161,17 +190,14 @@
 					</OnTextChanged>
 					<OnLoad>
 						self:GetParent().editBox = self;
+						self.addHighlightedText = true;
 					</OnLoad>
 				</Scripts>
 				<FontString inherits="ChatFontNormal"/>
 			</EditBox>
 			<Frame name="$parentMoneyFrame" inherits="SmallMoneyFrameTemplate" hidden="true">
 				<Anchors>
-					<Anchor point="TOP" relativeTo="$parentText" relativePoint="BOTTOM">
-						<Offset>
-							<AbsDimension x="0" y="-5"/>
-						</Offset>
-					</Anchor>
+					<Anchor point="TOP" relativeTo="$parentText" relativePoint="BOTTOM" x="0" y="-5"/>
 				</Anchors>
 				<Scripts>
 					<OnLoad>
@@ -183,14 +209,10 @@
 			</Frame>
 			<Frame name="$parentMoneyInputFrame" inherits="MoneyInputFrameTemplate">
 				<Anchors>
-					<Anchor point="TOP" relativeTo="$parentText" relativePoint="BOTTOM">
-						<Offset>
-							<AbsDimension x="0" y="-5"/>
-						</Offset>
-					</Anchor>
+					<Anchor point="TOP" relativeTo="$parentText" relativePoint="BOTTOM" x="0" y="-5"/>
 				</Anchors>
 			</Frame>
-			<Button parentKey="ItemFrame" name="$parentItemFrame" inherits="ItemButtonTemplate" hidden="true">
+			<ItemButton parentKey="ItemFrame" name="$parentItemFrame" hidden="true">
 				<Size>
 					<AbsDimension x="37" y="37"/>
 				</Size>
@@ -250,7 +272,7 @@
 					</OnLoad>
 					<OnEvent function="StaticPopupItemFrame_OnEvent"/>
 				</Scripts>
-			</Button>
+			</ItemButton>
 		</Frames>
 		<Scripts>
 			<OnUpdate>
@@ -263,16 +285,7 @@
 			<OnHide>
 				StaticPopup_OnHide(self);
 			</OnHide>
-			<OnLoad>
-				local name = self:GetName();
-				self.button1 = _G[name .. "Button1"];
-				self.button2 = _G[name .. "Button2"];
-				self.button3 = _G[name .. "Button3"];
-				self.text = _G[name .. "Text"];
-				self.icon = _G[name .. "AlertIcon"];
-				self.moneyInputFrame = _G[name .. "MoneyInputFrame"];
-				self:RegisterEvent("DISPLAY_SIZE_CHANGED");
-			</OnLoad>
+			<OnLoad function="StaticPopup_OnLoad"/>
 			<OnHyperlinkClick function="StaticPopup_OnHyperlinkClick"/>
 			<OnHyperlinkEnter function="StaticPopup_OnHyperlinkEnter"/>
 			<OnHyperlinkLeave function="StaticPopup_OnHyperlinkLeave"/>
@@ -280,11 +293,7 @@
 	</Frame>
 	<Frame name="StaticPopup1" inherits="StaticPopupTemplate" parent="UIParent" id="1">
 		<Anchors>
-			<Anchor point="TOP">
-				<Offset>
-					<AbsDimension x="0" y="-135"/>
-				</Offset>
-			</Anchor>
+			<Anchor point="TOP" x="0" y="-135"/>
 		</Anchors>
 	</Frame>
 	<Frame name="StaticPopup2" inherits="StaticPopupTemplate" parent="UIParent" id="2">

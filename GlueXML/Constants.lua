@@ -1,58 +1,56 @@
 --Login Screen Ambience
 EXPANSION_GLUE_AMBIENCE = {
-	[LE_EXPANSION_BURNING_CRUSADE] = "GlueScreenIntro",
-	[LE_EXPANSION_WRATH_OF_THE_LICH_KING] = "GlueScreenIntro",
-	[LE_EXPANSION_CATACLYSM] = "GlueScreenIntro",
-	[LE_EXPANSION_MISTS_OF_PANDARIA] = "GlueScreenIntro",
-	[LE_EXPANSION_WARLORDS_OF_DRAENOR] = "AMB_GlueScreen_WarlordsofDraenor",
-	[LE_EXPANSION_LEGION] = "AMB_GlueScreen_Legion",
+	[LE_EXPANSION_BURNING_CRUSADE]			= SOUNDKIT.GLUESCREEN_INTRO,
+	[LE_EXPANSION_WRATH_OF_THE_LICH_KING]	= SOUNDKIT.GLUESCREEN_INTRO,
+	[LE_EXPANSION_CATACLYSM]				= SOUNDKIT.GLUESCREEN_INTRO,
+	[LE_EXPANSION_MISTS_OF_PANDARIA]		= SOUNDKIT.GLUESCREEN_INTRO,
+	[LE_EXPANSION_WARLORDS_OF_DRAENOR]		= SOUNDKIT.AMB_GLUESCREEN_WARLORDS_OF_DRAENOR,
+	[LE_EXPANSION_LEGION]					= SOUNDKIT.AMB_GLUESCREEN_LEGION,
+	[LE_EXPANSION_BATTLE_FOR_AZEROTH]		= SOUNDKIT.AMB_GLUESCREEN_BATTLE_FOR_AZEROTH,
 };
 
 --Music
 EXPANSION_GLUE_MUSIC = {
-	[LE_EXPANSION_BURNING_CRUSADE] = "MUS_1.0_MainTitle_Original",
-	[LE_EXPANSION_WRATH_OF_THE_LICH_KING] = "GS_Cataclysm",
-	[LE_EXPANSION_CATACLYSM] = "GS_Cataclysm",
-	[LE_EXPANSION_MISTS_OF_PANDARIA] = "MUS_50_HeartofPandaria_MainTitle",
-	[LE_EXPANSION_WARLORDS_OF_DRAENOR] = "MUS_60_MainTitle",
-	[LE_EXPANSION_LEGION] = "MUS_70_MainTitle",
-};
-
---Logos
-EXPANSION_LOGOS = {
-	TRIAL = {texture="Interface\\Glues\\Common\\Glues-WoW-StarterLogo"},
-	[LE_EXPANSION_CLASSIC] = {texture="Interface\\Glues\\Common\\Glues-WoW-ClassicLogo"},
-	[LE_EXPANSION_BURNING_CRUSADE] = {texture="Interface\\Glues\\Common\\Glues-WoW-BCLogo"},
-	[LE_EXPANSION_WRATH_OF_THE_LICH_KING] = {texture="Interface\\Glues\\Common\\Glues-WoW-WotLKLogo"},
-	[LE_EXPANSION_CATACLYSM] = {texture="Interface\\Glues\\Common\\Glues-WoW-CCLogo"},
-	[LE_EXPANSION_MISTS_OF_PANDARIA] = {texture="Interface\\Glues\\Common\\Glues-WoW-MPLogo"},
-	[LE_EXPANSION_WARLORDS_OF_DRAENOR] = {texture="Interface\\Glues\\Common\\GLUES-WOW-WODLOGO"},
-	-- logos after WoD should be atlas
-	[LE_EXPANSION_LEGION] = {atlas="Glues-WoW-LegionLogo"},
-	--When adding entries to here, make sure to update the zhTW and zhCN localization files.
+	[LE_EXPANSION_BURNING_CRUSADE]			= SOUNDKIT.MUS_1_0_MAINTITLE_ORIGINAL,
+	[LE_EXPANSION_WRATH_OF_THE_LICH_KING]	= SOUNDKIT.GS_LICH_KING,
+	[LE_EXPANSION_CATACLYSM]				= SOUNDKIT.GS_CATACLYSM,
+	[LE_EXPANSION_MISTS_OF_PANDARIA]		= SOUNDKIT.MUS_50_HEART_OF_PANDARIA_MAINTITLE,
+	[LE_EXPANSION_WARLORDS_OF_DRAENOR]		= SOUNDKIT.MUS_60_MAIN_TITLE,
+	[LE_EXPANSION_LEGION]					= SOUNDKIT.MUS_70_MAIN_TITLE,
+	[LE_EXPANSION_BATTLE_FOR_AZEROTH]		= SOUNDKIT.MUS_80_MAIN_TITLE,
 };
 
 GLUE_AMBIENCE_TRACKS = {
-	["HUMAN"] = "AMB_GlueScreen_Human",
-	["ORC"] = "AMB_GlueScreen_Orc",
-	["TROLL"] = "AMB_GlueScreen_Troll",
-	["DWARF"] = "AMB_GlueScreen_Dwarf",
-	["GNOME"] = "AMB_GlueScreen_Gnome",
-	["TAUREN"] = "AMB_GlueScreen_Tauren",
-	["SCOURGE"] = "AMB_GlueScreen_Undead",
-	["NIGHTELF"] = "AMB_GlueScreen_NightElf",
-	["DRAENEI"] = "AMB_GlueScreen_Draenei",
-	["BLOODELF"] = "AMB_GlueScreen_BloodElf",
-	["GOBLIN"] = "AMB_GlueScreen_Goblin",
-	["WORGEN"] = "AMB_GlueScreen_Worgen",
-	["DEATHKNIGHT"] = "AMB_GlueScreen_Deathknight",
-	["CHARACTERSELECT"] = "GlueScreenIntro",
-	["PANDAREN"] = "AMB_GlueScreen_Pandaren",
-	["HORDE"] = "AMB_50_GlueScreen_HORDE",
-	["ALLIANCE"] = "AMB_50_GlueScreen_ALLIANCE",
-	["NEUTRAL"] = "AMB_50_GlueScreen_PANDAREN_NEUTRAL",
-	["PANDARENCHARACTERSELECT"] = "AMB_50_GlueScreen_PANDAREN_NEUTRAL",
-	["DEMONHUNTER"] = "AMB_GlueScreen_DemonHunter",
+	["HUMAN"]					= SOUNDKIT.AMB_GLUESCREEN_HUMAN,
+	["ORC"]						= SOUNDKIT.AMB_GLUESCREEN_ORC,
+	["TROLL"]					= SOUNDKIT.AMB_GLUESCREEN_TROLL,
+	["DWARF"]					= SOUNDKIT.AMB_GLUESCREEN_DWARF,
+	["GNOME"]					= SOUNDKIT.AMB_GLUESCREEN_GNOME,
+	["TAUREN"]					= SOUNDKIT.AMB_GLUESCREEN_TAUREN,
+	["SCOURGE"]					= SOUNDKIT.AMB_GLUESCREEN_UNDEAD,
+	["NIGHTELF"]				= SOUNDKIT.AMB_GLUESCREEN_NIGHTELF,
+	["DRAENEI"]					= SOUNDKIT.AMB_GLUESCREEN_DRAENEI,
+	["BLOODELF"]				= SOUNDKIT.AMB_GLUESCREEN_BLOODELF,
+	["GOBLIN"]					= SOUNDKIT.AMB_GLUESCREEN_GOBLIN,
+	["WORGEN"]					= SOUNDKIT.AMB_GLUESCREEN_WORGEN,
+	["VOIDELF"]					= SOUNDKIT.AMB_GLUESCREEN_VOIDELF,
+	["LIGHTFORGEDDRAENEI"]		= SOUNDKIT.AMB_GLUESCREEN_LIGHTFORGEDDRAENEI,
+	["NIGHTBORNE"]				= SOUNDKIT.AMB_GLUESCREEN_NIGHTBORNE,
+	["HIGHMOUNTAINTAUREN"]		= SOUNDKIT.AMB_GLUESCREEN_HIGHMOUNTAINTAUREN,
+	["DEATHKNIGHT"]				= SOUNDKIT.AMB_GLUESCREEN_DEATHKNIGHT,
+	["CHARACTERSELECT"]			= SOUNDKIT.GLUESCREEN_INTRO,
+	["PANDAREN"]				= SOUNDKIT.AMB_GLUESCREEN_PANDAREN,
+	["HORDE"]					= SOUNDKIT.AMB_50_GLUESCREEN_HORDE,
+	["ALLIANCE"]				= SOUNDKIT.AMB_50_GLUESCREEN_ALLIANCE,
+	["NEUTRAL"]					= SOUNDKIT.AMB_50_GLUESCREEN_PANDAREN_NEUTRAL,
+	["PANDARENCHARACTERSELECT"]	= SOUNDKIT.AMB_50_GLUESCREEN_PANDAREN_NEUTRAL,
+	["DEMONHUNTER"]				= SOUNDKIT.AMB_GLUESCREEN_DEMONHUNTER,
+	["DARKIRONDWARF"] 			= SOUNDKIT.AMB_GLUESCREEN_DARKIRONDWARF,
+	["MAGHARORC"] 				= SOUNDKIT.AMB_GLUESCREEN_MAGHARORC,
+	["ZANDALARITROLL"] 			= SOUNDKIT.AMB_GLUESCREEN_AR_ZANDALARITROLL,
+	["KULTIRAN"] 				= SOUNDKIT.AMB_GLUESCREEN_AR_KULTIRAN,
+	["MECHAGNOME"] 				= SOUNDKIT.AMB_GLUESCREEN_AR_MECHAGNOME,
+	["VULPERA"] 				= SOUNDKIT.AMB_GLUESCREEN_AR_VULPERA,
 };
 
 CHAR_MODEL_FOG_INFO = {
@@ -90,6 +88,7 @@ CREDITS_TITLES = {
 	[LE_EXPANSION_MISTS_OF_PANDARIA] = CREDITS_WOW_MOP,
 	[LE_EXPANSION_WARLORDS_OF_DRAENOR] = CREDITS_WOW_WOD,
 	[LE_EXPANSION_LEGION] = CREDITS_WOW_LEGION,
+	[LE_EXPANSION_BATTLE_FOR_AZEROTH] = CREDITS_WOW_8_0,
 };
 
 --Backgrounds
@@ -99,7 +98,8 @@ EXPANSION_HIGH_RES_BG = {
 	[LE_EXPANSION_CATACLYSM] = "Interface\\Glues\\Models\\UI_MainMenu_Cataclysm\\UI_MainMenu_Cataclysm.m2",
 	[LE_EXPANSION_MISTS_OF_PANDARIA] = "Interface\\Glues\\Models\\UI_MainMenu_Pandaria\\UI_MainMenu_Pandaria.m2",
 	[LE_EXPANSION_WARLORDS_OF_DRAENOR] = "Interface\\Glues\\Models\\UI_MainMenu_Warlords\\UI_MainMenu_Warlords.m2",
-	[LE_EXPANSION_LEGION] = "Interface\\Glues\\Models\\UI_MainMenu_Legion\\UI_MainMenu_Legion.m2",	-- TODO: Fix for 7.0
+	[LE_EXPANSION_LEGION] = "Interface\\Glues\\Models\\UI_MainMenu_Legion\\UI_MainMenu_Legion.m2",
+	[LE_EXPANSION_BATTLE_FOR_AZEROTH] = "Interface\\Glues\\Models\\UI_MAINMENU_BATTLEFORAZEROTH\\UI_MainMenu_BattleForAzeroth.m2",
 };
 
 EXPANSION_LOW_RES_BG = {
@@ -108,7 +108,8 @@ EXPANSION_LOW_RES_BG = {
 	[LE_EXPANSION_CATACLYSM] =  "Interface\\Glues\\Models\\UI_MainMenu_Cata_LowBandwidth\\UI_MainMenu_Cata_LowBandwidth.m2",
 	[LE_EXPANSION_MISTS_OF_PANDARIA] =  "Interface\\Glues\\Models\\UI_MainMenu_LowBandwidth\\UI_MainMenu_LowBandwidth.m2",
 	[LE_EXPANSION_WARLORDS_OF_DRAENOR] =  "Interface\\Glues\\Models\\UI_MainMenu_Warlords\\UI_MainMenu_Warlords_LowBandwidth.m2",
-	[LE_EXPANSION_LEGION] =  "Interface\\Glues\\Models\\UI_MainMenu_Legion\\UI_MainMenu_Legion_LowBandwidth.m2",	-- TODO: Fix for 7.0
+	[LE_EXPANSION_LEGION] =  "Interface\\Glues\\Models\\UI_MainMenu_Legion\\UI_MainMenu_Legion_LowBandwidth.m2",
+	[LE_EXPANSION_BATTLE_FOR_AZEROTH] =  "Interface\\Glues\\Models\\UI_MAINMENU_BFA_LOWBANDWIDTH\\UI_MainMenu_BFA_LowBandwidth.m2",
 };
 
 --Tooltip
@@ -132,6 +133,8 @@ MOVIE_LIST = {
   { 195 },
   -- Movie sequence 7 = Legion
   { 470 },
+  -- Movie sequence 8 = BFA
+  { 852 },
 };
 
 --Credits
@@ -225,16 +228,63 @@ CREDITS_ART_INFO = {
 		{ file="NashalPainting", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
 		{ file="ShamanMythicArmor", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
 	},
+	[LE_EXPANSION_BATTLE_FOR_AZEROTH] = {
+		path = "BattleforAzeroth",
+		{ file="Battle001_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle002_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle003_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle004_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle005_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle006_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle007_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle008_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle009_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle010_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle011_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle012_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle013_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle014_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle015_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle016_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle017_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle018_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle019_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle020_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle021_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle022_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle023_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle024_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle025_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle026_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle027_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle028_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle029_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle030_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle031_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle032_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle033_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle034_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle035_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle036_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle037_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle038_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle039_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle040_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle041_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle042_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+		{ file="Battle043_", w=1024, h=512, offsetx=0, offsety=0, maxAlpha=0.7 },
+	},
 };
 
 GLUE_CREDITS_SOUND_KITS = {
-	[LE_EXPANSION_CLASSIC] = "Menu-Credits01",
-	[LE_EXPANSION_BURNING_CRUSADE] = "Menu-Credits02",
-	[LE_EXPANSION_WRATH_OF_THE_LICH_KING] = "Menu-Credits03",
-	[LE_EXPANSION_CATACLYSM] = "Menu-Credits04",
-	[LE_EXPANSION_MISTS_OF_PANDARIA] = "Menu-Credits05",
-	[LE_EXPANSION_WARLORDS_OF_DRAENOR] = "Menu-Credits06",
-	[LE_EXPANSION_LEGION] = "Menu-Credits07",
+	[LE_EXPANSION_CLASSIC]					= SOUNDKIT.MENU_CREDITS01,
+	[LE_EXPANSION_BURNING_CRUSADE]			= SOUNDKIT.MENU_CREDITS02,
+	[LE_EXPANSION_WRATH_OF_THE_LICH_KING]	= SOUNDKIT.MENU_CREDITS03,
+	[LE_EXPANSION_CATACLYSM]				= SOUNDKIT.MENU_CREDITS04,
+	[LE_EXPANSION_MISTS_OF_PANDARIA]		= SOUNDKIT.MENU_CREDITS05,
+	[LE_EXPANSION_WARLORDS_OF_DRAENOR]		= SOUNDKIT.MENU_CREDITS06,
+	[LE_EXPANSION_LEGION]					= SOUNDKIT.MENU_CREDITS07,
+	[LE_EXPANSION_BATTLE_FOR_AZEROTH] 		= SOUNDKIT.MENU_CREDITS08,
 };
 
 AUTO_LOGIN_WAIT_TIME = 1.75;

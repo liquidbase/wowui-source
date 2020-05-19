@@ -6,33 +6,13 @@
 		<Anchors>
 			<Anchor point="CENTER"/>
 		</Anchors>
-		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
-			<BackgroundInsets>
-				<AbsInset left="11" right="12" top="12" bottom="11"/>
-			</BackgroundInsets>
-			<TileSize>
-				<AbsValue val="32"/>
-			</TileSize>
-			<EdgeSize>
-				<AbsValue val="32"/>
-			</EdgeSize>
-		</Backdrop>
-		<Layers>
-			<Layer level="ARTWORK">
-				<Texture name="GameMenuFrameHeader" file="Interface\DialogFrame\UI-DialogBox-Header">
-					<Size x="256" y="64"/>
-					<Anchors>
-						<Anchor point="TOP" x="0" y="12"/>
-					</Anchors>
-				</Texture>
-				<FontString inherits="GameFontNormal" text="MAINMENU_BUTTON">
-					<Anchors>
-						<Anchor point="TOP" relativeTo="GameMenuFrameHeader" x="0" y="-14"/>
-					</Anchors>
-				</FontString>
-			</Layer>
-		</Layers>
 		<Frames>
+			<Frame parentKey="Border" inherits="DialogBorderTemplate"/>
+			<Frame parentKey="Header" inherits="DialogHeaderTemplate">
+				<KeyValues>
+					<KeyValue key="textString" value="MAINMENU_BUTTON" type="global"/>
+				</KeyValues>
+			</Frame>
 			<Button name="GameMenuButtonHelp" inherits="GameMenuButtonTemplate" text="GAMEMENU_HELP">
 				<Anchors>
 					<Anchor point="CENTER" relativePoint="TOP" x="0" y="-42"/>
@@ -42,7 +22,7 @@
 						self:SetEnabled(not IsKioskModeEnabled());
 					</OnShow>
 					<OnClick>
-						PlaySound("igMainMenuOption");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
 						ToggleHelpFrame()
 					</OnClick>
 				</Scripts>
@@ -54,6 +34,7 @@
 				<Scripts>
 					<OnLoad>
 						self:RegisterEvent("STORE_STATUS_CHANGED");
+						self:RegisterEvent("TRIAL_STATUS_UPDATE");
 						GameMenuFrame_UpdateStoreButtonState(self);
 					</OnLoad>
 					<OnShow function="GameMenuFrame_UpdateStoreButtonState"/>
@@ -68,7 +49,7 @@
 					</OnEnter>
 					<OnLeave function="GameTooltip_Hide"/>
 					<OnClick>
-						PlaySound("igMainMenuOption");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
 						ToggleStoreUI()
 					</OnClick>
 				</Scripts>
@@ -82,9 +63,9 @@
 						self:SetEnabled(not IsKioskModeEnabled());
 					</OnShow>
 					<OnClick>
-						PlaySound("igMainMenuOption");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
 						HideUIPanel(GameMenuFrame);
-						SplashFrame_Open();
+						SplashFrame_ShowCurrent();
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -97,9 +78,8 @@
 						self:SetEnabled(not IsKioskModeEnabled());
 					</OnShow>
 					<OnClick>
-						PlaySound("igMainMenuOption");
-						ShowUIPanel(VideoOptionsFrame);
-						VideoOptionsFrame.lastFrame = GameMenuFrame;
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
+						ShowOptionsPanel(VideoOptionsFrame, GameMenuFrame);
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -113,9 +93,8 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						PlaySound("igMainMenuOption");
-						ShowUIPanel(InterfaceOptionsFrame);
-						InterfaceOptionsFrame.lastFrame = GameMenuFrame;
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
+						ShowOptionsPanel(InterfaceOptionsFrame, GameMenuFrame);
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -125,7 +104,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						PlaySound("igMainMenuOption");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
 						KeyBindingFrame_LoadUI();
 						KeyBindingFrame.mode = 1;
 						ShowUIPanel(KeyBindingFrame);
@@ -138,7 +117,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						PlaySound("igMainMenuOption");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
 						HideUIPanel(GameMenuFrame);
 						ShowMacroFrame();
 					</OnClick>
@@ -160,7 +139,7 @@
 						self:SetEnabled(not IsKioskModeEnabled() and not ScriptsDisallowedForBeta());
 					</OnShow>
 					<OnClick>
-						PlaySound("igMainMenuOption");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
 						HideUIPanel(GameMenuFrame);
 						ShowUIPanel(AddonList);
 					</OnClick>
@@ -179,7 +158,7 @@
 						end
 					</OnLoad>
 					<OnClick>
-						PlaySound("igMainMenuOption");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
 						HideUIPanel(GameMenuFrame);
 						ShowUIPanel(RatingMenuFrame);
 					</OnClick>
@@ -205,7 +184,7 @@
 						end
 					</OnShow>
 					<OnClick>
-						PlaySound("igMainMenuLogout");
+						PlaySound(SOUNDKIT.IG_MAINMENU_LOGOUT);
 						Logout();
 						HideUIPanel(GameMenuFrame);
 					</OnClick>
@@ -224,7 +203,7 @@
 						end
 					</OnShow>
 					<OnClick>
-						PlaySound("igMainMenuQuit");
+						PlaySound(SOUNDKIT.IG_MAINMENU_QUIT);
 						Quit();
 						HideUIPanel(GameMenuFrame);
 					</OnClick>
@@ -236,7 +215,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						PlaySound("igMainMenuContinue");
+						PlaySound(SOUNDKIT.IG_MAINMENU_CONTINUE);
 						HideUIPanel(GameMenuFrame);
 					</OnClick>
 				</Scripts>

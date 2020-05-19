@@ -1,5 +1,7 @@
 MAX_NUM_GLUE_DIALOG_BUTTONS = 3;
 
+local QUEUED_GLUE_DIALOGS = {};
+
 GlueDialogTypes = { };
 
 
@@ -181,6 +183,7 @@ GlueDialogTypes["REALM_IS_FULL"] = {
 		C_RealmList.ConnectToRealm(RealmList.selectedRealm);
 	end,
 	OnCancel = function()
+		C_RealmList.ClearRealmList();
 		CharacterSelect_ChangeRealm();
 	end,
 }
@@ -192,7 +195,7 @@ GlueDialogTypes["CONFIRM_PAID_SERVICE"] = {
 	OnAccept = function()
 		-- need to get desired faction in case of pandaren doing faction change to another pandaren
 		-- this will be nil in any other case
-		CreateCharacter(CharacterCreateNameEdit:GetText(), PandarenFactionButtons_GetSelectedFaction());
+		C_CharacterCreation.CreateCharacter(CharacterCreateNameEdit:GetText(), PandarenFactionButtons_GetSelectedFaction());
 	end,
 }
 
@@ -228,66 +231,6 @@ GlueDialogTypes["QUEUED_WITH_FCM"] = {
 	end,
 }
 
-GlueDialogTypes["SYSTEM_INCOMPATIBLE_SSE"] = {
-	text = SYSTEM_INCOMPATIBLE_SSE,
-	button1 = OKAY,
-	html = 1,
-	showAlert = 1,
-	OnAccept = function ()
-		CheckSystemRequirements("SSE");
-	end
-}
-
-GlueDialogTypes["DEVICE_BLACKLISTED"] = {
-	text = DEVICE_BLACKLISTED,
-	button1 = OKAY,
-	html = 1,
-	showAlert = 1,
-	OnAccept = function ()
-		CheckSystemRequirements("DEVICE");
-	end
-}
-
-GlueDialogTypes["FIXEDFUNCTION_UNSUPPORTED"] = {
-	text = FIXEDFUNCTION_UNSUPPORTED,
-	button1 = OKAY,
-	html = 1,
-	showAlert = 1,
-	OnAccept = function ()
-		CheckSystemRequirements("SHADERMODEL");
-	end
-}
-
-GlueDialogTypes["DRIVER_BLACKLISTED"] = {
-	text = DRIVER_BLACKLISTED,
-	button1 = OKAY,
-	html = 1,
-	showAlert = 1,
-	OnAccept = function ()
-		CheckSystemRequirements("DRIVER");
-	end
-}
-
-GlueDialogTypes["DRIVER_OUTOFDATE"] = {
-	text = DRIVER_OUTOFDATE,
-	button1 = OKAY,
-	html = 1,
-	showAlert = 1,
-	OnAccept = function ()
-		CheckSystemRequirements("DRIVER_OOD");
-	end
-}
-
-GlueDialogTypes["SHADER_MODEL_TO_BE_UNSUPPORTED"] = {
-	text = SHADER_MODEL_TO_BE_UNSUPPORTED,
-	button1 = OKAY,
-	html = 1,
-	showAlert = 1,
-	OnAccept = function ()
-		CheckSystemRequirements("SHADERMODEL_TOBEUNSUPPORTED");
-	end
-}
-
 GlueDialogTypes["CHARACTER_BOOST_NO_CHARACTERS_WARNING"] = {
 	text = CHARACTER_BOOST_NO_CHARACTERS_WARNING_DIALOG_TEXT,
 	button1 = CHARACTER_BOOST_NO_CHARACTERS_WARNING_DIALOG_ACCEPT_WARNING,
@@ -297,7 +240,7 @@ GlueDialogTypes["CHARACTER_BOOST_NO_CHARACTERS_WARNING"] = {
 
 	OnAccept = function ()
 		CharSelectServicesFlowFrame:Hide();
-		CharacterSelect_CreateNewCharacter(LE_CHARACTER_CREATE_TYPE_NORMAL, true);
+		CharacterSelect_CreateNewCharacter(Enum.CharacterCreateType.Normal, true);
 	end,
 
 	OnCancel = function ()
@@ -323,16 +266,6 @@ GlueDialogTypes["CHARACTER_BOOST_FEATURE_RESTRICTED"] = {
 	escapeHides = true,
 };
 
-GlueDialogTypes["UNLOCK_REVOKED_UPGRADE_CHARACTER"] = {
-	button1 = YES,
-	button2 = NO,
-	escapeHides = true,
-
-	OnAccept = function ()
-		C_CharacterServices.RequestManualUnrevoke(GlueDialog.data);
-	end,
-}
-
 GlueDialogTypes["BOOST_NOT_RECOMMEND_SPEC_WARNING"] = {
 	text = BOOST_NOT_RECOMMEND_SPEC_WARNING,
 	button1 = OKAY,
@@ -346,6 +279,20 @@ GlueDialogTypes["BOOST_NOT_RECOMMEND_SPEC_WARNING"] = {
 	end,
 }
 
+GlueDialogTypes["BOOST_ALLIED_RACE_HERITAGE_ARMOR_WARNING"] = {
+	button1 = CONTINUE,
+	button2 = CANCEL,
+	html = 1,
+	OnAccept = function()
+		-- Character select auto advances to spec select.
+		CharacterServicesMaster_Update();
+	end,
+	OnCancel = function()
+		local master = CharacterServicesMaster;
+		master.flow:Restart(master);
+	end,	
+}
+
 GlueDialogTypes["LEGION_PURCHASE_READY"] = {
 	text = BLIZZARD_STORE_LEGION_PURCHASE_READY_DESCRIPTION,
 	button1 = BLIZZARD_STORE_LOG_OUT_NOW,
@@ -354,6 +301,50 @@ GlueDialogTypes["LEGION_PURCHASE_READY"] = {
 		C_Login.DisconnectFromServer();
 	end,
 }
+
+GlueDialogTypes["CONFIGURATION_WARNING"] = {
+	button1 = OKAY,
+	OnAccept = function()
+		C_ConfigurationWarnings.SetConfigurationWarningSeen(GlueDialog.data.configurationWarning);
+	end,
+	showAlert = 1,
+	html = 1,
+}
+
+GlueDialogTypes["SUBSCRIPTION_CHANGED_KICK_WARNING"] = {
+	text = TRIAL_UPGRADE_LOGOUT_WARNING,
+	button1 = CAMP_NOW,
+	OnShow = function()
+		AccountReactivate_CloseDialogs();
+	end,
+	OnAccept = function()
+		C_Login.DisconnectFromServer();
+	end,
+	OnCancel = function()
+		C_Login.DisconnectFromServer();
+	end,
+	OnHide = function()
+		C_Login.DisconnectFromServer();
+	end,
+	OnUpdate = function()
+		GlueDialogText:SetText(GlueDialogTypes["SUBSCRIPTION_CHANGED_KICK_WARNING"].text:format(math.ceil(GlueDialog.timeleft)));
+	end,
+	timeout = 15,
+	cover = true,
+	anchorPoint = "CENTER",
+	anchorOffsetY = 150,
+}
+
+function GlueDialog_Queue(which, text, data)
+	table.insert(QUEUED_GLUE_DIALOGS, {which = which, text = text, data = data});
+end
+
+function GlueDialog_CheckQueuedDialogs()
+	if #QUEUED_GLUE_DIALOGS > 0 and not GlueDialog:IsShown() then
+		GlueDialog_Show(QUEUED_GLUE_DIALOGS[1].which, QUEUED_GLUE_DIALOGS[1].text, QUEUED_GLUE_DIALOGS[1].data);
+		table.remove(QUEUED_GLUE_DIALOGS, 1);
+	end
+end
 
 function GlueDialog_Show(which, text, data)
 	local dialogInfo = GlueDialogTypes[which];
@@ -368,6 +359,13 @@ function GlueDialog_Show(which, text, data)
 		end
 	end
 
+	GlueDialogBackground:ClearAllPoints();
+	if dialogInfo.anchorPoint then
+		GlueDialogBackground:SetPoint(dialogInfo.anchorPoint, dialogInfo.anchorOffsetX or 0, dialogInfo.anchorOffsetY or 0);
+	else
+		GlueDialogBackground:SetPoint("CENTER");
+	end
+	
 	GlueDialog.data = data;
 	local glueText;
 	if ( dialogInfo.html ) then
@@ -443,9 +441,13 @@ function GlueDialog_Show(which, text, data)
 		GlueDialogButton2:Hide();
 		GlueDialogButton3:Hide();
 	end
+	
+	--Show/Hide the disable overlay on the rest of the screen
+	GlueDialog.Cover:SetShown(dialogInfo.cover);
 
 	-- Set the miscellaneous variables for the dialog
 	GlueDialog.which = which;
+	GlueDialog.timeleft = dialogInfo.timeout or 0;
 	GlueDialog.data = data;
 
 	-- Show or hide the alert icon
@@ -537,7 +539,7 @@ function GlueDialog_Show(which, text, data)
 		end
 	end
 
-	GlueDialogBackground:SetHeight(displayHeight);
+	GlueDialogBackground:SetHeight(math.floor(displayHeight + 0.5));
 
 	GlueDialog:Show();
 end
@@ -576,8 +578,30 @@ function GlueDialog_OnShow(self)
 	end
 end
 
+function GlueDialog_OnUpdate(self, elapsed)
+	local which = self.which;
+	if ( self.timeleft > 0 ) then
+		local timeleft = self.timeleft - elapsed;
+		if ( timeleft <= 0 ) then
+			self.timeleft = 0;
+			local OnCancel = GlueDialogTypes[which].OnCancel;
+			if ( OnCancel ) then
+				OnCancel();
+			end
+			self:Hide();
+			return;
+		end
+		self.timeleft = timeleft;
+	end
+	
+	local OnUpdate = GlueDialogTypes[which].OnUpdate;
+	if ( OnUpdate ) then
+		OnUpdate(elapsed);
+	end
+end
+
 function GlueDialog_OnHide()
---	PlaySound("igMainMenuClose");
+--	PlaySound(SOUNDKIT.IG_MAINMENU_CLOSE);
 end
 
 function GlueDialog_OnClick(self, button, down)
@@ -599,7 +623,7 @@ function GlueDialog_OnClick(self, button, down)
 			OnAlt();
 		end
 	end
-	PlaySound("gsTitleOptionOK");
+	PlaySound(SOUNDKIT.GS_TITLE_OPTION_OK);
 end
 
 function GlueDialog_OnKeyDown(self, key)

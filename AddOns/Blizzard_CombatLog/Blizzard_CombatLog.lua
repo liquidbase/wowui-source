@@ -1686,10 +1686,12 @@ function Blizzard_CombatLog_SpellMenuClick(action, spellName, spellId, eventType
 			v.eventList[eventType] = false;
 		end
 	elseif ( action == "LINK" ) then
+		local spellLink = GetSpellLink(spellId);
+
 		if ( ChatEdit_GetActiveWindow() ) then
-			ChatEdit_InsertLink(GetSpellLink(spellId));
+			ChatEdit_InsertLink(spellLink);
 		else
-			ChatFrame_OpenChat(GetSpellLink(spellId));
+			ChatFrame_OpenChat(spellLink);
 		end
 		return;
 	end
@@ -1821,8 +1823,8 @@ local function CombatLog_String_PowerType(powerType, amount, alternatePowerType)
 	end
 
 	if ( powerType == alternatePowerEnumValue and alternatePowerType ) then
-		local costName = select(13, GetAlternatePowerInfoByID(alternatePowerType));
-		return costName; --costName could be nil if we didn't get the alternatePowerType for some reason (e.g. target out of AOI)
+		local name, tooltip, cost = GetUnitPowerBarStringsByID(alternatePowerType);
+		return cost; --cost could be nil if we didn't get the alternatePowerType for some reason (e.g. target out of AOI)
 	end
 
 	-- Previous behavior was returning nil if powerType didn't match one of the explicitly checked types
@@ -2138,10 +2140,12 @@ function CombatLog_OnEvent(filterSettings, timestamp, event, hideCaster, sourceG
 		spellName = ACTION_SWING;
 
 		-- Miss type
-		missType, isOffHand, amountMissed = ...;
+		missType, isOffHand, amountMissed, critical = ...;
 
 		-- Result String
-		if( missType == "RESIST" or missType == "BLOCK" or missType == "ABSORB" ) then
+		if ( missType == "ABSORB" ) then
+			resultStr = CombatLog_String_DamageResultString( resisted, blocked, amountMissed, critical, glancing, crushing, overhealing, textMode, spellId, overkill, overEnergize );
+		elseif( missType == "RESIST" or missType == "BLOCK" ) then
 			resultStr = format(_G["TEXT_MODE_A_STRING_RESULT_"..missType], amountMissed);
 		else
 			resultStr = _G["ACTION_SWING_MISSED_"..missType];
@@ -2176,11 +2180,13 @@ function CombatLog_OnEvent(filterSettings, timestamp, event, hideCaster, sourceG
 			end
 		elseif ( event == "SPELL_MISSED" ) then
 			-- Miss type
-			missType,  isOffHand, amountMissed = select(4, ...);
+			missType,  isOffHand, amountMissed, critical = select(4, ...);
 
 			resultEnabled = true;
 			-- Result String
-			if( missType == "RESIST" or missType == "BLOCK" or missType == "ABSORB" ) then
+			if ( missType == "ABSORB" ) then
+				resultStr = CombatLog_String_DamageResultString( resisted, blocked, amountMissed, critical, glancing, crushing, overhealing, textMode, spellId, overkill, overEnergize );
+			elseif( missType == "RESIST" or missType == "BLOCK" ) then
 				if ( amountMissed ~= 0 ) then
 					resultStr = format(_G["TEXT_MODE_A_STRING_RESULT_"..missType], amountMissed);
 				else
@@ -2237,7 +2243,7 @@ function CombatLog_OnEvent(filterSettings, timestamp, event, hideCaster, sourceG
 
 			if ( event == "SPELL_PERIODIC_MISSED" ) then
 				-- Miss type
-				missType, isOffHand, amountMissed = select(4, ...);
+				missType, isOffHand, amountMissed, critical = select(4, ...);
 
 				-- Result String
 				if ( missType == "ABSORB" ) then
@@ -2597,11 +2603,14 @@ function CombatLog_OnEvent(filterSettings, timestamp, event, hideCaster, sourceG
 			spellName = ACTION_RANGED;
 
 			-- Miss type
-			missType, isOffHand, amountMissed = select(4,...);
+			missType, isOffHand, amountMissed, critical = select(4,...);
 
 			-- Result String
-			if( missType == "RESIST" or missType == "BLOCK" or missType == "ABSORB" ) then
+			if ( missType == "ABSORB" ) then
+				resultStr = CombatLog_String_DamageResultString( resisted, blocked, amountMissed, critical, glancing, crushing, overhealing, textMode, spellId, overkill, overEnergize );
+			elseif( missType == "RESIST" or missType == "BLOCK" ) then
 				resultStr = format(_G["TEXT_MODE_A_STRING_RESULT_"..missType], amountMissed);
+
 			else
 				resultStr = _G["ACTION_RANGE_MISSED_"..missType];
 			end
@@ -3285,67 +3294,15 @@ end
 --
 -- Save the original event handler
 local original_OnEvent = COMBATLOG:GetScript("OnEvent");
-COMBATLOG:SetScript("OnEvent",
 
-function(self, event, ...)
+COMBATLOG:SetScript("OnEvent", function(self, event, ...)
 		if ( event == "COMBAT_LOG_EVENT" ) then
-			CombatLog_AddEvent(...);
-			return;
-		elseif ( event == "COMBAT_LOG_EVENT_UNFILTERED") then
-			--[[
-			local timestamp, event, srcGUID, srcName, srcFlags, dstGUID, dstName, dstFlags = select(1, ...);
-			local message = string.format("%s, %s, %s, 0x%x, %s, %s, 0x%x",
-					       --date("%H:%M:%S", timestamp),
-					       event,
-					       srcGUID, srcName or "nil", srcFlags,
-					       dstGUID, dstName or "nil", dstFlags);
-
-			for i = 9, select("#", ...) do
-				message = message..", "..tostring(select(i, ...));
-			end
-			ChatFrame1:AddMessage(message);
-			--COMBATLOG:AddMessage(message);
-			]]
-			return;
+			CombatLog_AddEvent(CombatLogGetCurrentEventInfo());
 		else
 			original_OnEvent(self, event, ...);
 		end
 	end
 );
---COMBATLOG:RegisterEvent("COMBAT_LOG_EVENT");
---COMBATLOG:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
-
---[[
-_G[COMBATLOG:GetName().."Tab"]:SetScript("OnDragStart",
-	function(self, event, ...)
-		local chatFrame = _G["ChatFrame"..this:GetID()];
-		if ( chatFrame == DEFAULT_CHAT_FRAME ) then
-			if (chatFrame.isLocked) then
-				return;
-			end
-			chatFrame:StartMoving();
-			MOVING_CHATFRAME = chatFrame;
-			return;
-		elseif ( chatFrame.isDocked ) then
-			FCF_UnDockFrame(chatFrame);
-			FCF_SetLocked(chatFrame, false);
-			local chatTab = _G[chatFrame:GetName().."Tab"];
-			local x,y = chatTab:GetCenter();
-			if ( x and y ) then
-				x = x - (chatTab:GetWidth()/2);
-				y = y - (chatTab:GetHeight()/2);
-				chatTab:ClearAllPoints();
-				chatFrame:ClearAllPoints();
-				chatFrame:SetPoint("TOPLEFT", "UIParent", "BOTTOMLEFT", x, y - CombatLogQuickButtonFrame:GetHeight());
-			end
-			FCF_SetTabPosition(chatFrame, 0);
-			chatFrame:StartMoving();
-			MOVING_CHATFRAME = chatFrame;
-		end
-		SELECTED_CHAT_FRAME = chatFrame;
-	end
-);
-]]--
 
 --
 -- XML Function Overrides Part 2
@@ -3378,34 +3335,22 @@ function Blizzard_CombatLog_QuickButtonFrame_OnEvent(self, event, ...)
 	end
 end
 
-
--- BUG: Since we're futzing with the frame height, the combat log tab fades out on hover while other tabs remain faded in. This bug is in the stock version, as well.
-
 local function Blizzard_CombatLog_AdjustCombatLogHeight()
-	-- This prevents improper positioning of the frame due to the scale not yet being set.
-	-- This whole method of resizing the frame and extending the background to preserve visual continuity really screws with repositioning after
-	-- a reload. I'm not sure it's going to work well in the long run.
-	local uiScale = tonumber(GetCVar("uiScale"));
-	--if UIParent:GetScale() ~= uiScale then return end
-
 	local quickButtonHeight = CombatLogQuickButtonFrame:GetHeight();
 
 	if ( COMBATLOG.isDocked ) then
-		local oldPoint,relativeTo,relativePoint,xOfs,yOfs;
+		local oldPoint, relativeTo, relativePoint, x, y;
 		for i=1, COMBATLOG:GetNumPoints() do
-			oldPoint,relativeTo,relativePoint,xOfs,yOfs = COMBATLOG:GetPoint(i);
+			oldPoint, relativeTo, relativePoint, x, y = COMBATLOG:GetPoint(i);
 			if ( oldPoint == "TOPLEFT" ) then
 				break;
 			end
 		end
-		COMBATLOG:SetPoint("TOPLEFT", relativeTo, relativePoint, xOfs/uiScale, -quickButtonHeight);
+		COMBATLOG:SetPoint("TOPLEFT", relativeTo, relativePoint, x, -quickButtonHeight);
 	end
 
-	local yOffset = (3 + quickButtonHeight*uiScale) / uiScale;
-	local xOffset = 2 / uiScale;
-	local combatLogBackground = _G[COMBATLOG:GetName().."Background"];
-	combatLogBackground:SetPoint("TOPLEFT", COMBATLOG, "TOPLEFT", -xOffset, yOffset);
-	combatLogBackground:SetPoint("TOPRIGHT", COMBATLOG, "TOPRIGHT", xOffset, yOffset);
+	FloatingChatFrame_UpdateBackgroundAnchors(COMBATLOG);
+	FCF_UpdateButtonSide(COMBATLOG);
 end
 
 -- On Load
@@ -3415,6 +3360,7 @@ function Blizzard_CombatLog_QuickButtonFrame_OnLoad(self)
 	-- We're using the _Custom suffix to get around the show/hide bug in FloatingChatFrame.lua.
 	-- Once the fading is removed from FloatingChatFrame.lua these can do back to the non-custom values, and the dummy frame creation should be removed.
 	CombatLogQuickButtonFrame = _G.CombatLogQuickButtonFrame_Custom
+	COMBATLOG.CombatLogQuickButtonFrame = CombatLogQuickButtonFrame;
 	CombatLogQuickButtonFrameProgressBar = _G.CombatLogQuickButtonFrame_CustomProgressBar
 	CombatLogQuickButtonFrameTexture = _G.CombatLogQuickButtonFrame_CustomTexture
 
@@ -3422,7 +3368,13 @@ function Blizzard_CombatLog_QuickButtonFrame_OnLoad(self)
 	CombatLogQuickButtonFrame:SetParent(COMBATLOG:GetName() .. "Tab");
 	CombatLogQuickButtonFrame:ClearAllPoints();
 	CombatLogQuickButtonFrame:SetPoint("BOTTOMLEFT", COMBATLOG, "TOPLEFT");
-	CombatLogQuickButtonFrame:SetPoint("BOTTOMRIGHT", COMBATLOG, "TOPRIGHT");
+
+	if COMBATLOG.ScrollBar then
+		CombatLogQuickButtonFrame:SetPoint("BOTTOMRIGHT", COMBATLOG, "TOPRIGHT", COMBATLOG.ScrollBar:GetWidth(), 0);
+	else
+		CombatLogQuickButtonFrame:SetPoint("BOTTOMRIGHT", COMBATLOG, "TOPRIGHT");
+	end
+
 	CombatLogQuickButtonFrameProgressBar:Hide();
 
 	-- Hook the frame's hide/show events so we can hide/show the quick buttons as appropriate.
@@ -3533,11 +3485,12 @@ function SetItemRef(link, text, button, chatFrame)
 	elseif ( strsub(link, 1,5) == "spell" ) then
 		local _, spellId, glyphId, event = strsplit(":", link);
 		spellId = tonumber (spellId);
-		glyphId = tonumber (glyphId);
+		glyphId = tonumber (glyphId) or 0;
 
 		if ( IsModifiedClick("CHATLINK") ) then
 			if ( spellId > 0 ) then
-				if ( ChatEdit_InsertLink(GetSpellLink(spellId, glyphId)) ) then
+				local spellLink = GetSpellLink(spellId, glyphId);
+				if ( ChatEdit_InsertLink(spellLink) ) then
 					return;
 				end
 			else
@@ -3556,12 +3509,6 @@ function SetItemRef(link, text, button, chatFrame)
 			EasyMenu(Blizzard_CombatLog_CreateActionMenu(event), CombatLogDropDown, "cursor", nil, nil, "MENU");
 		end
 		return;
-	elseif ( strsub(link, 1, 4) == "item") then
-		if ( IsModifiedClick("CHATLINK") ) then
-			local name, link = GetItemInfo(text);
-			ChatEdit_InsertLink (link);
-			return;
-		end
 	elseif ( strsub(link, 1, 19) == "garrfollowerability") then
 		if ( IsModifiedClick("CHATLINK") ) then
 			local _, abilityID = strsplit(":", link);
@@ -3655,7 +3602,7 @@ function Blizzard_CombatLog_QuickButton_OnClick(id)
 		Blizzard_CombatLog_Refilter();
 	end
 	Blizzard_CombatLog_Update_QuickButtons();
-	PlaySound("UChatScrollButton");
+	PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON);
 end
 
 function ShowQuickButton(filter)

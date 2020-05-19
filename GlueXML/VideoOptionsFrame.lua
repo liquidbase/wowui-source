@@ -20,8 +20,7 @@ end
 
 function VideoOptionsFrame_OnLoad (self)
 	OptionsFrame_OnLoad(self);
-
-	_G[self:GetName().."HeaderText"]:SetText(SYSTEMOPTIONS_MENU);
+	self.Header:Setup(SYSTEMOPTIONS_MENU);
 end
 
 function VideoOptionsFrame_OnHide (self)
@@ -55,11 +54,11 @@ function VideoOptionsFrameDefault_OnClick (self, button)
 end
 
 function VideoOptionsFrameReset_OnClick_Reset(self)
-	PlaySound("igMainMenuOptionCheckBoxOn");
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 	GlueDialog_Show("RESET_SERVER_SETTINGS");
 end
 
 function VideoOptionsFrameReset_OnClick_Cancel(self)
-	PlaySound("igMainMenuOptionCheckBoxOn");
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 	GlueDialog_Show("CANCEL_RESET_SETTINGS");
 end

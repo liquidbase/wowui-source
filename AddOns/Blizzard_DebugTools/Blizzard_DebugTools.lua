@@ -290,7 +290,9 @@ function EventTraceFrame_StopEventCapture ()
 end
 
 function EventTraceFrame_HandleSlashCmd (msg)
+	local originalMsg = msg;
 	msg = strlower(msg);
+
 	if ( msg == "start" ) then
 		EventTraceFrame_StartEventCapture();
 	elseif ( msg == "stop" ) then
@@ -300,6 +302,8 @@ function EventTraceFrame_HandleSlashCmd (msg)
 			_EventTraceFrame.eventsToCapture = tonumber(msg);
 			EventTraceFrame_StartEventCapture();
 		end
+	elseif ( msg:find("mark", 1, true) ) then
+		EventTraceFrame_AddMark(originalMsg:sub(5));
 	elseif ( msg == "" ) then
 		if ( not _EventTraceFrame:IsShown() ) then
 			_EventTraceFrame:Show();
@@ -309,6 +313,18 @@ function EventTraceFrame_HandleSlashCmd (msg)
 		else
 			_EventTraceFrame:Hide();
 		end
+	end
+end
+
+function EventTraceFrame_AddMessage(fmt, ...)
+	EventTraceFrame_OnEvent(_EventTraceFrame, fmt:format(...));
+end
+
+function EventTraceFrame_AddMark(customMark)
+	if customMark and customMark ~= '' then
+		EventTraceFrame_AddMessage("|cff00ff00--- %s ---|r", tostring(customMark));
+	else
+		EventTraceFrame_AddMessage("|cff00ff00--- Mark ---|r");
 	end
 end
 
@@ -491,8 +507,6 @@ function DebugTooltip_OnLoad(self)
 	self:SetFrameLevel(self:GetFrameLevel() + 2);
 	self:SetBackdropBorderColor(TOOLTIP_DEFAULT_COLOR.r, TOOLTIP_DEFAULT_COLOR.g, TOOLTIP_DEFAULT_COLOR.b);
 	self:SetBackdropColor(TOOLTIP_DEFAULT_BACKGROUND_COLOR.r, TOOLTIP_DEFAULT_BACKGROUND_COLOR.g, TOOLTIP_DEFAULT_BACKGROUND_COLOR.b);
-	self.statusBar2 = getglobal(self:GetName().."StatusBar2");
-	self.statusBar2Text = getglobal(self:GetName().."StatusBar2Text");
 end
 
 function FrameStackTooltip_OnDisplaySizeChanged(self)
@@ -504,77 +518,303 @@ function FrameStackTooltip_OnDisplaySizeChanged(self)
 	end
 end
 
+function FrameStackTooltip_IsShowHiddenEnabled()
+	return GetCVarBool("fstack_showhidden");
+end
+
+function FrameStackTooltip_IsHighlightEnabled()
+	return GetCVarBool("fstack_showhighlight");
+end
+
+function FrameStackTooltip_IsShowRegionsEnabled()
+	return GetCVarBool("fstack_showregions");
+end
+
+function FrameStackTooltip_IsShowAnchorsEnabled()
+	return GetCVarBool("fstack_showanchors");
+end
+
+function FrameStackTooltip_OnFramestackVisibilityUpdated(self)
+	if ( self:IsVisible() ) then
+		--[[Since these properties impact the contents displayed on the framestack,
+		toggle the framestack off and then on to reinitialize it.--]]
+		FrameStackTooltip_Hide(self);
+
+		local showHidden = FrameStackTooltip_IsShowHiddenEnabled();
+		local showRegions = FrameStackTooltip_IsShowRegionsEnabled();
+		local showAnchors = FrameStackTooltip_IsShowAnchorsEnabled();
+
+		FrameStackTooltip_Show(self, showHidden, showRegions, showAnchors);
+	end
+end
+
 function FrameStackTooltip_OnLoad(self)
+	Mixin(self, CallbackRegistryBaseMixin);
+	CallbackRegistryBaseMixin.OnLoad(self);
+	self:GenerateCallbackEvents({ "FrameStackOnHighlightFrameChanged", "FrameStackOnShow", "FrameStackOnHide", "FrameStackOnTooltipCleared" });
+
 	DebugTooltip_OnLoad(self);
+	self.nextUpdate = 0;
 
 	FrameStackTooltip_OnDisplaySizeChanged(self);
 	self:RegisterEvent("DISPLAY_SIZE_CHANGED");
+	self:RegisterEvent("FRAMESTACK_VISIBILITY_UPDATED");
+
+	self.commandKeys =
+	{
+		KeyCommand_Create(function() FrameStackTooltip_ChangeHighlight(self, 1); end, KeyCommand.RUN_ON_DOWN, KeyCommand_CreateKey("LALT")),
+		KeyCommand_Create(function() FrameStackTooltip_ChangeHighlight(self, -1); end, KeyCommand.RUN_ON_DOWN, KeyCommand_CreateKey("RALT")),
+		KeyCommand_Create(function() FrameStackTooltip_InspectTable(self); end, KeyCommand.RUN_ON_UP, KeyCommand_CreateKey("CTRL")),
+		KeyCommand_Create(function() FrameStackTooltip_ToggleTextureInformation(self); end, KeyCommand.RUN_ON_DOWN, KeyCommand_CreateKey("SHIFT")),
+		KeyCommand_Create(function() FrameStackTooltip_HandleFrameCommand(self); end, KeyCommand.RUN_ON_DOWN, KeyCommand_CreateKey("CTRL", "C")),
+	};
+end
+
+function FrameStackTooltip_ChangeHighlight(self, direction)
+	self.highlightIndexChanged = direction;
+	self.shouldSetFSObj = true;
+end
+
+function FrameStackTooltip_InspectTable(self)
+	if self.highlightFrame then
+		TableAttributeDisplay:InspectTable(self.highlightFrame);
+		TableAttributeDisplay:Show();
+	end
+end
+
+function FrameStackTooltip_ToggleTextureInformation(self)
+	self.showTextureInfo = not self.showTextureInfo;
+end
+
+function FrameStackTooltip_HandleFrameCommand(self)
+	if self.currentAssets then
+		for index, asset in ipairs(self.currentAssets) do
+			local assetName, assetType = asset[1], asset[2];
+
+			if assetType == "Atlas" then
+				HandleAtlasMemberCommand(assetName);
+				PlaySound(SOUNDKIT.MAP_PING);
+				break;
+			elseif assetType == "File" then
+				CopyToClipboard(assetName);
+				PlaySound(SOUNDKIT.UI_BONUS_LOOT_ROLL_END); -- find sound
+			end
+		end
+	end
 end
 
 function FrameStackTooltip_OnEvent(self, event, ...)
 	if ( event == "DISPLAY_SIZE_CHANGED" ) then
 		FrameStackTooltip_OnDisplaySizeChanged(self);
+	elseif ( event == "FRAMESTACK_VISIBILITY_UPDATED" ) then
+		FrameStackTooltip_OnFramestackVisibilityUpdated(self);
 	end
 end
 
-local shouldSetFSObj = false;
+local function AreTextureCoordinatesValid(...)
+	local coordCount = select("#", ...);
+	for i = 1, coordCount do
+		if type(select(i, ...)) ~= "number" then
+			return false;
+		end
+	end
+
+	return coordCount == 8;
+end
+
+local function AreTextureCoordinatesEntireImage(...)
+	local ulX, ulY, blX, blY, urX, urY, brX, brY = ...;
+	return	ulX == 0 and ulY == 0 and
+			blX == 0 and blY == 1 and
+			urX == 1 and urY == 0 and
+			brX == 1 and brY == 1;
+end
+
+local function FormatTextureCoordinates(...)
+	if AreTextureCoordinatesValid(...) then
+		if not AreTextureCoordinatesEntireImage(...) then
+			return WrapTextInColorCode(("UL:(%.2f, %.2f), BL:(%.2f, %.2f), UR:(%.2f, %.2f), BR:(%.2f, %.2f)"):format(...), "ff00ffff");
+		end
+
+		return "";
+	end
+
+	return "invalid coordinates";
+end
+
+local function ColorAssetType(assetType)
+	if assetType == "Atlas" then
+		return WrapTextInColorCode(assetType, "ff00ff00");
+	end
+
+	return WrapTextInColorCode(assetType, "ffff0000");
+end
+
+local function FormatTextureAssetName(assetName, assetType)
+	return ("%s: %s"):format(ColorAssetType(assetType), tostring(assetName));
+end
+
+local function FormatTextureInfo(region, ...)
+	if ... ~= nil then
+		local assetInfo = { select(1, ...), select(2, ...) };
+		return ("%s : %s %s"):format(region:GetDebugName(), FormatTextureAssetName(...), FormatTextureCoordinates(select(3, ...))), assetInfo;
+	end
+end
+
+local function CheckGetRegionsTextureInfo(...)
+	local info = {};
+	local assets = {};
+	for i = 1, select("#", ...) do
+		local region = select(i, ...);
+		if CanAccessObject(region) and region:IsMouseOver() then
+			local textureInfo, assetInfo = FormatTextureInfo(region, GetTextureInfo(region))
+			if textureInfo then
+				table.insert(info, textureInfo);
+				table.insert(assets, assetInfo);
+			end
+		end
+	end
+
+	if #info > 0 then
+		return table.concat(info, "\n"), assets;
+	end
+end
+
+local function CheckFormatTextureInfo(self, obj)
+	if self.showTextureInfo and CanAccessObject(obj) then
+		if obj.GetRegions then
+			return CheckGetRegionsTextureInfo(obj:GetRegions());
+		else
+			return CheckGetRegionsTextureInfo(obj);
+		end
+	end
+end
+
 function FrameStackTooltip_OnTooltipSetFrameStack(self, highlightFrame)
-	if shouldSetFSObj then
-		fsobj = highlightFrame;
-		shouldSetFSObj = false;
+	self.highlightFrame = highlightFrame;
+
+	if self.highlightFrame then
+		local textureInfo, assets = CheckFormatTextureInfo(self, self.highlightFrame);
+		if textureInfo then
+			self:AddLine(textureInfo);
+			self.currentAssets = assets;
+		end
+	end
+
+	if self.shouldSetFSObj then
+		fsobj = self.highlightFrame;
+		self.shouldSetFSObj = nil;
+
+		self:TriggerEvent(self.Event.FrameStackOnHighlightFrameChanged, fsobj);
 	end
 
 	if fsobj then
-		self:AddLine(string.format("\n\nfsobj = %s", fsobj:GetDebugName()));
+		self:AddLine(("\nfsobj = %s"):format(fsobj:GetDebugName()));
 	end
 end
 
-function FrameStackTooltip_Toggle (showHidden, showRegions)
-	local tooltip = _G["FrameStackTooltip"];
+function FrameStackTooltip_Show(self, showHidden, showRegions, showAnchors)
+	self:SetOwner(UIParent, "ANCHOR_NONE");
+	self:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -(CONTAINER_OFFSET_X or 0) - 13, (CONTAINER_OFFSET_Y or 0));
+	self.default = 1;
+	self.showRegions = showRegions;
+	self.showHidden = showHidden;
+	self.showAnchors = showAnchors;
+	self:SetFrameStack(showHidden, showRegions);
+end
+
+function FrameStackTooltip_Hide(self)
+	self:Hide();
+	FrameStackHighlight:Hide();
+end
+
+function FrameStackTooltip_ToggleDefaults()
+	local tooltip = FrameStackTooltip;
 	if ( tooltip:IsVisible() ) then
-		tooltip:Hide();
-		FrameStackHighlight:Hide();
+		FrameStackTooltip_Hide(tooltip);
 	else
-		tooltip:SetOwner(UIParent, "ANCHOR_NONE");
-		tooltip:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -CONTAINER_OFFSET_X - 13, CONTAINER_OFFSET_Y);
-		tooltip.default = 1;
-		tooltip.showRegions = showRegions;
-		tooltip.showHidden = showHidden;
-		tooltip:SetFrameStack(showHidden, showRegions);
+		local showHidden = FrameStackTooltip_IsShowHiddenEnabled();
+		local showRegions = FrameStackTooltip_IsShowRegionsEnabled();
+		local showAnchors = FrameStackTooltip_IsShowAnchorsEnabled();
+		FrameStackTooltip_Show(tooltip, showHidden, showRegions, showAnchors);
+	end
+end
+
+function FrameStackTooltip_Toggle(showHidden, showRegions, showAnchors)
+	local tooltip = FrameStackTooltip;
+	if ( tooltip:IsVisible() ) then
+		FrameStackTooltip_Hide(tooltip);
+	else
+		FrameStackTooltip_Show(tooltip, showHidden, showRegions, showAnchors);
+	end
+end
+
+local function AnchorHighlight(frame, highlight, relativePoint)
+	highlight:ClearAllPoints();
+	highlight:SetAllPoints(frame);
+	highlight:Show();
+
+	if highlight.AnchorPoint then
+		if relativePoint then
+			highlight.AnchorPoint:ClearAllPoints();
+			highlight.AnchorPoint:SetPoint("CENTER", highlight, relativePoint);
+			highlight.AnchorPoint:Show();
+		else
+			highlight.AnchorPoint:Hide();
+		end
+	end
+end
+
+AnchorHighlightMixin = {};
+
+function AnchorHighlightMixin:RetrieveAnchorHighlight(pointIndex)
+	if not self.AnchorHighlights then
+		CreateFrame("FRAME", "FrameStackAnchorHighlightTemplate1", self, "FrameStackAnchorHighlightTemplate");
+	end
+
+	while pointIndex > #self.AnchorHighlights do
+		CreateFrame("FRAME", "FrameStackAnchorHighlightTemplate"..(#self.AnchorHighlights + 1), self, "FrameStackAnchorHighlightTemplate");
+	end
+
+	return self.AnchorHighlights[pointIndex];
+end
+
+function AnchorHighlightMixin:HighlightFrame(baseFrame, showAnchors)
+	AnchorHighlight(baseFrame, self);
+
+	local pointIndex = 1;
+	if (showAnchors and baseFrame.GetNumPoints and baseFrame.GetPoint) then -- TODO: Fix for lines
+		while pointIndex <= baseFrame:GetNumPoints() do
+			local _, anchorFrame, anchorRelativePoint = baseFrame:GetPoint(pointIndex);
+			AnchorHighlight(anchorFrame, self:RetrieveAnchorHighlight(pointIndex), anchorRelativePoint);
+			pointIndex = pointIndex + 1;
+		end
+	end
+
+	while self.AnchorHighlights and self.AnchorHighlights[pointIndex] do
+		self.AnchorHighlights[pointIndex]:Hide();
+		pointIndex = pointIndex + 1;
 	end
 end
 
 FRAMESTACK_UPDATE_TIME = .1
-local _timeSinceLast = 0
-local _altKeyDown = false
-function FrameStackTooltip_OnUpdate (self, elapsed)
-	local highlightIndexChanged = 0;
-	local isAltKeyDown = IsAltKeyDown();
-	if ( _altKeyDown ~= isAltKeyDown ) then
-		_altKeyDown = isAltKeyDown;
-		if ( isAltKeyDown ) then
-			highlightIndexChanged = IsRightAltKeyDown() and -1 or 1;
-			shouldSetFSObj = true;
+
+function FrameStackTooltip_OnUpdate(self)
+	KeyCommand_Update(self.commandKeys);
+
+	local now = GetTime();
+	if now >= self.nextUpdate or self.highlightIndexChanged ~= 0 then
+		self.nextUpdate = now + FRAMESTACK_UPDATE_TIME;
+		self.highlightFrame = self:SetFrameStack(self.showHidden, self.showRegions, self.highlightIndexChanged);
+		self.highlightIndexChanged = 0;
+		if self.highlightFrame and FrameStackTooltip_IsHighlightEnabled() then
+			FrameStackHighlight:HighlightFrame(self.highlightFrame, self.showAnchors);
 		end
 	end
 
-	_timeSinceLast = _timeSinceLast - elapsed;
-	if ( _timeSinceLast <= 0 or highlightIndexChanged ~= 0 ) then
-		_timeSinceLast = FRAMESTACK_UPDATE_TIME;
-		local highlightFrame = self:SetFrameStack(self.showHidden, self.showRegions, highlightIndexChanged);
-
-		FrameStackHighlight:ClearAllPoints();
-		if (highlightFrame) then
-			FrameStackHighlight:SetPoint("BOTTOMLEFT", highlightFrame);
-			FrameStackHighlight:SetPoint("TOPRIGHT", highlightFrame);
-			FrameStackHighlight:Show();
-		else
-			FrameStackHighlight:Hide();
-		end
-	end
 end
 
-function FrameStackTooltip_OnShow (self)
+function FrameStackTooltip_OnShow(self)
 	local parent = self:GetParent() or UIParent;
 	local ps = parent:GetEffectiveScale();
 	local px, py = parent:GetCenter();
@@ -594,6 +834,78 @@ function FrameStackTooltip_OnShow (self)
 			self:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -20, -20);
 		end
 	end
+
+	self:TriggerEvent(self.Event.FrameStackOnShow);
+end
+
+function FrameStackTooltip_OnHide(self)
+	self:TriggerEvent(self.Event.FrameStackOnHide);
+end
+
+function FrameStackTooltip_OnTooltipCleared(self)
+	self:TriggerEvent(self.Event.FrameStackOnTooltipCleared);
 end
 
 FrameStackTooltip_OnEnter = FrameStackTooltip_OnShow;
+
+local DebugHighlightColors = {
+	CreateColor(0.1, 0.0, 0.0, 0.5),
+	CreateColor(0.0, 0.1, 0.0, 0.5),
+	CreateColor(0.0, 0.0, 0.1, 0.5),
+	CreateColor(0.1, 0.1, 0.0, 0.5),
+	CreateColor(0.1, 0.1, 0.1, 0.5),
+};
+
+local function GetDebugIdentifierLevel(debugIdentifierFrame)
+	local debugIdentifierLevel = 1;
+	local parent = debugIdentifierFrame:GetParent();
+	while parent and parent.DebugHighlight ~= nil do
+		debugIdentifierLevel = debugIdentifierLevel + 1;
+		parent = parent:GetParent();
+	end
+
+	return debugIdentifierLevel;
+end
+
+function DebugIdentifierFrame_OnLoad(self)
+	if self.DebugName then
+		local debugNameText = string.gsub(self:GetDebugName(), "[.]", " ");
+		self.DebugName:SetText(debugNameText);
+
+		C_Timer.After(0.05, function ()
+			local extraWidth = 10;
+			while (self.DebugName:IsTruncated()) do
+				self.DebugName:SetPoint("LEFT", -extraWidth, 0);
+				self.DebugName:SetPoint("RIGHT", extraWidth, 0);
+				extraWidth = extraWidth + 10;
+			end
+		end);
+	end
+
+	local debugIdentifierLevel = GetDebugIdentifierLevel(self);
+	local debugHighlightColor = DebugHighlightColors[math.min(debugIdentifierLevel, #DebugHighlightColors)];
+	self.DebugHighlight:SetColorTexture(debugHighlightColor:GetRGBA());
+end
+
+-- for checking that deprecated functions returns the same info as the original version
+function CompareFunctionReturns(func1, func2, ...)
+	local ret1 = { func1(...) };
+	local ret2 = { func2(...) };
+	local size = max(#ret1, #ret2);
+	local allPassed = true;
+	for i = 1, size do
+		if ret1[i] == ret2[i] then
+			print("["..i.."] pass");
+		else
+			print("["..i.."] "..RED_FONT_COLOR_CODE.."fail");
+			print(ret1[i]);
+			print(ret2[i]);
+			allPassed = false;
+		end
+	end
+	if allPassed then
+		print("=== PASS ===");
+	else
+		print("=== " ..RED_FONT_COLOR_CODE.."FAIL"..FONT_COLOR_CODE_CLOSE.." ===");
+	end
+end

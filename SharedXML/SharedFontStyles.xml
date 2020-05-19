@@ -3,6 +3,9 @@
 	<Font name="GameFontNormal" inherits="SystemFont_Shadow_Med1" virtual="true">
 		<Color r="1.0" g="0.82" b="0"/>
 	</Font>
+	<Font name="GameFontNormal_NoShadow" inherits="SystemFont_Med1" virtual="true">
+		<Color r="1.0" g="0.82" b="0"/>
+	</Font>
 	<Font name="GameFontNormalCenter" inherits="GameFontNormal" justifyH="CENTER" virtual="true"/>
 	<Font name="GameFontDisable" inherits="GameFontNormal" virtual="true">
 		<Color r="0.5" g="0.5" b="0.5"/>
@@ -73,6 +76,9 @@
 	<Font name="GameFontNormalHugeOutline2" inherits="SystemFont_Shadow_Outline_Huge2" virtual="true">
 		<Color r="1.0" g="0.82" b="0"/>
 	</Font>
+	<Font name="GameFontHighlightHugeOutline2" inherits="SystemFont_Shadow_Outline_Huge2" virtual="true">
+		<Color r="1.0" g="1.0" b="1.0"/>
+	</Font>
 	<Font name="GameFontNormalOutline" inherits="SystemFont_Shadow_Med1_Outline" virtual="true">
 		<Color r="1.0" g="0.82" b="0"/>
 	</Font>
@@ -103,6 +109,9 @@
 	<Font name="GameFontBlack" inherits="SystemFont_Med1" virtual="true">
 		<Color r="0" g="0" b="0"/>
 	</Font>
+	<Font name="GameFontWhite" inherits="GameFontBlack" virtual="true">
+		<Color r="1.0" g="1.0" b="1.0"/>
+	</Font>
 	<Font name="GameFontHighlightMed2" inherits="GameFontNormalMed2" virtual="true">
 		<Color r="1.0" g="1.0" b="1.0"/>
 	</Font>
@@ -113,6 +122,9 @@
 		<Color r="1.0" g="0.82" b="0"/>
 	</Font>
 	<Font name="GameFontDisableLarge" inherits="GameFontNormalLarge" virtual="true">
+		<Color r="0.5" g="0.5" b="0.5"/>
+	</Font>
+	<Font name="GameFontDisableMed2" inherits="GameFontNormalMed2" virtual="true">
 		<Color r="0.5" g="0.5" b="0.5"/>
 	</Font>
 	<Font name="GameFontHighlightSmall" inherits="GameFontNormalSmall" virtual="true">
@@ -153,7 +165,19 @@
     <Font name="GameFontNormalHuge3Outline" inherits="SystemFont_Shadow_Outline_Huge3" virtual="true">
 		<Color r="1.0" g="0.82" b="0"/>
 	</Font>
-  <Font name="GameTooltipHeaderText" inherits="GameTooltipHeader" justifyH="LEFT" virtual="true">
+	<Font name="GameFontNormalHuge4" inherits="SystemFont_Shadow_Huge4" virtual="true">
+		<Color r="1.0" g="0.82" b="0"/>
+	</Font>
+	<Font name="GameFontNormalHuge4Outline" inherits="SystemFont_Shadow_Outline_Huge4" virtual="true">
+		<Color r="1.0" g="0.82" b="0"/>
+	</Font>
+	<Font name="GameTooltipHeaderText" inherits="GameTooltipHeader" justifyH="LEFT" virtual="true">
+    <Color r="1.0" g="1.0" b="1.0"/>
+  </Font>
+  <Font name="GameTooltipText" inherits="Tooltip_Med" justifyH="LEFT" virtual="true">
+    <Color r="1.0" g="1.0" b="1.0"/>
+  </Font>
+  <Font name="GameTooltipTextSmall" inherits="Tooltip_Small" justifyH="LEFT" virtual="true">
     <Color r="1.0" g="1.0" b="1.0"/>
   </Font>
   <Font name="IMENormal" inherits="System_IME" justifyH="LEFT" virtual="true">

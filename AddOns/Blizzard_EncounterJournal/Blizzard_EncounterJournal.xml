@@ -19,10 +19,6 @@
 		<Size x="64" y="27"/>
 		<TexCoords left="0.00000000" right="1.00000000" top="0.16601563" bottom="0.21875000"/>
 	</Texture>
-	<Texture name="_PaperHeader-SelectUp-Mid" file="Interface\EncounterJournal\UI-EncounterJournalTextures_Tile" virtual="true" horizTile="true" >
-		<Size x="64" y="29"/>
-		<TexCoords left="0.00000000" right="1.00000000" top="0.22265625" bottom="0.27929688"/>
-	</Texture>
 	<Texture name="_PaperHeader-UnSelectDown-Mid" file="Interface\EncounterJournal\UI-EncounterJournalTextures_Tile" virtual="true" horizTile="true" >
 		<Size x="64" y="29"/>
 		<TexCoords left="0.00000000" right="1.00000000" top="0.28320313" bottom="0.33984375"/>
@@ -51,20 +47,11 @@
 		<Size x="64" y="36"/>
 		<TexCoords left="0.00000000" right="1.00000000" top="0.67382813" bottom="0.74414063"/>
 	</Texture>
-	<Texture name="_SearchBarLg" file="Interface\EncounterJournal\UI-EncounterJournalTextures_Tile" virtual="true" horizTile="true" >
-		<Size x="64" y="49"/>
-		<TexCoords left="0.00000000" right="1.00000000" top="0.74804688" bottom="0.84375000"/>
-	</Texture>
-
 
 	<!--size=512,1024-->
 	<Texture name="UI-EJ-AbilityIconBorder" file="Interface\EncounterJournal\UI-EncounterJournalTextures" virtual="true" >
 		<Size x="20" y="20"/>
 		<TexCoords left="0.00195313" right="0.04101563" top="0.00097656" bottom="0.02050781"/>
-	</Texture>
-	<Texture name="UI-EJ-AbilityTextBottomBorder" file="Interface\EncounterJournal\UI-EncounterJournalTextures" virtual="true" >
-		<Size x="243" y="9"/>
-		<TexCoords left="0.04492188" right="0.51953125" top="0.00097656" bottom="0.00976563"/>
 	</Texture>
 	<Texture name="UI-EJ-DungeonGridTab-SelectedGlow" file="Interface\EncounterJournal\UI-EncounterJournalTextures" virtual="true" >
 		<Size x="64" y="15"/>
@@ -77,10 +64,6 @@
 	<Texture name="UI-EJ-ReturnToDefault" file="Interface\EncounterJournal\UI-EncounterJournalTextures" virtual="true" >
 		<Size x="21" y="20"/>
 		<TexCoords left="0.90625000" right="0.94726563" top="0.00097656" bottom="0.02050781"/>
-	</Texture>
-	<Texture name="UI-EJ-AbilityTextBG" file="Interface\EncounterJournal\UI-EncounterJournalTextures" virtual="true" >
-		<Size x="256" y="80"/>
-		<TexCoords left="0.00195313" right="0.50195313" top="0.02246094" bottom="0.10058594"/>
 	</Texture>
 	<Texture name="UI-EJ-BossModelButton" file="Interface\EncounterJournal\UI-EncounterJournalTextures" virtual="true" >
 		<Size x="64" y="61"/>
@@ -214,10 +197,6 @@
 		<Size x="62" y="61"/>
 		<TexCoords left="0.81445313" right="0.93554688" top="0.33300781" bottom="0.39257813"/>
 	</Texture>
-	<Texture name="UI-EJ-PaperHeader-SelectUp-Left" file="Interface\EncounterJournal\UI-EncounterJournalTextures" virtual="true" >
-		<Size x="64" y="29"/>
-		<TexCoords left="0.81445313" right="0.93945313" top="0.39453125" bottom="0.42285156"/>
-	</Texture>
 	<Texture name="UI-EJ-DungeonButton-Up" file="Interface\EncounterJournal\UI-EncounterJournalTextures" virtual="true" >
 		<Size x="174" y="96"/>
 		<TexCoords left="0.00195313" right="0.34179688" top="0.42871094" bottom="0.52246094"/>
@@ -342,16 +321,12 @@
 		<Size x="48" y="43"/>
 		<TexCoords left="0.904296875" right="0.99609375" top="0.70703125" bottom="0.748046875"/>
 	</Texture>
-	<Texture name="UI-EJ-Bullet" file="Interface\EncounterJournal\UI-EncounterJournalTextures" virtual="true">
-		<Size x="13" y="13"/>
-		<TexCoords left="0.974609375" right="1.0" top="0.7509765625" bottom="0.763671875"/>
-	</Texture>
 	<Texture name="UI-EJ-Header-Overview" file="Interface\EncounterJournal\UI-EncounterJournalTextures" virtual="true">
 		<Size x="327" y="30"/>
 		<TexCoords left="0.359375" right="0.99609375" top="0.8525390625" bottom="0.880859375"/>
 	</Texture>
 
-	<Button name="EJButtonTemplate" virtual="true">
+	<Button name="EJButtonTemplate" mixin="EJButtonMixin" virtual="true">
 		<Size x="75" y="26"/>
 		<HitRectInsets>
 			<AbsInset left="-13" right="-13" top="0" bottom="0"/>
@@ -411,36 +386,9 @@
 			<Color r="0.973" g="0.902" b="0.581"/>
 		</ButtonText>
 		<Scripts>
-			<OnLoad>
-				local l, t, _, b, r = self.UpLeft:GetTexCoord();
-				self.UpLeft:SetTexCoord(l, l + (r-l)/2, t, b);
-				l, t, _, b, r = self.UpRight:GetTexCoord();
-				self.UpRight:SetTexCoord(l + (r-l)/2, r, t, b);
-
-				l, t, _, b, r = self.DownLeft:GetTexCoord();
-				self.DownLeft:SetTexCoord(l, l + (r-l)/2, t, b);
-				l, t, _, b, r = self.DownRight:GetTexCoord();
-				self.DownRight:SetTexCoord(l + (r-l)/2, r, t, b);
-
-				l, t, _, b, r = self.HighLeft:GetTexCoord();
-				self.HighLeft:SetTexCoord(l, l + (r-l)/2, t, b);
-				l, t, _, b, r = self.HighRight:GetTexCoord();
-				self.HighRight:SetTexCoord(l + (r-l)/2, r, t, b);
-			</OnLoad>
-			<OnMouseDown>
-				self.UpLeft:Hide();
-				self.UpRight:Hide();
-
-				self.DownLeft:Show();
-				self.DownRight:Show();
-			</OnMouseDown>
-			<OnMouseUp>
-				self.UpLeft:Show();
-				self.UpRight:Show();
-
-				self.DownLeft:Hide();
-				self.DownRight:Hide();
-			</OnMouseUp>
+			<OnLoad method="OnLoad"/>
+			<OnMouseDown method="OnMouseDown"/>
+			<OnMouseUp method="OnMouseUp"/>
 		</Scripts>
 	</Button>
 
@@ -497,7 +445,7 @@
 			<OnClick>
 				if not ChatEdit_TryInsertChatLink(self.link) then
 					EncounterJournal_DisplayInstance(self.instanceID);
-					PlaySound("igSpellBookOpen");
+					PlaySound(SOUNDKIT.IG_SPELLBOOK_OPEN);
 				end
 			</OnClick>
 		</Scripts>
@@ -562,7 +510,7 @@
 			</OnShow>
 			<OnClick>
 				EncounterJournal_SelectSearch(self:GetID())
-				PlaySound("igSpellBookOpen");
+				PlaySound(SOUNDKIT.IG_SPELLBOOK_OPEN);
 			</OnClick>
 		</Scripts>
 	</Button>
@@ -628,7 +576,7 @@
 			</OnLeave>
 			<OnClick>
 				EncounterJournal_SelectSearch(self:GetID());
-				PlaySound("igSpellBookOpen");
+				PlaySound(SOUNDKIT.IG_SPELLBOOK_OPEN);
 			</OnClick>
 		</Scripts>
 	</Button>
@@ -636,7 +584,7 @@
 	<Button name="EncounterCreatureButtonTemplate" motionScriptsWhileDisabled="true" virtual="true" hidden="true">
 		<Size x="64" y="61"/>
 		<Layers>
-			<Layer level="BACKGROUND" TextureSubLevel="6">
+			<Layer level="BACKGROUND" textureSubLevel="6">
 				<Texture name="$parentCreature" parentKey="creature">
 					<Size x="40" y="40"/>
 					<Anchors>
@@ -663,7 +611,7 @@
 			</OnEnable>
 			<OnClick>
 				EncounterJournal_DisplayCreature(self);
-				PlaySound("igMainMenuOption");
+				PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
 			</OnClick>
 			<OnEnter>
 
@@ -685,13 +633,33 @@
 	<Button name="EncounterBossButtonTemplate" virtual="true" hidden="true">
 		<Size x="325" y="55"/>
 		<Frames>
+			<Button frameLevel="150" parentKey="DefeatedOverlay">
+				<Size x="16" y="16"/>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" x="4" y="0"/>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<Texture parentKey="Icon" atlas="Map-MarkedDefeated" useAtlasSize="true">
+							<Anchors>
+								<Anchor point="CENTER"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnEnter function="EncounterJournalBossButtonDefeatedOverlay_OnEnter"/>
+					<OnLeave function="GameTooltip_Hide"/>
+				</Scripts>
+			</Button>
+
 			<Frame>
 				<Size x="1" y="1"/>
 				<Anchors>
 					<Anchor point="TOPLEFT" x="-4" y="13"/>
 				</Anchors>
 				<Layers>
-					<Layer level="OVERLAY" TextureSubLevel="6">
+					<Layer level="OVERLAY" textureSubLevel="6">
 						<Texture name="$parentCreature" file="Interface\EncounterJournal\UI-EJ-BOSS-Default" parentKey="creature">
 							<Size x="128" y="64"/>
 							<Anchors>
@@ -728,24 +696,14 @@
 		</HighlightFont>
 		<DisabledFont style="GameFontHighlightMedium"/>
 		<Scripts>
-			<OnClick>
-				if IsModifiedClick("CHATLINK") and ChatEdit_GetActiveWindow() then
-					if self.link then
-						ChatEdit_InsertLink(self.link);
-					end
-					return;
-				end
-				local _, _, _, rootSectionID = EJ_GetEncounterInfo(self.encounterID);
-				if ( rootSectionID == 0 ) then
-					EncounterJournal_SetTab(EncounterJournal.encounter.info.lootTab:GetID());
-				end
-				EncounterJournal_DisplayEncounter(self.encounterID);
-				PlaySound("igAbiliityPageTurn");
-			</OnClick>
+			<OnShow function="EncounterJournalBossButton_OnShow"/>
+			<OnHide function="EncounterJournalBossButton_OnHide"/>
+			<OnEvent function="EncounterJournalBossButton_OnEvent"/>
+			<OnClick function="EncounterJournalBossButton_OnClick"/>
 		</Scripts>
 	</Button>
 
-	<Button name="EncounterTabTemplate" virtual="true">
+	<Button name="EncounterTabTemplate" frameLevel="510" virtual="true">
 		<Size x="63" y="57"/>
 		<NormalTexture inherits="UI-EJ-Tab-UnSelected"/>
 		<PushedTexture inherits="UI-EJ-Tab-Selected"/>
@@ -818,7 +776,7 @@
 		<Size x="115" y="15"/>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture parentKey="Bullet" inherits="UI-EJ-Bullet">
+				<Texture parentKey="Bullet" inherits="UI-PaperOverlay-Bullet">
 					<Anchors>
 						<Anchor point="TOPLEFT"/>
 					</Anchors>
@@ -834,6 +792,9 @@
 				<FontString inherits="GameFontBlack" justifyH="LEFT" justifyV="TOP">
 					<Color r="0.25" g="0.1484375" b=".02" a="1"/>
 				</FontString>
+				<Scripts>
+					<OnHyperlinkEnter function="EncounterJournal_OnHyperlinkEnter"/>
+				</Scripts>
 			</SimpleHTML>
 		</Frames>
 	</Frame>
@@ -844,11 +805,14 @@
 				<FontString inherits="GameFontBlack" justifyH="LEFT" justifyV="TOP">
 					<Color r="0.25" g="0.1484375" b=".02" a="1"/>
 				</FontString>
+				<Scripts>
+					<OnHyperlinkEnter function="EncounterJournal_OnHyperlinkEnter"/>
+				</Scripts>
 			</SimpleHTML>
 		</Frames>
 	</Frame>
 
-	<Frame name="EncounterInfoTemplate" virtual="true">
+	<Frame name="EncounterInfoTemplate" virtual="true" inherits="InlineHyperlinkFrameTemplate">
 		<Animations>
 			<AnimationGroup parentKey="flashAnim">
 				<Alpha target="$parentHeaderButtonGlow" fromAlpha="0" toAlpha="1" duration="0.6" order="1"/>
@@ -883,17 +847,16 @@
 							<Size x="5" y="10"/>
 							<Anchors>
 								<Anchor point="LEFT" relativeTo="$parentAbilityIcon" relativePoint="RIGHT" x="5" y="-1"/>
-								<Anchor point="RIGHT" relativeTo="$parentIcon4" relativePoint="LEFT" x="-5" y="0"/>
 							</Anchors>
 						</FontString>
 					</Layer>
 					<Layer level="BACKGROUND">
-						<Texture name="$parentELeftUp" inherits="UI-EJ-PaperHeader-SelectUp-Left" parentKey="eLeftUp" hidden="true">
+						<Texture name="$parentELeftUp" inherits="UI-PaperOverlay-PaperHeader-SelectUp-Left" parentKey="eLeftUp" hidden="true">
 							<Anchors>
 								<Anchor point="LEFT" x="-1" y="-1"/>
 							</Anchors>
 						</Texture>
-						<Texture name="$parentERightUp" inherits="UI-EJ-PaperHeader-SelectUp-Right" parentKey="eRightUp" hidden="true">
+						<Texture name="$parentERightUp" inherits="UI-PaperOverlay-PaperHeader-SelectUp-Right" parentKey="eRightUp" hidden="true">
 							<Anchors>
 								<Anchor point="RIGHT" x="3" y="-1"/>
 							</Anchors>
@@ -930,7 +893,7 @@
 						</Texture>
 					</Layer>
 					<Layer level="BACKGROUND" textureSubLevel="-2">
-						<Texture name="$parentEMidUp" inherits="_PaperHeader-SelectUp-Mid" parentKey="eMidUp" hidden="true">
+						<Texture name="$parentEMidUp" inherits="UI-PaperOverlay-PaperHeader-SelectUp-Mid" parentKey="eMidUp" hidden="true">
 							<Anchors>
 								<Anchor point="LEFT" relativeTo="$parentELeftUp" relativePoint="RIGHT" x="-32" y="0"/>
 								<Anchor point="RIGHT" relativeTo="$parentERightUp" relativePoint="LEFT" x="32" y="0"/>
@@ -1001,22 +964,22 @@
 							</Layer>
 						</Layers>
 					</Frame>
-					<Frame name="$parentIcon1" inherits="EncounterSectionIconTemplate" parentKey="icon1">
+					<Frame name="$parentIcon1" inherits="EncounterSectionIconTemplate" parentKey="icon1" parentArray="icons">
 						<Anchors>
 							<Anchor point="RIGHT" x="5" y="0"/>
 						</Anchors>
 					</Frame>
-					<Frame name="$parentIcon2" inherits="EncounterSectionIconTemplate" parentKey="icon2">
+					<Frame name="$parentIcon2" inherits="EncounterSectionIconTemplate" parentKey="icon2" parentArray="icons">
 						<Anchors>
 							<Anchor point="RIGHT" relativeTo="$parentIcon1" relativePoint="LEFT" x="10" y="0"/>
 						</Anchors>
 					</Frame>
-					<Frame name="$parentIcon3" inherits="EncounterSectionIconTemplate" parentKey="icon3">
+					<Frame name="$parentIcon3" inherits="EncounterSectionIconTemplate" parentKey="icon3" parentArray="icons">
 						<Anchors>
 							<Anchor point="RIGHT" relativeTo="$parentIcon2" relativePoint="LEFT" x="10" y="0"/>
 						</Anchors>
 					</Frame>
-					<Frame name="$parentIcon4" inherits="EncounterSectionIconTemplate" parentKey="icon4">
+					<Frame name="$parentIcon4" inherits="EncounterSectionIconTemplate" parentKey="icon4" parentArray="icons">
 						<Anchors>
 							<Anchor point="RIGHT" relativeTo="$parentIcon3" relativePoint="LEFT" x="19" y="0"/>
 						</Anchors>
@@ -1057,7 +1020,7 @@
 									EncounterJournal_DisplayCreature(self);
 								end
 								self:Enable();
-								PlaySound("igMainMenuOptionCheckBoxOn");
+								PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 							</OnClick>
 						</Scripts>
 					</Button>
@@ -1076,21 +1039,8 @@
 						}
 						self.tex = self.textures.collapsed;
 					</OnLoad>
-					<OnShow>
-						EncounterJournal_UpdateButtonState(self);
-					</OnShow>
-					<OnClick>
-						if IsModifiedClick("CHATLINK") and ChatEdit_GetActiveWindow() then
-							if self.link then
-								ChatEdit_InsertLink(self.link);
-							end
-							return;
-						end
-
-						EncounterJournal_ToggleHeaders(self:GetParent())
-						self:GetScript("OnShow")(self);
-						PlaySound("igMainMenuOptionCheckBoxOn");
-					</OnClick>
+					<OnShow function="EncounterJournal_UpdateButtonState"/>
+					<OnClick function="EncounterJournal_OnClick"/>
 					<OnMouseDown>
 						self.tex.up[1]:Hide();
 						self.tex.up[2]:Hide();
@@ -1143,14 +1093,14 @@
 				</FontString>
 			</Layer>
 			<Layer level="BACKGROUND">
-				<Texture name="$parentDescriptionBG" inherits="UI-EJ-AbilityTextBG" parentKey="descriptionBG">
+				<Texture name="$parentDescriptionBG" inherits="UI-PaperOverlay-AbilityTextBG" parentKey="descriptionBG">
 					<Size x="12" y="12"/>
 					<Anchors>
 						<Anchor point="TOPLEFT" relativeTo="$parentDescription" x="-9" y="12"/>
 						<Anchor point="BOTTOMRIGHT" relativeTo="$parentDescription" x="9" y="-11"/>
 					</Anchors>
 				</Texture>
-				<Texture inherits="UI-EJ-AbilityTextBottomBorder" parentKey="descriptionBGBottom">
+				<Texture inherits="UI-PaperOverlay-AbilityTextBottomBorder" parentKey="descriptionBGBottom">
 					<Anchors>
 						<Anchor point="LEFT" relativeTo="$parentDescriptionBG" relativePoint="BOTTOMLEFT" x="0" y="0"/>
 						<Anchor point="RIGHT" relativeTo="$parentDescriptionBG" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
@@ -1162,6 +1112,7 @@
 			<OnHide>
 				self:SetScript("OnUpdate", nil);
 			</OnHide>
+			<OnHyperlinkEnter function="EncounterJournal_OnHyperlinkEnter"/>
 		</Scripts>
 	</Frame>
 
@@ -1275,7 +1226,7 @@
 		</Scripts>
 	</Frame>
 
-	<Button name="EncounterItemTemplate" virtual="true">
+	<Button name="EncounterItemTemplate" registerForClicks="LeftButtonUp, RightButtonUp" virtual="true">
 		<Size x="321" y="45"/>
 		<Layers>
 			<Layer level="BACKGROUND">
@@ -1337,13 +1288,22 @@
 					</Anchors>
 				</Texture>
 			</Layer>
+			<Layer level="OVERLAY" textureSubLevel="2">
+				<Texture parentKey="IconOverlay" hidden="true">
+					<Size x="37" y="37"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.icon"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.icon"/>
+					</Anchors>
+				</Texture>
+			</Layer>
 		</Layers>
 		<Scripts>
 			<OnClick>
 				if (not HandleModifiedItemClick(self.link)) then
 					EncounterJournal_Loot_OnClick(self);
 				else
-					PlaySound("igMainMenuOption");
+					PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
 				end
 			</OnClick>
 			<OnEnter>
@@ -1604,7 +1564,7 @@
 							</OnShow>
 							<OnClick>
 								EncounterJournal_ShowFullSearch()
-								PlaySound("igMainMenuOptionCheckBoxOn");
+								PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 							</OnClick>
 							<OnEnter function="EncounterJournalSearchBoxShowAllResults_OnEnter"/>
 						</Scripts>
@@ -1848,10 +1808,10 @@
 					<OnShow>
 						--always on top
 						self:SetFrameLevel(self:GetParent():GetFrameLevel()+10);
-						PlaySound("igSpellBookOpen");
+						PlaySound(SOUNDKIT.IG_SPELLBOOK_OPEN);
 					</OnShow>
 					<OnHide>
-						PlaySound("igSpellBookClose");
+						PlaySound(SOUNDKIT.IG_SPELLBOOK_CLOSE);
 					</OnHide>
 				</Scripts>
 			</Frame>
@@ -1912,8 +1872,7 @@
 					<Layer level="BACKGROUND">
 						<Texture name="$parentBG" file="Interface\EncounterJournal\UI-EJ-Cataclysm" parentKey="bg">
 							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="0"/>
-								<Anchor point="BOTTOMRIGHT" x="0" y="0"/>
+								<Anchor point="TOPLEFT" x="3" y="-1"/>
 							</Anchors>
 						</Texture>
 					</Layer>
@@ -1952,7 +1911,7 @@
 							<OnClick function="EJ_ContentTab_OnClick"/>
 						</Scripts>
 					</Button>
-					<Button name="$parentLootJournalTab" inherits="EncounterTierTabTemplate" text="LOOT" parentKey="LootJournalTab">
+					<Button name="$parentLootJournalTab" inherits="EncounterTierTabTemplate" text="LOOT_JOURNAL_ITEM_SETS" parentKey="LootJournalTab">
 						<KeyValues>
  							<KeyValue key="id" value="4" type="number"/>
  						</KeyValues>
@@ -2089,11 +2048,9 @@
 								</Layers>
 								<Scripts>
 									<OnClick>
-										local _, _, _, _, _, _, dungeonAreaMapID = EJ_GetInstanceInfo();
-										if dungeonAreaMapID and dungeonAreaMapID > 0 then
-											WorldMapFrame.fromJournal = true;
-											ShowUIPanel(WorldMapFrame);
-											SetMapByID(dungeonAreaMapID);
+										local _, _, _, _, _, _, mapID = EJ_GetInstanceInfo();
+										if mapID and mapID > 0 then
+											OpenWorldMap(mapID);
 										end
 									</OnClick>
 									<OnMouseDown>
@@ -2179,10 +2136,16 @@
 									</Anchors>
 									<Color r="0.902" g="0.788" b="0.671"/>
 								</FontString>
+								<Texture name="$parentDifficultyIcon" parentKey="difficultyIcon" file="Interface\EncounterJournal\UI-EJ-Icons">
+									<Size x="32" y="32"/>
+									<Anchors>
+										<Anchor point="TOPLEFT" x="55" y="-10"/>
+									</Anchors>
+								</Texture>
 								<FontString name="$parentInstanceTitle" inherits="GameFontNormalLarge" justifyH="LEFT" parentKey="instanceTitle">
 									<Size x="290" y="12"/>
 									<Anchors>
-										<Anchor point="TOPLEFT" x="65" y="-20"/>
+										<Anchor point="LEFT" relativeKey="$parent.difficultyIcon" relativePoint="RIGHT" x="-4" y="0"/>
 									</Anchors>
 									<Color r="0.902" g="0.788" b="0.671"/>
 								</FontString>
@@ -2210,7 +2173,7 @@
 									<OnClick function="EncounterJournalInstanceButton_OnClick"/>
 								</Scripts>
 							</Button>
-							<Button name="$parentOverviewTab" inherits="EncounterTabTemplate" useParentLevel="true" parentKey="overviewTab" id="1">
+							<Button name="$parentOverviewTab" inherits="EncounterTabTemplate" parentKey="overviewTab" id="1">
 								<Anchors>
 									<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="-12" y="-35"/>
 								</Anchors>
@@ -2240,7 +2203,7 @@
 									</OnClick>
 								</Scripts>
 							</Button>
-							<Button name="$parentLootTab" inherits="EncounterTabTemplate" useParentLevel="true" parentKey="lootTab" id="2">
+							<Button name="$parentLootTab" inherits="EncounterTabTemplate" parentKey="lootTab" id="2">
 								<Anchors>
 									<Anchor point="TOP" relativeTo="$parentOverviewTab" relativePoint="BOTTOM" x="0" y="2"/>
 								</Anchors>
@@ -2264,7 +2227,7 @@
 									</OnLoad>
 								</Scripts>
 							</Button>
-							<Button name="$parentBossTab" inherits="EncounterTabTemplate" useParentLevel="true" parentKey="bossTab" id="3">
+							<Button name="$parentBossTab" inherits="EncounterTabTemplate" parentKey="bossTab" id="3">
 								<Anchors>
 									<Anchor point="TOP" relativeTo="$parentLootTab" relativePoint="BOTTOM" x="0" y="2"/>
 								</Anchors>
@@ -2294,7 +2257,7 @@
 									</OnClick>
 								</Scripts>
 							</Button>
-							<Button name="$parentModelTab" inherits="EncounterTabTemplate" useParentLevel="true" parentKey="modelTab" id="4">
+							<Button name="$parentModelTab" inherits="EncounterTabTemplate" parentKey="modelTab" id="4">
 								<Anchors>
 									<Anchor point="TOP" relativeTo="$parentBossTab" relativePoint="BOTTOM" x="0" y="2"/>
 								</Anchors>
@@ -2360,18 +2323,19 @@
 									</Frame>
 								</ScrollChild>
 							</ScrollFrame>
-							<Button name="$parentDifficulty" parentKey="difficulty" inherits="EJButtonTemplate" frameLevel="10">
+							<DropDownToggleButton name="$parentDifficulty" parentKey="difficulty" inherits="EJButtonTemplate" frameLevel="10">
 								<Size x="75" y="26"/>
 								<Anchors>
 									<Anchor point="TOPRIGHT" x="-19" y="-13"/>
 								</Anchors>
 								<Scripts>
-									<OnClick>
+									<OnMouseDown>
+										EJButtonMixin.OnMouseDown(self, button);
 										ToggleDropDownMenu(1, nil, self:GetParent().difficultyDD, self, 5, 0);
-										PlaySound("igMainMenuOptionCheckBoxOn");
-									</OnClick>
+										PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+									</OnMouseDown>
 								</Scripts>
-							</Button>
+							</DropDownToggleButton>
 							<Frame name="$parentDifficultyDD" parentKey="difficultyDD" inherits="UIDropDownMenuTemplate" clampedToScreen="true" hidden="true">
 								<Scripts>
 									<OnLoad>
@@ -2597,7 +2561,7 @@
 														self.texture:SetPoint("TOPLEFT", 0, 0);
 													</OnMouseUp>
 													<OnClick>
-														PlaySound("igMainMenuOptionCheckBoxOn");
+														PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 														EJ_ResetLootFilter();
 														EncounterJournal_LootUpdate();
 														self:GetParent():Hide();
@@ -2606,31 +2570,33 @@
 											</Button>
 										</Frames>
 									</Frame>
-									<Button name="$parentFilterToggle" parentKey="filter" text="GEAR_FILTER" inherits="EJButtonTemplate">
+									<DropDownToggleButton name="$parentFilterToggle" parentKey="filter" text="GEAR_FILTER" inherits="EJButtonTemplate">
 										<Scripts>
-											<OnClick>
+											<OnMouseDown>
+												EJButtonMixin.OnMouseDown(self, button);
 												ToggleDropDownMenu(1, nil, self:GetParent().lootFilter, self, 5, 0);
-												PlaySound("igMainMenuOption");
-											</OnClick>
+												PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
+											</OnMouseDown>
 											<OnLoad inherit="prepend">
 												self:SetPoint("TOPLEFT", self:GetParent():GetParent(), "TOPRIGHT", -340, -13);
 											</OnLoad>
 										</Scripts>
-									</Button>
-									<Button name="$parentSlotFilterToggle" parentKey="slotFilter" text="ALL_INVENTORY_SLOTS" inherits="EJButtonTemplate">
+									</DropDownToggleButton>
+									<DropDownToggleButton name="$parentSlotFilterToggle" parentKey="slotFilter" text="ALL_INVENTORY_SLOTS" inherits="EJButtonTemplate">
 										<Anchors>
 											<Anchor point="LEFT" relativeKey="$parent.filter" relativePoint="RIGHT" x="10" y="0"/>
 										</Anchors>
 										<Scripts>
-											<OnClick>
+											<OnMouseDown>
+												EJButtonMixin.OnMouseDown(self, button);
 												ToggleDropDownMenu(1, nil, self:GetParent().lootSlotFilter, self, 5, 0);
-												PlaySound("igMainMenuOption");
-											</OnClick>
+												PlaySound(SOUNDKIT.IG_MAINMENU_OPTION);
+											</OnMouseDown>
 											<OnLoad inherit="prepend">
 												self:SetPoint("TOPLEFT", self:GetParent():GetParent(), "TOPRIGHT", -230, -13);
 											</OnLoad>
 										</Scripts>
-									</Button>
+									</DropDownToggleButton>
 									<Frame name="$parentLootFilter" inherits="UIDropDownMenuTemplate" parentKey="lootFilter" hidden="true"/>
 									<Frame name="$parentLootSlotFilter" inherits="UIDropDownMenuTemplate" parentKey="lootSlotFilter" hidden="true"/>
 
@@ -2656,7 +2622,7 @@
 									</OnShow>
 								</Scripts>
 							</ScrollFrame>
-							<PlayerModel name="$parentModelFrame" parentKey="model" inherits="ModelTemplate" >
+							<ModelScene name="$parentModelFrame" parentKey="model" inherits="ModelSceneMixinTemplate">
 								<Size x="390" y="423"/>
 								<Anchors>
 									<Anchor point="BOTTOMRIGHT" x="-3" y="1"/>
@@ -2726,13 +2692,11 @@
 										EncounterJournal.encounter.info.rightShadow:Hide();
 										EncounterJournal.encounter.info.difficulty:Hide();
 									</OnShow>
-									<OnLoad>
-										Model_OnLoad(self);
-										self:SetCamDistanceScale(1.0);
+									<OnLoad inherit="append">
 										self:GetParent().imageTitle = self.imageTitle;
 									</OnLoad>
 								</Scripts>
-							</PlayerModel>
+							</ModelScene>
 							<Button name="$parentCreatureButton1" inherits="EncounterCreatureButtonTemplate" parentArray="creatureButtons">
 								<Anchors>
 									<Anchor point="TOPLEFT" relativeTo="$parentModelFrame" x="3" y="-35"/>
@@ -2886,7 +2850,7 @@
 								<Scripts>
 									<OnClick>
 										EJSuggestFrame_PrevSuggestion();
-										PlaySoundKitID(858); -- igMainMenuOptionFaerTab
+										PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_FAER_TAB);
 									</OnClick>
 								</Scripts>
 								<NormalTexture file="Interface\Buttons\UI-SpellbookIcon-PrevPage-Up"/>
@@ -2902,7 +2866,7 @@
 								<Scripts>
 									<OnClick>
 										EJSuggestFrame_NextSuggestion();
-										PlaySoundKitID(858); --igMainMenuOptionFaerTab
+										PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_FAER_TAB);
 									</OnClick>
 								</Scripts>
 								<NormalTexture file="Interface\Buttons\UI-SpellbookIcon-NextPage-Up"/>
@@ -3014,17 +2978,29 @@
 							</Anchors>
 						</Texture>
 					</Layer>
+					<Layer level="OVERLAY" textureSubLevel="1">
+						<Texture parentKey="IconOverlay" hidden="true">
+							<Size x="28" y="28"/>
+							<Anchors>
+								<Anchor point="CENTER" relativeKey="$parent.icon"/>
+							</Anchors>
+						</Texture>
+					</Layer>
 				</Layers>
 				<Frames>
 					<GameTooltip name="$parentTooltip" parentKey="tooltip" inherits="GameTooltipTemplate">
+            <KeyValues>
+                <KeyValue key="IsEmbedded" value="true" type="boolean"/>
+            </KeyValues>
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.icon" relativePoint="TOPRIGHT" x="0" y="10"/>
 						</Anchors>
 						<Scripts>
 							<OnLoad inherit="prepend">
-								self:SetBackdrop(nil);
-								self.shoppingTooltips = { ShoppingTooltip1, ShoppingTooltip2 };
+									GameTooltip_SetBackdropStyle(self, GAME_TOOLTIP_BACKDROP_STYLE_EMBEDDED);
+									self.shoppingTooltips = { ShoppingTooltip1, ShoppingTooltip2 };
 							</OnLoad>
+							<OnUpdate function="GameTooltip_OnUpdate"/>
 						</Scripts>
 					</GameTooltip>
 				</Frames>
@@ -3059,6 +3035,14 @@
 					<Layer level="OVERLAY">
 						<Texture parentKey="IconBorder" file="Interface\Common\WhiteIconFrame" hidden="true">
 							<Size x="28" y="2"/>
+							<Anchors>
+								<Anchor point="CENTER" relativeKey="$parent.icon"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="OVERLAY" textureSubLevel="1">
+						<Texture parentKey="IconOverlay" hidden="true">
+							<Size x="28" y="28"/>
 							<Anchors>
 								<Anchor point="CENTER" relativeKey="$parent.icon"/>
 							</Anchors>

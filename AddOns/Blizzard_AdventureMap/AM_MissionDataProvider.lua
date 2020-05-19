@@ -123,7 +123,6 @@ function AdventureMap_MissionDataProviderMixin:AddMissionPin(missionInfo)
 	pin.dataProvider = self;
 	pin:SetupMission(missionInfo);
 	pin:SetPosition(missionInfo.mapPosX, missionInfo.mapPosY);
-	pin:Show();
 end
 
 local function ShowGarrisonMission(dataProvider, missionInfo)
@@ -139,18 +138,18 @@ end
 function AdventureMap_MissionDataProviderMixin:CompleteMission(missionInfo)
 	if not self.completingMissionInfo then
 		self.completingMissionInfo = missionInfo;
-		PlaySound("UI_Garrison_Mission_Complete_Encounter_Chance");
+		PlaySound(SOUNDKIT.UI_GARRISON_MISSION_COMPLETE_ENCOUNTER_CHANCE);
 		C_Garrison.MarkMissionComplete(missionInfo.missionID);
 	end
 end
 
-function AdventureMap_MissionDataProviderMixin:OnMissionCompleteResponse(missionID, canComplete, succeeded, followerDeaths)
+function AdventureMap_MissionDataProviderMixin:OnMissionCompleteResponse(missionID, canComplete, succeeded, overmaxSucceeded, followerDeaths)
 	if self.completingMissionInfo and self.completingMissionInfo.missionID == missionID then
 		local missionInfo = self.completingMissionInfo;
 		self.completingMissionInfo = nil;
 
 		if succeeded then
-			PlaySound("UI_Garrison_CommandTable_MissionSuccess_Stinger");
+			PlaySound(SOUNDKIT.UI_GARRISON_COMMAND_TABLE_MISSION_SUCCESS_STINGER);
 		end
 
 		C_Garrison.MissionBonusRoll(missionID);
@@ -161,7 +160,6 @@ function AdventureMap_MissionDataProviderMixin:OnMissionCompleteResponse(mission
 		rewardPin.dataProvider = self;
 		rewardPin:ShowRewards(missionInfo);
 		rewardPin:SetPosition(missionInfo.mapPosX, missionInfo.mapPosY);
-		rewardPin:Show();
 	end
 end
 
@@ -179,7 +177,7 @@ AdventureMap_MissionPinMixin = CreateFromMixins(MapCanvasPinMixin);
 
 function AdventureMap_MissionPinMixin:OnLoad()
 	self:SetAlphaStyle(AM_PIN_ALPHA_STYLE_VISIBLE_WHEN_ZOOMED_OUT);
-	self:SetScalingLimits(1.25, 3.0, 1.5);
+	self:SetScalingLimits(1.25, 0.825, 1.275);
 end
 
 function AdventureMap_MissionPinMixin:OnReleased()
@@ -242,7 +240,7 @@ function AdventureMap_MissionPinMixin:SetupMission(missionInfo)
 		self.StatusBackground:Hide();
 	end
 
-	if self:GetMap():IsZoomedIn() then
+	if not self:GetMap():IsAtMinZoom() then
 		if self.missionInfo.newMission then
 			self.OnNewAnim:Play();
 		elseif self.missionInfo.justCompleted then
@@ -323,7 +321,7 @@ end
 
 function AdventureMap_CombatAllyMissionPinMixin:OnLoad()
 	self:SetAlphaStyle(AM_PIN_ALPHA_STYLE_VISIBLE_WHEN_ZOOMED_OUT);
-	self:SetScalingLimits(1.25, 3.5, 1.5);
+	self:SetScalingLimits(1.25, 0.9625, 1.275);
 end
 
 function AdventureMap_CombatAllyMissionPinMixin:OnCanvasScaleChanged()
@@ -366,7 +364,7 @@ AdventureMap_MissionRewardPinMixin = CreateFromMixins(MapCanvasPinMixin);
 
 function AdventureMap_MissionRewardPinMixin:OnLoad()
 	self:SetAlphaStyle(AM_PIN_ALPHA_STYLE_VISIBLE_WHEN_ZOOMED_OUT);
-	self:SetScalingLimits(1.25, 3.0, 1.5);
+	self:SetScalingLimits(1.25, 0.825, 1.275);
 end
 
 function AdventureMap_MissionRewardPinMixin:ShowRewards(missionInfo)

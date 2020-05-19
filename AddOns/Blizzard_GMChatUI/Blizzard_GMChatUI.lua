@@ -43,6 +43,7 @@ function GMChatFrame_OnLoad(self)
 	self.buttonFrame:SetAlpha(1);
 	self.buttonFrame.minimizeButton:Hide();
 
+	self.editBox:ClearAllPoints();
 	self.editBox:SetPoint("TOPRIGHT", self, "BOTTOMRIGHT", 8, -2);
 	self.editBox:SetPoint("TOPLEFT", self, "BOTTOMLEFT", -43, -2);
 	self.editBox.isGM = true;
@@ -80,7 +81,7 @@ function GMChatFrame_OnEvent(self, event, ...)
 			GMChatStatusFrame:Show();
 			GMChatStatusFrame.pulse:Play();
 			table.insert(self.lastGM,arg2);
-			PlaySound("GM_ChatWarning");
+			PlaySound(SOUNDKIT.GM_CHAT_WARNING);
 
 			DEFAULT_CHAT_FRAME:AddMessage(pflag.."|HGMChat|h["..GM_CHAT_STATUS_READY_DESCRIPTION.."]|h", info.r, info.g, info.b, info.id);
 			DEFAULT_CHAT_FRAME:SetHyperlinksEnabled(true);

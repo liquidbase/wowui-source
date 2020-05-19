@@ -12,18 +12,7 @@ function ToggleFramerate(benchmark)
 		FramerateLabel:Show();
 		FramerateText:Show();
 	end
-	ToggleMapFramerate();
 	WorldFrame.fpsTime = 0;
-end
-
-function ToggleMapFramerate()
-	if ( FramerateText:IsShown() and WORLDMAP_SETTINGS.size ~= WORLDMAP_WINDOWED_SIZE ) then
-		MapFramerateLabel:Show();
-		MapFramerateText:Show();	
-	else
-		MapFramerateLabel:Hide();
-		MapFramerateText:Hide();	
-	end
 end
 
 function WorldFrame_OnLoad(self)
@@ -39,7 +28,6 @@ function WorldFrame_OnUpdate(self, elapsed)
 			self.fpsTime = FRAMERATE_FREQUENCY;
 			local framerate = GetFramerate();
 			FramerateText:SetFormattedText("%.1f", framerate);
-			MapFramerateText:SetFormattedText("%.1f", framerate);
 		else
 			self.fpsTime = timeLeft;
 		end
@@ -112,7 +100,7 @@ function ActionStatus_OnEvent(self, event, ...)
 		self.startTime = GetTime();
 		self:SetAlpha(1.0);
 		if ( event == "SCREENSHOT_SUCCEEDED" ) then
-			ActionStatus_DisplayMessage(SCREENSHOT_SUCCESS, true);
+			ActionStatus_DisplayMessage(SCREENSHOT_SUCCESS);
 			-- Append [Share] hyperlink
 			if ( C_Social.IsSocialEnabled() ) then
 				local screenshotText = SCREENSHOT_SUCCESS .. " " .. Social_GetShareScreenshotLink();
@@ -120,20 +108,18 @@ function ActionStatus_OnEvent(self, event, ...)
 			end
 		end
 		if ( event == "SCREENSHOT_FAILED" ) then
-			ActionStatus_DisplayMessage(SCREENSHOT_FAILURE, true);
+			ActionStatus_DisplayMessage(SCREENSHOT_FAILURE);
 		end
 		self:Show();
 	end
 end
 
-function ActionStatus_DisplayMessage(text, ignoreNewbieTooltipSetting)
-	if ( ignoreNewbieTooltipSetting or SHOW_NEWBIE_TIPS == "1" ) then
-		local self = ActionStatus;
-		self.startTime = GetTime();
-		self:SetAlpha(1.0);
-		ActionStatusText:SetText(text);
-		self:Show();
-	end
+function ActionStatus_DisplayMessage(text)
+	local self = ActionStatus;
+	self.startTime = GetTime();
+	self:SetAlpha(1.0);
+	ActionStatusText:SetText(text);
+	self:Show();
 end
 
 function ActionStatus_OnUpdate(self, elapsed)

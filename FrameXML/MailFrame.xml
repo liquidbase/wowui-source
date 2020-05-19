@@ -118,6 +118,14 @@
 							</Anchors>
 						</FontString>
 					</Layer>
+					<Layer level="OVERLAY" textureSubLevel="1">
+						<Texture parentKey="IconOverlay" hidden="true">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent.Icon"/>
+								<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon"/>
+							</Anchors>
+						</Texture>
+					</Layer>
 				</Layers>
 				<Scripts>
 					<OnLoad>
@@ -184,6 +192,14 @@
 					</Anchors>
 				</Texture>
 			</Layer>
+			<Layer level="OVERLAY" textureSubLevel="1">
+				<Texture parentKey="IconOverlay" hidden="true">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Icon"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon"/>
+					</Anchors>
+				</Texture>
+			</Layer>
 		</Layers>
 		<Scripts>
 			<OnClick>
@@ -208,7 +224,7 @@
 		</Scripts>
 		<HighlightTexture alphaMode="ADD" file="Interface\Buttons\ButtonHilight-Square"/>
 	</Button>
-	<Button name="OpenMailAttachment" parentArray="OpenMailAttachments" inherits="ItemButtonTemplate" virtual="true">
+	<ItemButton name="OpenMailAttachment" parentArray="OpenMailAttachments" virtual="true">
 		<Scripts>
 			<OnLoad>
 				self:RegisterEvent("MAIL_INBOX_UPDATE");
@@ -245,7 +261,7 @@
 			</OnLeave>
 		</Scripts>
 		<HighlightTexture alphaMode="ADD" file="Interface\Buttons\ButtonHilight-Square"/>
-	</Button>
+	</ItemButton>
 	<Frame name="MailFrame" toplevel="true" parent="UIParent" enableMouse="true" hidden="true" inherits="ButtonFrameTemplate">
 		<Layers>
 			<Layer level="OVERLAY" textureSubLevel="-1">
@@ -603,7 +619,7 @@
 						</Layers>
 						<Scripts>
 							<OnLoad>
-								self.autoCompleteParams = AUTOCOMPLETE_LIST.MAIL;
+								AutoCompleteEditBox_SetAutoCompleteSource(self, GetAutoCompleteResults, AUTOCOMPLETE_LIST.MAIL.include, AUTOCOMPLETE_LIST.MAIL.exclude);
 								self.addHighlightedText = true;
 								self.autoCompleteContext = "mail";
 							</OnLoad>
@@ -871,7 +887,7 @@
 				SendMailBodyEditBox:SetText("");
 				SendMailNameEditBox:SetText("");
 				SendMailSubjectEditBox:SetText("");
-				PlaySound("igCharacterInfoClose");
+				PlaySound(SOUNDKIT.IG_CHARACTER_INFO_CLOSE);
 				SetSendMailShowing(false);
 			</OnHide>
 			<OnMouseWheel function="MailFrame_OnMouseWheel"/>
@@ -1020,7 +1036,7 @@
 								<Anchors>
 									<Anchor point="TOPLEFT" x="10" y="-10"/>
 								</Anchors>
-								<FontString inherits="MailTextFontNormal" nonspacewrap="true"/>
+								<FontString inherits="MailTextFontNormal" nonspacewrap="true" justifyH="LEFT"/>
 							</SimpleHTML>
 							<Frame name="OpenMailInvoiceFrame" setAllPoints="true">
 								<Layers>
@@ -1034,11 +1050,6 @@
 										<FontString name="OpenMailInvoicePurchaser" inherits="InvoiceTextFontNormal" text="PURCHASED_BY_COLON">
 											<Anchors>
 												<Anchor point="TOPLEFT" relativeTo="OpenMailInvoiceItemLabel" relativePoint="BOTTOMLEFT" x="0" y="-5"/>
-											</Anchors>
-										</FontString>
-										<FontString name="OpenMailInvoiceBuyMode" inherits="InvoiceTextFontSmall">
-											<Anchors>
-												<Anchor point="LEFT" relativeTo="OpenMailInvoicePurchaser" relativePoint="RIGHT" x="5" y="0"/>
 											</Anchors>
 										</FontString>
 										<FontString name="OpenMailInvoiceSalePrice" inherits="InvoiceTextFontNormal" text="SALE_PRICE_COLON">
@@ -1135,6 +1146,15 @@
 										<Anchors>
 											<Anchor point="TOPRIGHT" relativeTo="OpenMailInvoiceSalePrice" relativePoint="BOTTOMRIGHT" x="16" y="-4"/>
 										</Anchors>
+										<Layers>
+											<Layer level="BACKGROUND">
+												<FontString parentKey="Count" inherits="InvoiceTextFontNormal">
+													<Anchors>
+														<Anchor point="RIGHT" relativeKey="$parent" relativePoint="LEFT" x="-5" y="0"/>
+													</Anchors>
+												</FontString>
+											</Layer>
+										</Layers>
 										<Scripts>
 											<OnLoad>
 												SmallMoneyFrame_OnLoad(self);
@@ -1148,7 +1168,7 @@
 					</Frame>
 				</ScrollChild>
 			</ScrollFrame>
-			<Button name="OpenMailLetterButton" inherits="ItemButtonTemplate">
+			<ItemButton name="OpenMailLetterButton">
 				<Scripts>
 					<OnLoad>
 						self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
@@ -1156,7 +1176,7 @@
 					<OnClick>
 						OpenMailFrame.updateButtonPositions = false;
 						TakeInboxTextItem(InboxFrame.openMailID);
-						PlaySound("igMainMenuOptionCheckBoxOn");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
@@ -1165,24 +1185,24 @@
 					<OnLeave function="GameTooltip_Hide"/>
 				</Scripts>
 				<HighlightTexture alphaMode="ADD" file="Interface\Buttons\ButtonHilight-Square"/>
-			</Button>
-			<Button name="OpenMailAttachmentButton1" inherits="OpenMailAttachment" id="1"/>
-			<Button name="OpenMailAttachmentButton2" inherits="OpenMailAttachment" id="2"/>
-			<Button name="OpenMailAttachmentButton3" inherits="OpenMailAttachment" id="3"/>
-			<Button name="OpenMailAttachmentButton4" inherits="OpenMailAttachment" id="4"/>
-			<Button name="OpenMailAttachmentButton5" inherits="OpenMailAttachment" id="5"/>
-			<Button name="OpenMailAttachmentButton6" inherits="OpenMailAttachment" id="6"/>
-			<Button name="OpenMailAttachmentButton7" inherits="OpenMailAttachment" id="7"/>
-			<Button name="OpenMailAttachmentButton8" inherits="OpenMailAttachment" id="8"/>
-			<Button name="OpenMailAttachmentButton9" inherits="OpenMailAttachment" id="9"/>
-			<Button name="OpenMailAttachmentButton10" inherits="OpenMailAttachment" id="10"/>
-			<Button name="OpenMailAttachmentButton11" inherits="OpenMailAttachment" id="11"/>
-			<Button name="OpenMailAttachmentButton12" inherits="OpenMailAttachment" id="12"/>
-			<Button name="OpenMailAttachmentButton13" inherits="OpenMailAttachment" id="13"/>
-			<Button name="OpenMailAttachmentButton14" inherits="OpenMailAttachment" id="14"/>
-			<Button name="OpenMailAttachmentButton15" inherits="OpenMailAttachment" id="15"/>
-			<Button name="OpenMailAttachmentButton16" inherits="OpenMailAttachment" id="16"/>
-			<Button name="OpenMailMoneyButton" inherits="ItemButtonTemplate">
+			</ItemButton>
+			<ItemButton name="OpenMailAttachmentButton1" inherits="OpenMailAttachment" id="1"/>
+			<ItemButton name="OpenMailAttachmentButton2" inherits="OpenMailAttachment" id="2"/>
+			<ItemButton name="OpenMailAttachmentButton3" inherits="OpenMailAttachment" id="3"/>
+			<ItemButton name="OpenMailAttachmentButton4" inherits="OpenMailAttachment" id="4"/>
+			<ItemButton name="OpenMailAttachmentButton5" inherits="OpenMailAttachment" id="5"/>
+			<ItemButton name="OpenMailAttachmentButton6" inherits="OpenMailAttachment" id="6"/>
+			<ItemButton name="OpenMailAttachmentButton7" inherits="OpenMailAttachment" id="7"/>
+			<ItemButton name="OpenMailAttachmentButton8" inherits="OpenMailAttachment" id="8"/>
+			<ItemButton name="OpenMailAttachmentButton9" inherits="OpenMailAttachment" id="9"/>
+			<ItemButton name="OpenMailAttachmentButton10" inherits="OpenMailAttachment" id="10"/>
+			<ItemButton name="OpenMailAttachmentButton11" inherits="OpenMailAttachment" id="11"/>
+			<ItemButton name="OpenMailAttachmentButton12" inherits="OpenMailAttachment" id="12"/>
+			<ItemButton name="OpenMailAttachmentButton13" inherits="OpenMailAttachment" id="13"/>
+			<ItemButton name="OpenMailAttachmentButton14" inherits="OpenMailAttachment" id="14"/>
+			<ItemButton name="OpenMailAttachmentButton15" inherits="OpenMailAttachment" id="15"/>
+			<ItemButton name="OpenMailAttachmentButton16" inherits="OpenMailAttachment" id="16"/>
+			<ItemButton name="OpenMailMoneyButton">
 				<Scripts>
 					<OnLoad>
 						self:RegisterEvent("MAIL_INBOX_UPDATE");
@@ -1212,7 +1232,7 @@
 					<OnLeave function="GameTooltip_Hide"/>
 				</Scripts>
 				<HighlightTexture alphaMode="ADD" file="Interface\Buttons\ButtonHilight-Square"/>
-			</Button>
+			</ItemButton>
 			<Button name="OpenMailCancelButton" inherits="UIPanelButtonTemplate" text="CLOSE">
 				<Size x="80" y="22"/>
 				<Anchors>

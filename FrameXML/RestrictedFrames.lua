@@ -32,6 +32,9 @@ local GetManagedEnvironment = GetManagedEnvironment;
 
 local CallRestrictedClosure = CallRestrictedClosure;
 
+local AddReferencedFrame = AddReferencedFrame;
+local PropagateForbiddenToReferencedFrames = PropagateForbiddenToReferencedFrames;
+
 local forceinsecure = forceinsecure;
 local scrub = scrub;
 local pcall = pcall;
@@ -43,6 +46,16 @@ local pcall = pcall;
 -- HANDLE is the frame handle method namespace (populated below)
 local HANDLE = {};
 
+local LOCAL_CHECK_Frame = CreateFrame("Frame");
+
+local function CheckForbidden(frame)
+	return LOCAL_CHECK_Frame.IsForbidden(frame);
+end
+
+local function MakeForbidden(frame)
+	LOCAL_CHECK_Frame.SetForbidden(frame);
+end
+
 ---------------------------------------------------------------------------
 -- Action implementation support function
 --
@@ -53,17 +66,33 @@ local HANDLE = {};
 local function GetUnprotectedHandleFrame(handle)
     local frame = GetFrameHandleFrame(handle);
     if (frame) then
+		AddReferencedFrame(frame);
+
+        return frame;
+    end
+    error("Invalid frame handle");
+end
+
+local function GetPossiblyForbiddenHandleFrame(handle)
+    local frame, isProtected = GetFrameHandleFrame(handle);
+    if (frame and (isProtected
+                   or (frame:IsProtected() or not InCombatLockdown()))) then
         return frame;
     end
     error("Invalid frame handle");
 end
 
 local function GetHandleFrame(handle)
-    local frame, isProtected = GetFrameHandleFrame(handle);
-    if (frame and (isProtected
-                   or (frame:IsProtected() or not InCombatLockdown()))) then
-        return frame;
-    end
+	local frame = GetPossiblyForbiddenHandleFrame(handle);
+	if (frame) then
+		AddReferencedFrame(frame);
+
+		if (CheckForbidden(frame)) then
+			PropagateForbiddenToReferencedFrames();
+		else
+			return frame;
+		end
+	end
     error("Invalid frame handle");
 end
 
@@ -174,49 +203,54 @@ function HANDLE:GetEffectiveAttribute(name, button, prefix, suffix)
     return nil;
 end
 
+local function ShouldAllowAccessToFrame(nolockdown, frame)
+	if frame:IsForbidden() then
+		return false;
+	end
+
+	if not nolockdown then
+        return frame:IsProtected();
+    end
+
+    return nolockdown;
+end
+
+local function GetValidatedFrameHandle(nolockdown, frame)
+	if ShouldAllowAccessToFrame(nolockdown, frame) then
+		return GetFrameHandle(frame);
+	end
+
+	return nil;
+end
+
 
 local function FrameHandleMapper(nolockdown, frame, nextFrame, ...)
     if (not frame) then
         return;
     end
-    -- Do an explicit protection check to avoid errors from
-    -- the frame handle lookup
-    local p = nolockdown;
-    if (not p) then
-        p = frame:IsProtected();
-    end
-    if (p) then
-        frame = GetFrameHandle(frame);
-        if (frame) then
-            if (nextFrame) then
-                return frame, FrameHandleMapper(nolockdown, nextFrame, ...);
-            else
-                return frame;
-            end
+
+    frame = GetValidatedFrameHandle(nolockdown, frame);
+
+    if frame then
+        if (nextFrame) then
+            return frame, FrameHandleMapper(nolockdown, nextFrame, ...);
+        else
+            return frame;
         end
     end
+
     if (nextFrame) then
         return FrameHandleMapper(nolockdown, nextFrame, ...);
     end
 end
 
-local function FrameHandleInserter(result, ...)
-    local nolockdown = not InCombatLockdown();
+local function FrameHandleInserter(nolockdown, result, ...)
     local idx = #result;
     for i = 1, select('#', ...) do
-        local frame = select(i, ...);
-        -- Do an explicit protection check to avoid errors from
-        -- the frame handle lookup
-        local p = nolockdown;
-        if (not p) then
-            p = frame:IsProtected();
-        end
-        if (p) then
-            frame = GetFrameHandle(frame);
-            if (frame) then
-                idx = idx + 1;
-                result[idx] = frame;
-            end
+        local frame = GetValidatedFrameHandle(nolockdown, select(i, ...));
+        if frame then
+			idx = idx + 1;
+			result[idx] = frame;
         end
     end
 
@@ -224,17 +258,15 @@ local function FrameHandleInserter(result, ...)
 end
 
 function HANDLE:GetChildren()
-    return FrameHandleMapper(not InCombatLockdown(),
-                             GetHandleFrame(self):GetChildren());
+    return FrameHandleMapper(not InCombatLockdown(), GetHandleFrame(self):GetChildren());
 end
 
 function HANDLE:GetChildList(tbl)
-    return FrameHandleInserter(tbl, GetHandleFrame(self):GetChildren());
+    return FrameHandleInserter(not InCombatLockdown(), tbl, GetHandleFrame(self):GetChildren());
 end
 
 function HANDLE:GetParent()
-    return FrameHandleMapper(not InCombatLockdown(),
-                             GetHandleFrame(self):GetParent());
+    return FrameHandleMapper(not InCombatLockdown(), GetHandleFrame(self):GetParent());
 end
 
 -- NOTE: Cannot allow the frame to figure out if it has mouse focus
@@ -629,7 +661,7 @@ function HANDLE:Run(body, ...)
         -- be protected to have an environment or control!
         return;
     end
-    return scrub(CallRestrictedClosure("self,...",
+    return scrub(CallRestrictedClosure(frame, "self,...",
                                        env, self, body, self, ...));
 end
 
@@ -648,7 +680,7 @@ function HANDLE:RunFor(otherHandle, body, ...)
         return;
     end
     local env = GetManagedEnvironment(frame, true);
-    return scrub(CallRestrictedClosure("self,...",
+    return scrub(CallRestrictedClosure(frame, "self,...",
                                        env, self, body, otherHandle, ...));
 end
 
@@ -674,7 +706,7 @@ function HANDLE:RunAttribute(snippetAttr, ...)
         -- be protected to have an environment or control!
         return
     end
-    return scrub(CallRestrictedClosure("self,...",
+    return scrub(CallRestrictedClosure(frame, "self,...",
                                        env, self, body, self, ...));
 end
 
@@ -699,7 +731,7 @@ local function ChildUpdate_Helper(environment, controlHandle,
             if (body and type(body) == "string") then
                 local selfHandle = GetFrameHandle(child, true);
                 if (selfHandle) then
-                    CallRestrictedClosure("self,scriptid,message",
+                    CallRestrictedClosure(child, "self,scriptid,message",
                                           environment, controlHandle, body,
                                           selfHandle, scriptid, message);
                 end

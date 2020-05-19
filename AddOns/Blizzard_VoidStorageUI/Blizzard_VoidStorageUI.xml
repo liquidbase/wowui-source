@@ -123,6 +123,14 @@
 					<Color r="0" g="0" b="0" a="0.8"/>
 				</Texture>
 			</Layer>
+			<Layer level="OVERLAY" textureSubLevel="1">
+				<Texture parentKey="IconOverlay" hidden="true">
+					<Size x="37" y="37"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
 		</Layers>
 		<PushedTexture file="Interface\Buttons\UI-Quickslot-Depress"/>
 		<HighlightTexture file="Interface\Buttons\ButtonHilight-Square" alphaMode="ADD"/>
@@ -390,11 +398,11 @@
 										if ( ExecuteVoidTransfer() ) then
 											-- was successful so play an appropriate sound
 											if ( numDeposits == 0 ) then
-												PlaySound("UI_VoidStorage_Withdraw");
+												PlaySound(SOUNDKIT.UI_VOID_STORAGE_WITHDRAW);
 											elseif ( numWithdrawals == 0 ) then
-												PlaySound("UI_VoidStorage_Deposit");
+												PlaySound(SOUNDKIT.UI_VOID_STORAGE_DEPOSIT);
 											else
-												PlaySound("UI_VoidStorage_Both");
+												PlaySound(SOUNDKIT.UI_VOID_STORAGE_BOTH);
 											end
 										end
 									</OnClick>
@@ -534,7 +542,7 @@
 								</Anchors>
 								<Scripts>
 									<OnClick>
-										PlaySound("igMainMenuOptionCheckBoxOn");
+										PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
 										SetCVar("lastVoidStorageTutorial", self.currentTutorial);
 										VoidStorageFrame_Update();
 									</OnClick>
@@ -650,7 +658,7 @@
 								</Anchors>
 								<Scripts>
 									<OnClick>
-										PlaySound("UI_Voidstorage_Unlock");
+										PlaySound(SOUNDKIT.UI_VOID_STORAGE_UNLOCK);
 										UnlockVoidStorage();
 									</OnClick>
 								</Scripts>

@@ -133,10 +133,12 @@ function CombatText_OnEvent(self, event, ...)
 		if ( not messageType ) then
 			return;
 		end
-	elseif ( event == "UNIT_POWER" ) then
+	elseif ( event == "UNIT_POWER_UPDATE" ) then
 		if ( arg1 == self.unit ) then
 			local powerType, powerToken = UnitPowerType(self.unit);
-			if ( powerToken == "MANA" and (UnitPower(self.unit) / UnitPowerMax(self.unit)) <= COMBAT_TEXT_LOW_MANA_THRESHOLD ) then
+			local maxPower = UnitPowerMax(self.unit);
+			local currentPower = UnitPower(self.unit);
+			if ( maxPower ~= 0 and powerToken == "MANA" and (currentPower / maxPower) <= COMBAT_TEXT_LOW_MANA_THRESHOLD ) then
 				if ( not CombatText.lowMana ) then
 					messageType = "MANA_LOW";
 					CombatText.lowMana = 1;
@@ -154,24 +156,8 @@ function CombatText_OnEvent(self, event, ...)
 		messageType = "ENTERING_COMBAT";
 	elseif ( event == "PLAYER_REGEN_ENABLED" ) then
 		messageType = "LEAVING_COMBAT";
-	elseif ( event == "UNIT_COMBO_POINTS" ) then
-		local unit = ...;
-		if ( unit == "player" ) then
-			local comboPoints = GetComboPoints("player", "target");
-			if ( comboPoints > 0 ) then
-				messageType = "COMBO_POINTS";
-				data = comboPoints;
-				-- Show message as a crit if max combo points
-				if ( comboPoints == MAX_COMBO_POINTS ) then
-					displayType = "crit";
-				end
-			else
-				return;
-			end
-		else
-			return;
-		end
 	elseif ( event == "COMBAT_TEXT_UPDATE" ) then
+		data, arg3, arg4 = GetCurrentCombatTextEventInfo();
 		messageType = arg1;
 	elseif ( event == "RUNE_POWER_UPDATE" ) then
 		messageType = "RUNE";
@@ -210,6 +196,9 @@ function CombatText_OnEvent(self, event, ...)
 			return
 		end
 		message = "-"..BreakUpLargeNumbers(data);
+		if(arg1 and arg1 == "BLOCK" and arg3 and arg3 > 0) then
+			message = COMBAT_TEXT_BLOCK_REDUCED:format(arg3);
+		end
 	elseif ( messageType == "SPELL_CAST" ) then
 		message = "<"..data..">";
 	elseif ( messageType == "SPELL_AURA_START" ) then
@@ -265,6 +254,7 @@ function CombatText_OnEvent(self, event, ...)
 				or arg3 == "COMBO_POINTS"
 				or arg3 == "ARCANE_CHARGES" ) then
 			local numPower = UnitPower( "player" , GetPowerEnumFromEnergizeString(arg3) );
+			numPower = numPower + count;
 			message = "<"..numPower.." ".._G[arg3]..">";
 			info = PowerBarColor[arg3];
 			--Display as crit if we're at max power
@@ -556,10 +546,9 @@ function CombatText_UpdateDisplayedMessages()
 	if ( SHOW_COMBAT_TEXT == "0" ) then
 		CombatText:UnregisterEvent("COMBAT_TEXT_UPDATE");
 		CombatText:UnregisterEvent("UNIT_HEALTH");
-		CombatText:UnregisterEvent("UNIT_POWER");
+		CombatText:UnregisterEvent("UNIT_POWER_UPDATE");
 		CombatText:UnregisterEvent("PLAYER_REGEN_DISABLED");
 		CombatText:UnregisterEvent("PLAYER_REGEN_ENABLED");
-		CombatText:UnregisterEvent("UNIT_COMBO_POINTS");
 		CombatText:UnregisterEvent("RUNE_POWER_UPDATE");
 		CombatText:UnregisterEvent("UNIT_ENTERED_VEHICLE");
 		CombatText:UnregisterEvent("UNIT_EXITING_VEHICLE");
@@ -577,10 +566,9 @@ function CombatText_UpdateDisplayedMessages()
 	-- register events
 	CombatText:RegisterEvent("COMBAT_TEXT_UPDATE");
 	CombatText:RegisterEvent("UNIT_HEALTH");
-	CombatText:RegisterEvent("UNIT_POWER");
+	CombatText:RegisterEvent("UNIT_POWER_UPDATE");
 	CombatText:RegisterEvent("PLAYER_REGEN_DISABLED");
 	CombatText:RegisterEvent("PLAYER_REGEN_ENABLED");
-	CombatText:RegisterEvent("UNIT_COMBO_POINTS");
 	CombatText:RegisterEvent("RUNE_POWER_UPDATE");
 	CombatText:RegisterEvent("UNIT_ENTERED_VEHICLE");
 	CombatText:RegisterEvent("UNIT_EXITING_VEHICLE");

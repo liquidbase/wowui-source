@@ -16,7 +16,7 @@ function GuildFrame_OnLoad(self)
 	RequestGuildRewards();
 --	QueryGuildXP();
 	QueryGuildNews();
-	OpenCalendar();		-- to get event data
+	C_Calendar.OpenCalendar();		-- to get event data
 	GuildFrame_UpdateTabard();
 	GuildFrame_UpdateFaction();
 	local guildName, _, _, realm = GetGuildInfo("player");
@@ -32,7 +32,7 @@ function GuildFrame_OnLoad(self)
 end
 
 function GuildFrame_OnShow(self)
-	PlaySound("igCharacterInfoOpen");
+	PlaySound(SOUNDKIT.IG_CHARACTER_INFO_OPEN);
 	GuildFrameTab1:Show();
 	GuildFrameTab3:Show();
 	GuildFrameTab4:Show();
@@ -41,7 +41,7 @@ function GuildFrame_OnShow(self)
 	if ( not PanelTemplates_GetSelectedTab(self) ) then
 		GuildFrame_TabClicked(GuildFrameTab1);
 	end
-	GuildRoster();
+	C_GuildInfo.GuildRoster();
 	UpdateMicroButtons();
 	GuildNameChangeAlertFrame.topAnchored = true;
 	GuildFrame.hasForcedNameChange = GetGuildRenameRequired();
@@ -61,7 +61,7 @@ function GuildFrame_OnShow(self)
 end
 
 function GuildFrame_OnHide(self)
-	PlaySound("igCharacterInfoClose");
+	PlaySound(SOUNDKIT.IG_CHARACTER_INFO_CLOSE);
 	UpdateMicroButtons();
 	CloseGuildMenus();
 end
@@ -219,10 +219,7 @@ function GuildFrame_OpenAchievement(button, achievementID)
 end
 
 function GuildFrame_LinkItem(button, itemID, itemLink)
-	local _;
-	if ( not itemLink ) then
-		_, itemLink = GetItemInfo(itemID);
-	end
+	itemLink = itemLink or select(2, GetItemInfo(itemID));
 	if ( itemLink ) then
 		if ( ChatEdit_GetActiveWindow() ) then
 			ChatEdit_InsertLink(itemLink);
@@ -366,7 +363,7 @@ function GuildFrame_TabClicked(self)
 		GuildFrameMembersCountLabel:Hide();
 	end
 	if ( updateRosterCount ) then
-		GuildRoster();
+		C_GuildInfo.GuildRoster();
 		GuildFrameMembersCount:Show();
 	else
 		GuildFrameMembersCount:Hide();
@@ -440,9 +437,9 @@ function GuildPerksFrame_OnEvent(self, event, ...)
 		return;
 	end
 	if ( event == "GUILD_ROSTER_UPDATE" ) then
-		local arg1 = ...;
-		if ( arg1 ) then
-			GuildRoster();
+		local canRequestRosterUpdate = ...;
+		if ( canRequestRosterUpdate ) then
+			C_GuildInfo.GuildRoster();
 		end
 	end
 end
@@ -450,29 +447,11 @@ end
 --****** News/Events ************************************************************
 function GuildEventButton_OnClick(self, button)
 	if ( button == "LeftButton" ) then
-		if ( CalendarFrame and CalendarFrame:IsShown() ) then
-			-- if the calendar is already open we need to do some work that's normally happening in CalendarFrame_OnShow
-			local weekday, month, day, year = CalendarGetDate();
-			CalendarSetAbsMonth(month, year);
+		if ( CalendarFrame ) then
+			CalendarFrame_OpenToGuildEventIndex(self.index);
 		else
 			ToggleCalendar();
-		end
-		local monthOffset, day, eventIndex = CalendarGetGuildEventSelectionInfo(self.index);
-		CalendarSetMonth(monthOffset);
-		-- need to highlight the proper day/event in calendar
-		local _, _, _, firstDay = CalendarGetMonth();
-		local buttonIndex = day + firstDay - CALENDAR_FIRST_WEEKDAY;
-		if ( firstDay < CALENDAR_FIRST_WEEKDAY ) then
-			buttonIndex = buttonIndex + 7;
-		end
-		local dayButton = _G["CalendarDayButton"..buttonIndex];
-		CalendarDayButton_Click(dayButton);
-		if ( eventIndex <= 4 ) then -- can only see 4 events per day
-			local eventButton = _G["CalendarDayButton"..buttonIndex.."EventButton"..eventIndex];
-			CalendarDayEventButton_Click(eventButton, true);	-- true to open the event
-		else
-			CalendarFrame_SetSelectedEvent();	-- clears any event highlights
-			CalendarOpenEvent(0, day, eventIndex);
+			CalendarFrame_OpenToGuildEventIndex(self.index);
 		end
 	end
 end
@@ -482,7 +461,8 @@ end
 function GuildPerksButton_OnEnter(self)
 	GuildPerksContainer.activeButton = self;
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 36, 0);
-	GameTooltip:SetHyperlink(GetSpellLink(self.spellID));
+	local spellLink = GetSpellLink(self.spellID);
+	GameTooltip:SetHyperlink(spellLink);
 end
 
 function GuildPerks_Update()

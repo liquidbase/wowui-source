@@ -4,7 +4,7 @@
 
 	<Button name="CinematicsButtonTemplate" virtual="true">
 		<Size x="176" y="78"/>
-		
+
 		<Layers>
 			<Layer level="OVERLAY">
 				<Texture name="$parentPlayButton" atlas="StreamCinematic-PlayButton" parentKey="PlayButton">
@@ -21,7 +21,7 @@
 				</Texture>
 			</Layer>
 		</Layers>
-		
+
 		<Frames>
 			<Frame name="$parentStreamingIcon" hidden="true" parentKey="StreamingIcon">
 				<Animations>
@@ -40,7 +40,7 @@
 								<Texture file="Interface\COMMON\StreamBackground" name="$parentBackground" setAllPoints="true" parentKey="Background"/>
 							</Layer>
 							<Layer level="ARTWORK">
-								<Texture file="Interface\COMMON\StreamFrame" name="$parenAlpha" setAllPoints="true" />
+								<Texture file="Interface\COMMON\StreamFrame" parentKey="Alpha" setAllPoints="true" />
 							</Layer>
 						</Layers>
 					</Frame>
@@ -117,29 +117,15 @@
 				<Anchor point="BOTTOM" y="5"/>
 			</Anchors>
 		</ButtonText>
-		<PushedTextOffset x="-3" y="-3"/> 
+		<PushedTextOffset x="-3" y="-3"/>
 	</Button>
-	
+
 	<Frame name="CinematicsFrame" inherits="GlueModalFrameTemplate" toplevel="true" parent="GlueParent" setAllPoints="true" enableMouse="true" enableKeyboard="true" frameStrata="DIALOG" hidden="true" propagateKeyboardInput="false">
-		<Size x="262" y="512"/>
+		<Size x="450" y="430"/>
 		<Anchors>
-			<Anchor point="CENTER"/>
+			<Anchor point="TOP" x="0" y="-50"/>
 		</Anchors>
-		<Backdrop edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
-			<EdgeSize>
-				<AbsValue val="32"/>
-			</EdgeSize>
-		</Backdrop>
 		<Layers>
-			<Layer level="BACKGROUND">
-				<Texture name="CinematicsFrameBg" alpha="0.8">
-					<Anchors>
-						<Anchor point="TOPLEFT" x="11" y="-11"/>
-						<Anchor point="BOTTOMRIGHT" x="-11" y="11"/>
-					</Anchors>
-					<Color r="0" g="0" b="0"/>
-				</Texture>
-			</Layer>
 			<Layer level="ARTWORK">
 				<FontString inherits="QuestFontNormalLarge" text="CINEMATICS">
 					<Size x="450" y="0"/>
@@ -155,13 +141,14 @@
 			</Layer>
 		</Layers>
 		<Frames>
+			<Frame parentKey="Border" inherits="DialogBorderTranslucentTemplate"/>
 			<Button name="CinematicsFrameCloseButton" inherits="GlueCloseButton">
 				<Anchors>
 					<Anchor point="TOPRIGHT" x="-4" y="-4"/>
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						PlaySound("igMainMenuOptionCheckBoxOff");
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF);
 						GlueParent_CloseSecondaryScreen();
 					</OnClick>
 				</Scripts>
@@ -169,7 +156,7 @@
 			<Button name="CinematicsButton1" inherits="CinematicsButtonTemplate" text="WORLD_OF_WARCRAFT" hidden="true" id="1">
 				<Size x="176" y="78"/>
 				<Anchors>
-					<Anchor point="TOP" x="0" y="-44"/>
+					<Anchor point="TOPLEFT" x="40" y="-44"/>
 				</Anchors>
 				<NormalTexture atlas="StreamCinematic-Classic-Up" />
 				<PushedTexture atlas="StreamCinematic-Classic-Down" />
@@ -198,10 +185,11 @@
 				<NormalTexture atlas="StreamCinematic-CC-Up" />
 				<PushedTexture atlas="StreamCinematic-CC-Down" />
 			</Button>
+
 			<Button name="CinematicsButton5" inherits="CinematicsButtonTemplate" text="MISTS_OF_PANDARIA" hidden="true" id="5">
 				<Size x="176" y="78"/>
 				<Anchors>
-					<Anchor point="TOP" relativeTo="CinematicsButton4" relativePoint="BOTTOM" x="0" y="-8"/>
+					<Anchor point="TOPRIGHT" x="-40" y="-44"/>
 				</Anchors>
 				<NormalTexture atlas="StreamCinematic-MOP-Up" />
 				<PushedTexture atlas="StreamCinematic-MOP-Down" />
@@ -221,6 +209,14 @@
 				</Anchors>
 				<NormalTexture atlas="StreamCinematic-Legion-Up" />
 				<PushedTexture atlas="StreamCinematic-Legion-Down" />
+			</Button>
+			<Button name="CinematicsButton8" inherits="CinematicsButtonTemplate" text="EXPANSION_NAME7" hidden="true" id="8">
+				<Size x="176" y="78"/>
+				<Anchors>
+					<Anchor point="TOP" relativeTo="CinematicsButton7" relativePoint="BOTTOM" x="0" y="-8"/>
+				</Anchors>
+				<NormalTexture atlas="StreamCinematic-BFA-Up" />
+				<PushedTexture atlas="StreamCinematic-BFA-Down" />
 			</Button>
 			<CheckButton name="CinematicSubtitlesCheckBox" inherits="GlueCheckButtonTemplate">
 				<Size x="20" y="20"/>

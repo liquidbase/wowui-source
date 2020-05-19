@@ -24,6 +24,7 @@ PET_BATTLE_WEATHER_TEXTURES = {
 	--[63] = "Interface\\PetBattles\\Weather-Windy",
 
 	[235] = "Interface\\PetBattles\\Weather-Rain",
+	[2350] = "Interface\\PetBattles\\Weather-ToxicFumes",
 };
 
 StaticPopupDialogs["PET_BATTLE_FORFEIT"] = {
@@ -72,12 +73,12 @@ function PetBattleFrame_OnLoad(self)
 	self:RegisterEvent("PET_BATTLE_OPENING_START");
 	self:RegisterEvent("PET_BATTLE_OPENING_DONE");
 
-	self:RegisterEvent("PET_BATTLE_TURN_STARTED");
 	self:RegisterEvent("PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE");
 	self:RegisterEvent("PET_BATTLE_PET_CHANGED");
 	self:RegisterEvent("PET_BATTLE_XP_CHANGED");
 	self:RegisterEvent("PET_BATTLE_ACTION_SELECTED");
 	self:RegisterEvent("PET_BATTLE_PET_TYPE_CHANGED");
+	self:RegisterEvent("PET_BATTLE_OVERRIDE_ABILITY");
 	
 	-- Transitioning out of battle event
 	self:RegisterEvent("PET_BATTLE_OVER");
@@ -91,15 +92,13 @@ end
 
 function PetBattleFrame_OnEvent(self, event, ...)
 	if ( event == "PET_BATTLE_OPENING_START" ) then
-		PlaySoundKitID(32047); -- UI_PetBattle_Camera_Move_In
+		PlaySound(SOUNDKIT.UI_PET_BATTLE_CAMERA_MOVE_IN);
 		PetBattleFrame_Display(self);
 	elseif ( event == "PET_BATTLE_OPENING_DONE" ) then
 		PetBattleFrameTurnTimer_UpdateValues(self.BottomFrame.TurnTimer);
 		StartSplashTexture.splashAnim:Play();
-		PlaySoundKitID(31584); -- UI_PetBattle_Start
+		PlaySound(SOUNDKIT.UI_PET_BATTLE_START);
 		PetBattleFrame_UpdateSpeedIndicators(self);
-	elseif ( event == "PET_BATTLE_TURN_STARTED" ) then
-		PetBattleFrameTurnTimer_UpdateValues(self.BottomFrame.TurnTimer);
 	elseif ( event == "PET_BATTLE_PET_ROUND_PLAYBACK_COMPLETE" ) then
 		PetBattleFrameTurnTimer_UpdateValues(self.BottomFrame.TurnTimer);
 		PetBattleFrame_UpdatePetSelectionFrame(self);
@@ -116,7 +115,7 @@ function PetBattleFrame_OnEvent(self, event, ...)
 		PetBattleFrame_UpdateSpeedIndicators(self);
 		PetBattleFrame_UpdateXpBar(self);
 	elseif ( event == "PET_BATTLE_OVER" ) then
-		PlaySoundKitID(32052); -- UI_PetBattle_Camera_Move_Out
+		PlaySound(SOUNDKIT.UI_PET_BATTLE_CAMERA_MOVE_OUT);
 	elseif ( event == "PET_BATTLE_CLOSE" ) then
 		PetBattleFrame_Remove(self);
 		StaticPopup_Hide("PET_BATTLE_FORFEIT");
@@ -129,6 +128,11 @@ function PetBattleFrame_OnEvent(self, event, ...)
 		self.BottomFrame.TurnTimer.SkipButton:Disable();
 	elseif ( event == "PET_BATTLE_PET_TYPE_CHANGED" ) then
 		PetBattleFrame_UpdateAllActionButtons(self);
+	elseif ( event == "PET_BATTLE_OVERRIDE_ABILITY" ) then
+		local abilityIndex = ...;
+		local button = self.BottomFrame.abilityButtons[abilityIndex];
+		PetBattleAbilityButton_UpdateIcons(button);
+		PetBattleActionButton_UpdateState(button);
 	end
 end
 
@@ -254,13 +258,10 @@ function PetBattleFrame_LoadXPTicks(self)
 	local divWidth = width / 7;
 	local xpos = divWidth;
 	for i = 1, 6 do
-		local texture = _G["PetBattleXPBarDiv"..i];
-		if not texture then
-			texture = self.BottomFrame.xpBar:CreateTexture("MainMenuXPBarDiv"..i, "OVERLAY");
-			texture:SetTexture("Interface\\MainMenuBar\\UI-XP-Bar");
-			texture:SetSize(9,9);
-			texture:SetTexCoord( 0.01562500, 0.15625000, 0.01562500, 0.17187500);
-		end
+		local texture = self.BottomFrame.xpBar:CreateTexture("PetBattleXPBarDiv"..i, "OVERLAY");
+		texture:SetTexture("Interface\\MainMenuBar\\UI-XP-Bar");
+		texture:SetSize(9,9);
+		texture:SetTexCoord( 0.01562500, 0.15625000, 0.01562500, 0.17187500);
 		local xalign = floor(xpos);
 		texture:SetPoint("LEFT", xalign, 1);
 		texture:SetVertexColor("0.7450980392156863", "0.6352941176470588", "0.5176470588235294");
@@ -806,7 +807,7 @@ function PetBattleActionButton_UpdateState(self)
 	if ( actionType == LE_BATTLE_PET_ACTION_TRAP ) then
 		if ( usable ) then
 			if ( not self.playedSound ) then
-				PlaySoundKitID(28814);
+				PlaySound(SOUNDKIT.UI_PET_BATTLES_TRAP_READY);
 				self.playedSound = true;
 			end
 			ActionButton_ShowOverlayGlow(self);
