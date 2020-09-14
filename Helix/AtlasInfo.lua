@@ -1215,18 +1215,21 @@ local AtlasInfo = {
 		["UI-Frame-Oribos-CardShadowMask"]={8, 8, 0.0625, 0.5625, 0.0625, 0.5625, false, false},
 	}, -- Interface/CovenantChoice/CovenantChoiceUIMask
 	["Interface/CovenantSanctum/CovenantSanctumKyrian"]={
-		["CovenantSanctum-Background-Kyrian"]={644, 585, 0.12793, 0.756836, 0.000976562, 0.572266, false, false},
-		["CovenantSanctum-BigIcon-Border-Kyrian"]={128, 141, 0.000976562, 0.125977, 0.000976562, 0.138672, false, false},
-		["CovenantSanctum-Divider-Kyrian"]={24, 585, 0.000976562, 0.0244141, 0.140625, 0.711914, false, false},
-		["CovenantSanctum-Icon-Border-Kyrian"]={128, 128, 0.758789, 0.883789, 0.000976562, 0.125977, false, false},
-		["CovenantSanctum-Renown-Border-Kyrian"]={65, 65, 0.0263672, 0.0898438, 0.140625, 0.204102, false, false},
-		["CovenantSanctum-Resevoir-Empty-Kyrian"]={344, 336, 0.12793, 0.463867, 0.574219, 0.902344, false, false},
-		["CovenantSanctum-Resevoir-Full-Kyrian"]={344, 336, 0.46582, 0.801758, 0.574219, 0.902344, false, false},
-		["CovenantSanctum-Resevoir-RankBorder-Kyrian"]={44, 60, 0.0263672, 0.0693359, 0.206055, 0.264648, false, false},
-		["CovenantSanctum-Tab-NotSelected-Kyrian"]={113, 28, 0.885742, 0.996094, 0.0390625, 0.0664062, false, false},
-		["CovenantSanctum-Tab-Selected-Kyrian"]={113, 37, 0.885742, 0.996094, 0.000976562, 0.0371094, false, false},
-		["CovenantSanctum-Upgrade-Border-Kyrian"]={251, 52, 0.12793, 0.373047, 0.904297, 0.955078, false, false},
+		["CovenantSanctum-Background-Kyrian"]={644, 585, 0.000976562, 0.629883, 0.331055, 0.902344, false, false},
+		["CovenantSanctum-Divider-Kyrian"]={24, 585, 0.631836, 0.655273, 0.331055, 0.902344, false, false},
+		["CovenantSanctum-Icon-Border-Kyrian"]={128, 128, 0.676758, 0.801758, 0.000976562, 0.125977, false, false},
+		["CovenantSanctum-Resevoir-Empty-Kyrian"]={344, 336, 0.000976562, 0.336914, 0.000976562, 0.329102, false, false},
+		["CovenantSanctum-Resevoir-Full-Kyrian"]={344, 336, 0.338867, 0.674805, 0.000976562, 0.329102, false, false},
+		["CovenantSanctum-Upgrade-Border-Kyrian"]={251, 52, 0.676758, 0.921875, 0.12793, 0.178711, false, false},
 	}, -- Interface/CovenantSanctum/CovenantSanctumKyrian
+	["Interface/CovenantSanctum/CovenantSanctumNightfae"]={
+		["CovenantSanctum-Resevoir-Empty-Nightfae"]={344, 336, 0.000976562, 0.336914, 0.000976562, 0.329102, false, false},
+		["CovenantSanctum-Resevoir-Full-Nightfae"]={344, 336, 0.338867, 0.674805, 0.000976562, 0.329102, false, false},
+		["CovenantSanctum-Upgrade-Border-Nightfae"]={251, 52, 0.676758, 0.921875, 0.000976562, 0.0517578, false, false},
+		["CovenantSanctum-Icon-Border-Nightfae"]={128, 128, 0.676758, 0.801758, 0.0537109, 0.178711, false, false},
+		["CovenantSanctum-Background-Nightfae"]={644, 585, 0.000976562, 0.629883, 0.331055, 0.902344, false, false},
+		["CovenantSanctum-Divider-Nightfae"]={24, 585, 0.631836, 0.655273, 0.331055, 0.902344, false, false},
+	}, -- Interface/CovenantSanctum/CovenantSanctumNightfae
 	["Interface/CovenantSanctum/CovenantSanctumUI"]={
 		["CovenantSanctum-Icon-Hover"]={94, 94, 0.195312, 0.378906, 0.707031, 0.890625, false, false},
 		["CovenantSanctum-Icon-RankBorder"]={22, 18, 0.574219, 0.617188, 0.605469, 0.640625, false, false},
@@ -1239,6 +1242,14 @@ local AtlasInfo = {
 		["CovenantSanctum-Upgrade-Hover"]={249, 50, 0.00195312, 0.488281, 0.605469, 0.703125, false, false},
 		["CovenantSanctum-Upgrade-Icon-Available"]={15, 20, 0.574219, 0.603516, 0.644531, 0.683594, false, false},
 	}, -- Interface/CovenantSanctum/CovenantSanctumUI
+	["Interface/CovenantSanctum/CovenantSanctumVenthyr"]={
+		["CovenantSanctum-Resevoir-Empty-Venthyr"]={344, 336, 0.000976562, 0.336914, 0.000976562, 0.329102, false, false},
+		["CovenantSanctum-Divider-Venthyr"]={24, 585, 0.631836, 0.655273, 0.331055, 0.902344, false, false},
+		["CovenantSanctum-Upgrade-Border-Venthyr"]={251, 52, 0.676758, 0.921875, 0.12793, 0.178711, false, false},
+		["CovenantSanctum-Icon-Border-Venthyr"]={128, 128, 0.676758, 0.801758, 0.000976562, 0.125977, false, false},
+		["CovenantSanctum-Background-Venthyr"]={644, 585, 0.000976562, 0.629883, 0.331055, 0.902344, false, false},
+		["CovenantSanctum-Resevoir-Full-Venthyr"]={344, 336, 0.338867, 0.674805, 0.000976562, 0.329102, false, false},
+	}, -- Interface/CovenantSanctum/CovenantSanctumVenthyr
 	["Interface/DressUpFrame/DressingRoomDeathKnight"]={
 		["dressingroom-background-deathknight"]={478, 500, 0.00195312, 0.935547, 0.00195312, 0.978516, false, false},
 	}, -- Interface/DressUpFrame/DressingRoomDeathKnight
@@ -3922,6 +3933,13 @@ local AtlasInfo = {
 	["Interface/Garrison/OrderHallTalentsWarrior"]={
 		["orderhalltalents-background-warrior"]={322, 382, 0.00195312, 0.630859, 0.00195312, 0.748047, false, false},
 	}, -- Interface/Garrison/OrderHallTalentsWarrior
+	["Interface/Garrison/ShadowlandsLandingPage"]={
+		["shadowlands-landingpage-callingsdecor-kyrian"]={169, 42, 0.00195312, 0.332031, 0.34375, 0.425781, false, false},
+		["shadowlands-landingpage-callingsdecor-necrolord"]={169, 42, 0.335938, 0.666016, 0.34375, 0.425781, false, false},
+		["shadowlands-landingpage-callingsdecor-nightfae"]={169, 42, 0.00195312, 0.332031, 0.429688, 0.511719, false, false},
+		["shadowlands-landingpage-callingsdecor-venthyr"]={169, 42, 0.335938, 0.666016, 0.429688, 0.511719, false, false},
+		["shadowlands-landingpage-divider"]={361, 173, 0.00195312, 0.707031, 0.00195312, 0.339844, false, false},
+	}, -- Interface/Garrison/ShadowlandsLandingPage
 	["Interface/Garrison/ShipsCargoShipMap"]={
 		["Ships_CargoShip-Map"]={94, 94, 0.0078125, 0.742188, 0.0078125, 0.742188, false, false},
 	}, -- Interface/Garrison/ShipsCargoShipMap
@@ -5189,6 +5207,17 @@ local AtlasInfo = {
 		["WhiteCircle-RaidBlips"]={19, 18, 0.015625, 0.3125, 0.03125, 0.59375, false, false},
 		["WhiteDotCircle-RaidBlips"]={19, 18, 0.34375, 0.640625, 0.03125, 0.59375, false, false},
 	}, -- Interface/Minimap/PartyRaidBlipsV2
+	["Interface/MixingPoolBar/MixingPoolBar"]={
+		["mixingpool-fill"]={138, 13, 0.00390625, 0.542969, 0.28125, 0.382812, false, false},
+		["mixingpool-frame"]={158, 33, 0.00390625, 0.621094, 0.0078125, 0.265625, false, false},
+		["mixingpool-lefticon-amount"]={21, 15, 0.628906, 0.710938, 0.148438, 0.265625, false, false},
+		["mixingpool-lefticon-frame"]={37, 37, 0.00390625, 0.148438, 0.398438, 0.6875, false, false},
+		["mixingpool-midicon-amount"]={21, 15, 0.71875, 0.800781, 0.148438, 0.265625, false, false},
+		["mixingpool-midicon-frame"]={37, 37, 0.00390625, 0.148438, 0.703125, 0.992188, false, false},
+		["mixingpool-righticon-amount"]={21, 15, 0.808594, 0.890625, 0.0078125, 0.125, false, false},
+		["mixingpool-righticon-frame"]={37, 37, 0.15625, 0.300781, 0.398438, 0.6875, false, false},
+		["mixingpool-shadow-text"]={44, 16, 0.628906, 0.800781, 0.0078125, 0.132812, false, false},
+	}, -- Interface/MixingPoolBar/MixingPoolBar
 	["Interface/MoneyFrame/MoneyFrame"]={
 		["UI-MoneyFrame-Large"]={172, 120, 0.00390625, 0.675781, 0.0078125, 0.945312, false, false},
 	}, -- Interface/MoneyFrame/MoneyFrame
@@ -5535,6 +5564,20 @@ local AtlasInfo = {
 		["pvpscoreboard-background"]={746, 466, 0.000488281, 0.364746, 0.000976562, 0.456055, false, false},
 		["pvpscoreboard-header-glow"]={993, 167, 0.365723, 0.850586, 0.308594, 0.47168, false, false},
 	}, -- Interface/PVPFrame/PvPScoreboard
+	["Interface/PVPFrame/PVPSeparation"]={
+		["Bar-End"]={15, 18, 0.734375, 0.792969, 0.458984, 0.494141, false, false},
+		["Cast-Bar-End"]={15, 25, 0.734375, 0.792969, 0.40625, 0.455078, false, false},
+		["Health-Bar-End"]={15, 35, 0.734375, 0.792969, 0.333984, 0.402344, false, false},
+		["Health_End"]={6, 18, 0.960938, 0.984375, 0.166016, 0.201172, false, false},
+		["Health_Mid"]={5, 18, 0.960938, 0.980469, 0.205078, 0.240234, false, false},
+		["Metal-Bar"]={243, 84, 0.00390625, 0.953125, 0.166016, 0.330078, false, false},
+		["Portrait-Frame-Nameplate"]={50, 50, 0.476562, 0.671875, 0.462891, 0.560547, false, false},
+		["Portrait-Frame"]={119, 119, 0.00390625, 0.46875, 0.333984, 0.566406, false, false},
+		["Trinket-Frame"]={64, 64, 0.476562, 0.726562, 0.333984, 0.458984, false, false},
+		["_Bar-mid"]={15, 18, 0, 0.0585938, 0.126953, 0.162109, false, false},
+		["_Cast-Bar-mid"]={15, 25, 0, 0.0585938, 0.0742188, 0.123047, false, false},
+		["_Health-Bar-mid"]={15, 35, 0, 0.0585938, 0.00195312, 0.0703125, false, false},
+	}, -- Interface/PVPFrame/PVPSeparation
 	["Interface/PVPFrame/Scoreboard"]={
 		["scoreboard-footer-lootbackground"]={174, 40, 0.71875, 0.888672, 0.259277, 0.278809, false, false},
 		["scoreboard-frameborder-bottom"]={359, 10, 0.594727, 0.945312, 0.359863, 0.364746, false, false},
@@ -7056,34 +7099,41 @@ local AtlasInfo = {
 		["worldmap-highlight-cosmic-draenor"]={359, 364, 0.000976562, 0.351562, 0.416016, 0.771484, false, false},
 	}, -- Interface/WorldMap/WorldMapHighlightCosmic
 	["Interface/WorldStateFrame/WorldStateCaptureBar"]={
-		["worldstate-capturebar-frame-factions"]={173, 26, 0.00390625, 0.679688, 0.259766, 0.310547, false, false},
-		["worldstate-capturebar-arrow"]={9, 15, 0.6875, 0.722656, 0.259766, 0.289062, false, false},
-		["worldstate-capturebar-frame-separater"]={3, 8, 0.6875, 0.699219, 0.292969, 0.308594, false, false},
-		["worldstate-capturebar-frame-lfd"]={173, 26, 0.00390625, 0.679688, 0.314453, 0.365234, false, false},
-		["worldstate-capturebar-leftfill-factions"]={4, 9, 0, 0.015625, 0.0234375, 0.0410156, false, false},
-		["worldstate-capturebar-leftfill-lfd"]={4, 9, 0, 0.015625, 0.0449219, 0.0625, false, false},
-		["worldstate-capturebar-rightfill-factions"]={4, 9, 0, 0.015625, 0.195312, 0.212891, false, false},
-		["worldstate-capturebar-rightfill-lfd"]={4, 9, 0, 0.015625, 0.216797, 0.234375, false, false},
-		["worldstate-capturebar-spark-factions"]={5, 18, 0.757812, 0.777344, 0.259766, 0.294922, false, false},
-		["worldstate-capturebar-spark-lfd"]={5, 18, 0.785156, 0.804688, 0.259766, 0.294922, false, false},
-		["worldstate-capturebar-leftfill-boss"]={4, 9, 0, 0.015625, 0.00195312, 0.0195312, false, false},
-		["worldstate-capturebar-rightfill-boss"]={4, 9, 0, 0.015625, 0.173828, 0.191406, false, false},
-		["worldstate-capturebar-spark-boss"]={5, 18, 0.730469, 0.75, 0.259766, 0.294922, false, false},
-		["worldstate-capturebar-frame-boss"]={130, 25, 0.00390625, 0.511719, 0.421875, 0.470703, false, false},
-		["worldstate-capturebar-leftglow-boss"]={135, 24, 0.00390625, 0.53125, 0.527344, 0.574219, false, false},
-		["worldstate-capturebar-leftglow-factions"]={27, 28, 0.00390625, 0.109375, 0.578125, 0.632812, false, false},
-		["worldstate-capturebar-leftglow-lfd"]={27, 28, 0.00390625, 0.109375, 0.636719, 0.691406, false, false},
-		["worldstate-capturebar-rightglow-factions"]={27, 28, 0.00390625, 0.109375, 0.695312, 0.75, false, false},
-		["worldstate-capturebar-rightglow-lfd"]={27, 28, 0.00390625, 0.109375, 0.753906, 0.808594, false, false},
-		["worldstate-capturebar-neutralfill-boss"]={4, 9, 0, 0.015625, 0.0878906, 0.105469, false, false},
-		["worldstate-capturebar-neutralfill-factions"]={4, 9, 0, 0.015625, 0.109375, 0.126953, false, false},
-		["worldstate-capturebar-neutralfill-lfd"]={4, 9, 0, 0.015625, 0.130859, 0.148438, false, false},
-		["worldstate-capturebar-frame-target"]={130, 25, 0.00390625, 0.511719, 0.474609, 0.523438, false, false},
-		["worldstate-capturebar-leftfill-target"]={4, 9, 0, 0.015625, 0.0664062, 0.0839844, false, false},
-		["worldstate-capturebar-neutralfill-target"]={4, 9, 0, 0.015625, 0.152344, 0.169922, false, false},
-		["worldstate-capturebar-rightfill-target"]={4, 9, 0, 0.015625, 0.238281, 0.255859, false, false},
-		["worldstate-capturebar-spark-target"]={5, 18, 0.8125, 0.832031, 0.259766, 0.294922, false, false},
-		["worldstate-capturebar-neutralglow-target"]={135, 25, 0.00390625, 0.53125, 0.369141, 0.417969, false, false},
+		["worldstate-capturebar-frame-factions"]={173, 26, 0.00390625, 0.679688, 0.441406, 0.492188, false, false},
+		["worldstate-capturebar-arrow"]={9, 15, 0.757812, 0.792969, 0.365234, 0.394531, false, false},
+		["worldstate-capturebar-frame-separater"]={3, 8, 0.902344, 0.914062, 0.00195312, 0.0175781, false, false},
+		["worldstate-capturebar-frame-lfd"]={173, 26, 0.00390625, 0.679688, 0.496094, 0.546875, false, false},
+		["worldstate-capturebar-leftfill-factions"]={4, 9, 0, 0.015625, 0.0527344, 0.0703125, false, false},
+		["worldstate-capturebar-leftfill-lfd"]={4, 9, 0, 0.015625, 0.0742188, 0.0917969, false, false},
+		["worldstate-capturebar-rightfill-factions"]={4, 9, 0, 0.015625, 0.224609, 0.242188, false, false},
+		["worldstate-capturebar-rightfill-lfd"]={4, 9, 0, 0.015625, 0.246094, 0.263672, false, false},
+		["worldstate-capturebar-spark-factions"]={5, 18, 0.800781, 0.820312, 0.365234, 0.400391, false, false},
+		["worldstate-capturebar-spark-lfd"]={5, 18, 0.828125, 0.847656, 0.365234, 0.400391, false, false},
+		["worldstate-capturebar-leftfill-boss"]={4, 9, 0, 0.015625, 0.03125, 0.0488281, false, false},
+		["worldstate-capturebar-rightfill-boss"]={4, 9, 0, 0.015625, 0.203125, 0.220703, false, false},
+		["worldstate-capturebar-spark-boss"]={5, 18, 0.757812, 0.777344, 0.398438, 0.433594, false, false},
+		["worldstate-capturebar-frame-boss"]={130, 25, 0.00390625, 0.511719, 0.603516, 0.652344, false, false},
+		["worldstate-capturebar-leftglow-boss"]={135, 24, 0.00390625, 0.53125, 0.708984, 0.755859, false, false},
+		["worldstate-capturebar-leftglow-factions"]={27, 28, 0.644531, 0.75, 0.289062, 0.34375, false, false},
+		["worldstate-capturebar-leftglow-lfd"]={27, 28, 0.757812, 0.863281, 0.289062, 0.34375, false, false},
+		["worldstate-capturebar-rightglow-factions"]={27, 28, 0.871094, 0.976562, 0.289062, 0.34375, false, false},
+		["worldstate-capturebar-rightglow-lfd"]={27, 28, 0.644531, 0.75, 0.365234, 0.419922, false, false},
+		["worldstate-capturebar-neutralfill-boss"]={4, 9, 0, 0.015625, 0.117188, 0.134766, false, false},
+		["worldstate-capturebar-neutralfill-factions"]={4, 9, 0, 0.015625, 0.138672, 0.15625, false, false},
+		["worldstate-capturebar-neutralfill-lfd"]={4, 9, 0, 0.015625, 0.160156, 0.177734, false, false},
+		["worldstate-capturebar-frame-target"]={130, 25, 0.00390625, 0.511719, 0.65625, 0.705078, false, false},
+		["worldstate-capturebar-leftfill-target"]={4, 9, 0, 0.015625, 0.0957031, 0.113281, false, false},
+		["worldstate-capturebar-neutralfill-target"]={4, 9, 0, 0.015625, 0.181641, 0.199219, false, false},
+		["worldstate-capturebar-rightfill-target"]={4, 9, 0, 0.015625, 0.267578, 0.285156, false, false},
+		["worldstate-capturebar-spark-target"]={5, 18, 0.855469, 0.875, 0.365234, 0.400391, false, false},
+		["worldstate-capturebar-neutralglow-target"]={135, 25, 0.00390625, 0.53125, 0.550781, 0.599609, false, false},
+		["worldstate-capturebar-arrow-bastionarmor"]={7, 7, 0.847656, 0.875, 0.00195312, 0.015625, false, false},
+		["worldstate-capturebar-frame-bastionarmor"]={162, 37, 0.00390625, 0.636719, 0.289062, 0.361328, false, false},
+		["worldstate-capturebar-frame-separater-bastionarmor"]={3, 13, 0.882812, 0.894531, 0.00195312, 0.0273438, false, false},
+		["worldstate-capturebar-neutralfill-bastionarmor"]={54, 13, 0, 0.210938, 0.00195312, 0.0273438, false, false},
+		["worldstate-capturebar-neutralglow-bastionarmor"]={162, 37, 0.00390625, 0.636719, 0.365234, 0.4375, false, false},
+		["worldstate-capturebar-spark-bastionarmor"]={19, 39, 0.00390625, 0.078125, 0.759766, 0.835938, false, false},
+		["worldstate-capturebar-spark-neutral-bastionarmor"]={19, 39, 0.00390625, 0.078125, 0.839844, 0.916016, false, false},
 	}, -- Interface/WorldStateFrame/WorldStateCaptureBar
 }
 
