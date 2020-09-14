@@ -1,2 +1,0 @@
-## Title: Blizzard Secure Trade UI
-Blizzard_SecureTransferUI.xml
