@@ -1798,6 +1798,12 @@ local AtlasInfo = {
 		["Adventure_Ability_Frame_enemy"]={29, 28, 0.301758, 0.330078, 0.967773, 0.995117, false, false},
 		["Adventure_Ability_Frame_Filled"]={36, 37, 0.804688, 0.839844, 0.424805, 0.460938, false, false},
 		["Adventure_Ability_Frame_Filled_Enemy"]={29, 28, 0.416992, 0.445312, 0.939453, 0.966797, false, false},
+		[""]={0, 0, 0, 0, 0, 0, false, false},
+		[""]={0, 0, 0, 0, 0, 0, false, false},
+		[""]={0, 0, 0, 0, 0, 0, false, false},
+		[""]={0, 0, 0, 0, 0, 0, false, false},
+		[""]={0, 0, 0, 0, 0, 0, false, false},
+		[""]={0, 0, 0, 0, 0, 0, false, false},
 	}, -- Interface/Garrison/AdventureMissionsFrame
 	["Interface/Garrison/AdventureMissionsFrameBG1"]={
 		["Adventures-Missions-BG-01"]={256, 256, 0, 1, 0, 1, false, false},
@@ -3058,6 +3064,9 @@ local AtlasInfo = {
 	["Interface/Garrison/GarrisonMissionLocationArathiHighlands"]={
 		["_GarrMissionLocation-ArathiHighlands-Mid"]={1024, 285, 0, 1, 0.00195312, 0.558594, false, false},
 	}, -- Interface/Garrison/GarrisonMissionLocationArathiHighlands
+	["Interface/Garrison/GarrisonMissionLocationArdenweald"]={
+		["_GarrMissionLocation-Ardenweald-Mid"]={1024, 285, 0, 1, 0.00195312, 0.558594, false, false},
+	}, -- Interface/Garrison/GarrisonMissionLocationArdenweald
 	["Interface/Garrison/GarrisonMissionLocationArgus"]={
 		["_GarrMissionLocation-Argus-Mid"]={1024, 285, 0, 1, 0.00195312, 0.558594, false, false},
 	}, -- Interface/Garrison/GarrisonMissionLocationArgus
@@ -3070,6 +3079,9 @@ local AtlasInfo = {
 	["Interface/Garrison/GarrisonMissionLocationAzsuna"]={
 		["_GarrMissionLocation-Azsuna-Mid"]={1024, 285, 0, 1, 0.00195312, 0.558594, false, false},
 	}, -- Interface/Garrison/GarrisonMissionLocationAzsuna
+	["Interface/Garrison/GarrisonMissionLocationBastion"]={
+		["_GarrMissionLocation-Bastion-Mid"]={1024, 285, 0, 1, 0.00195312, 0.558594, false, false},
+	}, -- Interface/Garrison/GarrisonMissionLocationBastion
 	["Interface/Garrison/GarrisonMissionLocationBattleForAzerothListBgs"]={
 		["GarrMissionLocation-ArathiHighlands-List"]={792, 78, 0.000488281, 0.387207, 0.000976562, 0.0771484, false, false},
 		["GarrMissionLocation-Ashenvale-List"]={792, 78, 0.388184, 0.774902, 0.000976562, 0.0771484, false, false},
@@ -3153,6 +3165,9 @@ local AtlasInfo = {
 		["GarrMissionLocation-TannanJungle-List"]={792, 78, 0.000976562, 0.774414, 0.547852, 0.624023, false, false},
 		["_GarrMissionLocation-BlackrockMountain-List"]={792, 78, 0, 0.773438, 0.000976562, 0.0771484, false, false},
 	}, -- Interface/Garrison/GarrisonMissionLocationListBgs
+	["Interface/Garrison/GarrisonMissionLocationMaldraxxus"]={
+		["_GarrMissionLocation-Maldraxxus-Mid"]={1024, 285, 0, 1, 0.00195312, 0.558594, false, false},
+	}, -- Interface/Garrison/GarrisonMissionLocationMaldraxxus
 	["Interface/Garrison/GarrisonMissionLocationMechagon"]={
 		["_GarrMissionLocation-Mechagon-Mid"]={1024, 285, 0, 1, 0.00195312, 0.558594, false, false},
 	}, -- Interface/Garrison/GarrisonMissionLocationMechagon
@@ -3175,6 +3190,9 @@ local AtlasInfo = {
 	["Interface/Garrison/GarrisonMissionLocationNorthernBarrens"]={
 		["_GarrMissionLocation-NorthernBarrens-Mid"]={1024, 285, 0, 1, 0.00195312, 0.558594, false, false},
 	}, -- Interface/Garrison/GarrisonMissionLocationNorthernBarrens
+	["Interface/Garrison/GarrisonMissionLocationRevendreth"]={
+		["_GarrMissionLocation-Revendreth-Mid"]={1024, 285, 0, 1, 0.00195312, 0.558594, false, false},
+	}, -- Interface/Garrison/GarrisonMissionLocationRevendreth
 	["Interface/Garrison/GarrisonMissionLocationShadowmoonSea"]={
 		["_GarrMissionLocation-ShadowmoonSea-Back"]={1024, 285, 0, 1, 0.000976562, 0.279297, false, false},
 		["_GarrMissionLocation-ShadowmoonSea-Fore"]={1024, 285, 0, 1, 0.28125, 0.55957, false, false},
@@ -4145,9 +4163,9 @@ local AtlasInfo = {
 		["charactercreate-ring-metaldark"]={278, 280, 0.137207, 0.272949, 0.276367, 0.549805, false, false},
 		["charactercreate-ring-metallight"]={278, 280, 0.273926, 0.409668, 0.000976562, 0.274414, false, false},
 		["charactercreate-ring-select"]={236, 236, 0.273926, 0.38916, 0.518555, 0.749023, false, false},
-		["charactercreate-vignette-bottom"]={1, 577, 0.615723, 0.616211, 0.210938, 0.774414, false, false},
-		["charactercreate-vignette-sides"]={703, 1, 0.615723, 0.958984, 0.208008, 0.208984, false, false},
-		["charactercreate-vignette-top"]={1, 451, 0.617188, 0.617676, 0.210938, 0.651367, false, false},
+		["charactercreate-vignette-bottom"]={1, 577, 0.615723, 0.616211, 0.287109, 0.850586, false, false},
+		["charactercreate-vignette-sides"]={703, 1, 0.615723, 0.958984, 0.28418, 0.285156, false, false},
+		["charactercreate-vignette-top"]={1, 451, 0.617188, 0.617676, 0.287109, 0.727539, false, false},
 		["charactercreate-gendericon-male"]={56, 56, 0.000488281, 0.027832, 0.941406, 0.996094, false, false},
 		["charactercreate-gendericon-female"]={56, 56, 0.0991211, 0.126465, 0.827148, 0.881836, false, false},
 		["charactercreate-ring-alliance-disabled"]={278, 280, 0.000488281, 0.13623, 0.276367, 0.549805, false, false},
@@ -4158,6 +4176,10 @@ local AtlasInfo = {
 		["charactercreate-tooltip-side"]={1, 68, 0.171387, 0.171875, 0.90332, 0.969727, false, false},
 		["charactercreate-tooltip-top"]={1, 68, 0.172852, 0.17334, 0.90332, 0.969727, false, false},
 		["charactercreate-ring-racialtrait"]={76, 76, 0.137207, 0.174316, 0.827148, 0.901367, true, true},
+		["charactercreate-customize-dropdownbox"]={300, 76, 0.615723, 0.762207, 0.208008, 0.282227, true, true},
+		["charactercreate-customize-palette"]={60, 12, 0.0288086, 0.0581055, 0.941406, 0.953125, false, false},
+		["charactercreate-customize-dropdown-linemouseover-middle"]={1, 40, 0.134277, 0.134766, 0.827148, 0.866211, false, false},
+		["charactercreate-customize-dropdown-linemouseover-side"]={12, 40, 0.127441, 0.133301, 0.827148, 0.866211, true, true},
 	}, -- Interface/Glues/CharacterCreate/CharacterCreate
 	["Interface/Glues/CharacterCreate/CharacterCreateClassTrial"]={
 		["UI-CharacterCreate-LargeButton-Blue-Highlight"]={108, 37, 0.488281, 0.910156, 0.34375, 0.632812, false, false},
@@ -4168,6 +4190,17 @@ local AtlasInfo = {
 		["UI-CharacterCreate-PadLock"]={63, 76, 0.230469, 0.476562, 0.398438, 0.992188, false, false},
 		["CharacterCreate-NewLabel"]={64, 48, 0.230469, 0.480469, 0.0078125, 0.382812, false, false},
 	}, -- Interface/Glues/CharacterCreate/CharacterCreateClassTrial
+	["Interface/Glues/CharacterCreate/CharacterCreateDropdown"]={
+		["UI-Frame-CharacterCreateDropdown-CornerBottomLeft"]={124, 144, 0.000976562, 0.12207, 0.00195312, 0.283203, true, true},
+		["UI-Frame-CharacterCreateDropdown-CornerBottomRight"]={124, 144, 0.000976562, 0.12207, 0.494141, 0.775391, true, true},
+		["UI-Frame-CharacterCreateDropdown-CornerTopLeft"]={124, 104, 0.000976562, 0.12207, 0.287109, 0.490234, true, true},
+		["UI-Frame-CharacterCreateDropdown-CornerTopRight"]={124, 104, 0.793945, 0.915039, 0.00195312, 0.205078, true, true},
+		["_UI-Frame-CharacterCreateDropdown-EdgeBottom"]={432, 144, 0.370117, 0.791992, 0.00195312, 0.283203, false, false},
+		["_UI-Frame-CharacterCreateDropdown-EdgeTop"]={432, 104, 0.370117, 0.791992, 0.287109, 0.490234, false, false},
+		["!UI-Frame-CharacterCreateDropdown-EdgeLeft"]={124, 408, 0.24707, 0.368164, 0.00195312, 0.798828, true, true},
+		["!UI-Frame-CharacterCreateDropdown-EdgeRight"]={124, 408, 0.124023, 0.245117, 0.00195312, 0.798828, true, true},
+		["UI-Frame-CharacterCreateDropdown-Center"]={1, 1, 0.000976562, 0.00195312, 0.779297, 0.78125, false, false},
+	}, -- Interface/Glues/CharacterCreate/CharacterCreateDropdown
 	["Interface/Glues/CharacterCreate/CharacterCreateIcons"]={
 		["raceicon-bloodelf-male"]={64, 64, 0.0639648, 0.0952148, 0.889648, 0.952148, false, false},
 		["raceicon-draenei-female"]={64, 64, 0.254395, 0.285645, 0.889648, 0.952148, false, false},
@@ -5657,6 +5690,10 @@ local AtlasInfo = {
 		["bonusobjectives-title-icon"]={155, 150, 0.482422, 0.785156, 0.00195312, 0.294922, false, false},
 		["bonusobjectives-title-icon-honor"]={244, 181, 0.00195312, 0.478516, 0.00195312, 0.355469, false, false},
 	}, -- Interface/QuestFrame/BonusObjectives
+	["Interface/QuestFrame/Callings"]={
+		["Callings-Available"]={14, 30, 0.3125, 0.53125, 0.03125, 0.96875, false, false},
+		["Callings-Turnin"]={17, 28, 0.015625, 0.28125, 0.03125, 0.90625, false, false},
+	}, -- Interface/QuestFrame/Callings
 	["Interface/QuestFrame/ObjectiveTracker"]={
 		["Rewards-Shadow"]={154, 16, 0.587891, 0.888672, 0.421875, 0.453125, false, false},
 		["OBJFX_LineBurst"]={86, 20, 0.164062, 0.332031, 0.525391, 0.564453, false, false},
