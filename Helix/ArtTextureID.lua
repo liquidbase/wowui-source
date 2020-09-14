@@ -10302,6 +10302,7 @@ local ArtTexturePaths = {
 	[2032227]="Interface/Icons/Achievement_Nazmir_Boss_ZekVoz",
 	[2032228]="Interface/Icons/Achievement_Nazmir_Boss_Zul",
 	[2032229]="Interface/Icons/Achievement_Nazmir_Zone",
+	[3567434]="Interface/Icons/Achievement_NewPlayerExperience",
 	[236570]="Interface/Icons/Achievement_Noblegarden_Chocolate_Egg",
 	[348277]="Interface/Icons/Achievement_OgrimsHammer",
 	[236577]="Interface/Icons/Achievement_PVP_A_01",
