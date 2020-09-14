@@ -993,13 +993,25 @@ local AtlasInfo = {
 		["newplayerchat-chaticon-newcomer"]={30, 30, 0.289062, 0.523438, 0.0078125, 0.242188, true, true},
 	}, -- Interface/ChatFrame/ChatFrame
 	["Interface/ChromieTime/ChromieTimeUI"]={
-		["ChromieTime-Button-Background"]={208, 115, 0.617188, 0.820312, 0.000976562, 0.113281, false, false},
-		["ChromieTime-Button-Frame"]={226, 133, 0.000976562, 0.22168, 0.853516, 0.983398, false, false},
-		["ChromieTime-Button-Highlight"]={204, 111, 0.394531, 0.59375, 0.132812, 0.241211, false, false},
-		["ChromieTime-Parchment"]={401, 514, 0.000976562, 0.392578, 0.000976562, 0.50293, false, false},
-		["ChromieTime-Portrait-Chrome"]={325, 167, 0.000976562, 0.318359, 0.688477, 0.851562, false, false},
-		["ChromieTime-Portrait-Frame"]={344, 186, 0.000976562, 0.336914, 0.504883, 0.686523, false, false},
-		["ChromieTime-Button-Selection"]={226, 133, 0.394531, 0.615234, 0.000976562, 0.130859, false, false},
+		["ChromieTime-Button-Background"]={208, 115, 0.896973, 0.998535, 0.250977, 0.363281, false, false},
+		["ChromieTime-Button-Frame"]={226, 133, 0.000488281, 0.11084, 0.853516, 0.983398, false, false},
+		["ChromieTime-Button-Highlight"]={204, 111, 0.70166, 0.80127, 0.421875, 0.530273, false, false},
+		["ChromieTime-Parchment"]={401, 514, 0.000488281, 0.196289, 0.000976562, 0.50293, false, false},
+		["ChromieTime-Portrait-Chrome"]={325, 167, 0.000488281, 0.15918, 0.688477, 0.851562, false, false},
+		["ChromieTime-Portrait-Frame"]={344, 186, 0.000488281, 0.168457, 0.504883, 0.686523, false, false},
+		["ChromieTime-Button-Selection"]={226, 133, 0.590332, 0.700684, 0.421875, 0.551758, false, false},
+		["ChromieTime-Portrait-Small-BurningCrusade"]={312, 173, 0.437012, 0.589355, 0.250977, 0.419922, false, false},
+		["ChromieTime-Portrait-Small-Cataclysm"]={312, 173, 0.590332, 0.742676, 0.250977, 0.419922, false, false},
+		["ChromieTime-Portrait-Small-Legion"]={312, 173, 0.743652, 0.895996, 0.250977, 0.419922, false, false},
+		["ChromieTime-Portrait-Small-MistsofPandaria"]={312, 173, 0.437012, 0.589355, 0.421875, 0.59082, false, false},
+		["ChromieTime-Portrait-Small-WarlordsofDraenor"]={312, 173, 0.437012, 0.589355, 0.592773, 0.761719, false, false},
+		["ChromieTime-Portrait-Small-WrathoftheLichKing"]={312, 173, 0.437012, 0.589355, 0.763672, 0.932617, false, false},
+		["ChromieTime-Portrait-Large-BurningCrusade"]={489, 254, 0.197266, 0.436035, 0.000976562, 0.249023, true, true},
+		["ChromieTime-Portrait-Large-Cataclysm"]={489, 254, 0.437012, 0.675781, 0.000976562, 0.249023, true, true},
+		["ChromieTime-Portrait-Large-Legion"]={489, 254, 0.676758, 0.915527, 0.000976562, 0.249023, true, true},
+		["ChromieTime-Portrait-Large-MistsofPandaria"]={489, 254, 0.197266, 0.436035, 0.250977, 0.499023, true, true},
+		["ChromieTime-Portrait-Large-WarlordsofDraenor"]={489, 254, 0.197266, 0.436035, 0.500977, 0.749023, true, true},
+		["ChromieTime-Portrait-Large-WrathoftheLichKing"]={489, 254, 0.197266, 0.436035, 0.750977, 0.999023, true, true},
 	}, -- Interface/ChromieTime/ChromieTimeUI
 	["Interface/Collections/Collections"]={
 		["collections-icon-favorites"]={31, 33, 0.181641, 0.242188, 0.0136719, 0.078125, false, false},
@@ -1544,26 +1556,26 @@ local AtlasInfo = {
 		["UI-Frame-IconMask"]={64, 64, 0, 1, 0, 1, false, false},
 	}, -- Interface/FrameGeneral/UIFrameIconMask
 	["Interface/FrameGeneral/UIFrameKyrian"]={
-		["UI-Frame-Kyrian-CornerBottomLeft"]={166, 166, 0.00390625, 0.652344, 0.148438, 0.310547, false, false},
-		["UI-Frame-Kyrian-CornerBottomRight"]={166, 166, 0.00390625, 0.652344, 0.3125, 0.474609, false, false},
-		["UI-Frame-Kyrian-CornerTopLeft"]={166, 166, 0.00390625, 0.652344, 0.476562, 0.638672, false, false},
-		["UI-Frame-Kyrian-CornerTopRight"]={166, 166, 0.00390625, 0.652344, 0.640625, 0.802734, false, false},
 		["UI-Frame-Kyrian-ExitButtonBorder"]={33, 32, 0.660156, 0.789062, 0.148438, 0.179688, false, false},
 		["UI-Frame-Kyrian-TitleLeft"]={202, 85, 0.00390625, 0.792969, 0.804688, 0.887695, false, false},
 		["UI-Frame-Kyrian-TitleRight"]={202, 85, 0.00390625, 0.792969, 0.889648, 0.972656, false, false},
-		["_UI-Frame-Kyrian-TileBottom"]={256, 30, 0, 1, 0.0859375, 0.115234, false, false},
-		["_UI-Frame-Kyrian-TileTop"]={256, 30, 0, 1, 0.117188, 0.146484, false, false},
 		["_UI-Frame-Kyrian-TitleMiddle"]={128, 85, 0, 0.5, 0.000976562, 0.0839844, false, false},
+		["Kyrian-NineSlice-CornerBottomLeft"]={166, 166, 0.00390625, 0.652344, 0.148438, 0.310547, false, false},
+		["Kyrian-NineSlice-CornerBottomRight"]={166, 166, 0.00390625, 0.652344, 0.3125, 0.474609, false, false},
+		["Kyrian-NineSlice-CornerTopLeft"]={166, 166, 0.00390625, 0.652344, 0.476562, 0.638672, false, false},
+		["Kyrian-NineSlice-CornerTopRight"]={166, 166, 0.00390625, 0.652344, 0.640625, 0.802734, false, false},
+		["_Kyrian-NineSlice-EdgeBottom"]={256, 30, 0, 1, 0.0859375, 0.115234, false, false},
+		["_Kyrian-NineSlice-EdgeTop"]={256, 30, 0, 1, 0.117188, 0.146484, false, false},
 	}, -- Interface/FrameGeneral/UIFrameKyrian
 	["Interface/FrameGeneral/UIFrameKyrianBackground"]={
-		["UI-Frame-Kyrian-BackgroundTile"]={256, 256, 0.00390625, 1.00391, 0.00390625, 1.00391, false, false},
+		["Kyrian-NineSlice-Center"]={256, 256, 0, 1, 0, 1, false, false},
 	}, -- Interface/FrameGeneral/UIFrameKyrianBackground
 	["Interface/FrameGeneral/UIFrameKyrianVertical"]={
 		["!UI-Frame-Kyrian-TileLeft"]={30, 256, 0.015625, 0.484375, 0, 1, false, false},
 		["!UI-Frame-Kyrian-TileRight"]={30, 256, 0.515625, 0.984375, 0, 1, false, false},
 	}, -- Interface/FrameGeneral/UIFrameKyrianVertical
 	["Interface/FrameGeneral/UIFrameMarine"]={
-		["UI-Frame-Marine-CornerTopLeft"]={166, 166, 0.000976562, 0.163086, 0.743164, 0.905273, false, false},
+		["UI-Frame-Marine-Corner"]={166, 166, 0.000976562, 0.163086, 0.743164, 0.905273, false, false},
 		["UI-Frame-Marine-CardParchmentWider"]={515, 438, 0.250977, 0.753906, 0.352539, 0.780273, false, false},
 		["UI-Frame-Marine-Portrait"]={205, 109, 0.755859, 0.956055, 0.352539, 0.458984, false, false},
 		["UI-Frame-Marine-PortraitDisable"]={205, 109, 0.755859, 0.956055, 0.460938, 0.567383, false, false},
@@ -1647,6 +1659,25 @@ local AtlasInfo = {
 		["!UI-Frame-Metal-EdgeLeft-2x"]={264, 256, 0.000976562, 0.258789, 0, 1, false, false},
 		["!UI-Frame-Metal-EdgeRight-2x"]={264, 256, 0.260742, 0.518555, 0, 1, false, false},
 	}, -- Interface/FrameGeneral/UIFrameMetalVertical2x
+	["Interface/FrameGeneral/UIFrameNecrolord"]={
+		["Necrolord-NineSlice-CornerBottomLeft"]={166, 166, 0.00390625, 0.652344, 0.148438, 0.310547, false, false},
+		["Necrolord-NineSlice-CornerBottomRight"]={166, 166, 0.00390625, 0.652344, 0.3125, 0.474609, false, false},
+		["Necrolord-NineSlice-CornerTopLeft"]={166, 166, 0.00390625, 0.652344, 0.476562, 0.638672, false, false},
+		["Necrolord-NineSlice-CornerTopRight"]={166, 166, 0.00390625, 0.652344, 0.640625, 0.802734, false, false},
+		["UI-Frame-Necrolord-ExitButtonBorder"]={33, 32, 0.660156, 0.789062, 0.148438, 0.179688, false, false},
+		["UI-Frame-Necrolord-TitleLeft"]={202, 85, 0.00390625, 0.792969, 0.804688, 0.887695, false, false},
+		["UI-Frame-Necrolord-TitleRight"]={202, 85, 0.00390625, 0.792969, 0.889648, 0.972656, false, false},
+		["_Necrolord-NineSlice-EdgeBottom"]={256, 30, 0, 1, 0.0859375, 0.115234, false, false},
+		["_Necrolord-NineSlice-EdgeTop"]={256, 30, 0, 1, 0.117188, 0.146484, false, false},
+		["_UI-Frame-Necrolord-TitleMiddle"]={128, 85, 0, 0.5, 0.000976562, 0.0839844, false, false},
+	}, -- Interface/FrameGeneral/UIFrameNecrolord
+	["Interface/FrameGeneral/UIFrameNecrolordBackground"]={
+		["Necrolord-NineSlice-Center"]={256, 256, 0, 1, 0, 1, false, false},
+	}, -- Interface/FrameGeneral/UIFrameNecrolordBackground
+	["Interface/FrameGeneral/UIFrameNecrolordVertical"]={
+		["!Necrolord-NineSlice-EdgeLeft"]={30, 256, 0.015625, 0.484375, 0, 1, false, false},
+		["!Necrolord-NineSlice-EdgeRight"]={30, 256, 0.515625, 0.984375, 0, 1, false, false},
+	}, -- Interface/FrameGeneral/UIFrameNecrolordVertical
 	["Interface/FrameGeneral/UIFrameNeutral"]={
 		["UI-Frame-Neutral-CardParchment"]={254, 439, 0.000976562, 0.249023, 0.148438, 0.577148, false, false},
 		["UI-Frame-Neutral-CardParchmentWider"]={515, 438, 0.250977, 0.753906, 0.148438, 0.576172, false, false},
@@ -1670,6 +1701,25 @@ local AtlasInfo = {
 		["!UI-Frame-Neutral-TileLeft"]={30, 256, 0.015625, 0.484375, 0, 1, false, false},
 		["!UI-Frame-Neutral-TileRight"]={30, 256, 0.515625, 0.984375, 0, 1, false, false},
 	}, -- Interface/FrameGeneral/UIFrameNeutralVertical
+	["Interface/FrameGeneral/UIFrameNightFae"]={
+		["NightFae-NineSlice-CornerBottomLeft"]={166, 166, 0.00390625, 0.652344, 0.148438, 0.310547, false, false},
+		["NightFae-NineSlice-CornerBottomRight"]={166, 166, 0.00390625, 0.652344, 0.3125, 0.474609, false, false},
+		["NightFae-NineSlice-CornerTopLeft"]={166, 166, 0.00390625, 0.652344, 0.476562, 0.638672, false, false},
+		["NightFae-NineSlice-CornerTopRight"]={166, 166, 0.00390625, 0.652344, 0.640625, 0.802734, false, false},
+		["UI-Frame-NightFae-ExitButtonBorder"]={33, 32, 0.660156, 0.789062, 0.148438, 0.179688, false, false},
+		["UI-Frame-NightFae-TitleLeft"]={202, 85, 0.00390625, 0.792969, 0.804688, 0.887695, false, false},
+		["UI-Frame-NightFae-TitleRight"]={202, 85, 0.00390625, 0.792969, 0.889648, 0.972656, false, false},
+		["_NightFae-NineSlice-EdgeBottom"]={256, 30, 0, 1, 0.0859375, 0.115234, false, false},
+		["_NightFae-NineSlice-EdgeTop"]={256, 30, 0, 1, 0.117188, 0.146484, false, false},
+		["_UI-Frame-NightFae-TitleMiddle"]={128, 85, 0, 0.5, 0.000976562, 0.0839844, false, false},
+	}, -- Interface/FrameGeneral/UIFrameNightFae
+	["Interface/FrameGeneral/UIFrameNightFaeBackground"]={
+		["NightFae-NineSlice-Center"]={256, 256, 0, 1, 0, 1, false, false},
+	}, -- Interface/FrameGeneral/UIFrameNightFaeBackground
+	["Interface/FrameGeneral/UIFrameNightFaeVertical"]={
+		["!NightFae-NineSlice-EdgeLeft"]={30, 256, 0.015625, 0.484375, 0, 1, false, false},
+		["!NightFae-NineSlice-EdgeRight"]={30, 256, 0.515625, 0.984375, 0, 1, false, false},
+	}, -- Interface/FrameGeneral/UIFrameNightFaeVertical
 	["Interface/FrameGeneral/UIFrameOribos"]={
 		["UI-Frame-Oribos-CornerBottomLeft"]={166, 166, 0.00390625, 0.652344, 0.3125, 0.474609, false, false},
 		["UI-Frame-Oribos-CornerBottomRight"]={166, 166, 0.00390625, 0.652344, 0.476562, 0.638672, false, false},
@@ -1702,6 +1752,25 @@ local AtlasInfo = {
 	["Interface/FrameGeneral/UIFrameSimpleMetalVertical"]={
 		["!UI-Frame-SimpleMetal-EdgeLeft"]={64, 64, 0.0078125, 0.507812, 0, 1, false, false},
 	}, -- Interface/FrameGeneral/UIFrameSimpleMetalVertical
+	["Interface/FrameGeneral/UIFrameVenthyr"]={
+		["UI-Frame-Venthyr-TitleLeft"]={202, 85, 0.00390625, 0.792969, 0.804688, 0.887695, false, false},
+		["UI-Frame-Venthyr-TitleRight"]={202, 85, 0.00390625, 0.792969, 0.889648, 0.972656, false, false},
+		["Venthyr-NineSlice-CornerBottomLeft"]={166, 166, 0.00390625, 0.652344, 0.148438, 0.310547, false, false},
+		["Venthyr-NineSlice-CornerBottomRight"]={166, 166, 0.00390625, 0.652344, 0.3125, 0.474609, false, false},
+		["Venthyr-NineSlice-CornerTopLeft"]={166, 166, 0.00390625, 0.652344, 0.476562, 0.638672, false, false},
+		["Venthyr-NineSlice-CornerTopRight"]={166, 166, 0.00390625, 0.652344, 0.640625, 0.802734, false, false},
+		["_UI-Frame-Venthyr-TitleMiddle"]={128, 85, 0, 0.5, 0.000976562, 0.0839844, false, false},
+		["_Venthyr-NineSlice-EdgeBottom"]={256, 30, 0, 1, 0.0859375, 0.115234, false, false},
+		["_Venthyr-NineSlice-EdgeTop"]={256, 30, 0, 1, 0.117188, 0.146484, false, false},
+		["UI-Frame-Venthyr-ExitButtonBorder"]={33, 32, 0.660156, 0.789062, 0.148438, 0.179688, false, false},
+	}, -- Interface/FrameGeneral/UIFrameVenthyr
+	["Interface/FrameGeneral/UIFrameVenthyrBackground"]={
+		["Venthyr-NineSlice-Center"]={256, 256, 0, 1, 0, 1, false, false},
+	}, -- Interface/FrameGeneral/UIFrameVenthyrBackground
+	["Interface/FrameGeneral/UIFrameVenthyrVertical"]={
+		["!Venthyr-NineSlice-EdgeLeft"]={30, 256, 0.015625, 0.484375, 0, 1, false, false},
+		["!Venthyr-NineSlice-EdgeRight"]={30, 256, 0.515625, 0.984375, 0, 1, false, false},
+	}, -- Interface/FrameGeneral/UIFrameVenthyrVertical
 	["Interface/FrameGeneral/UIFrameVertical"]={
 		["!UI-Frame-InnerLeftTile"]={3, 256, 0.484375, 0.53125, 0, 1, false, false},
 		["!UI-Frame-InnerRightTile"]={3, 256, 0.5625, 0.609375, 0, 1, false, false},
@@ -6114,6 +6183,30 @@ local AtlasInfo = {
 		["Upgrade-Bottom-Tile"]={32, 10, 0, 1, 0.03125, 0.34375, false, false},
 		["Upgrade-Top-Tile"]={32, 10, 0, 1, 0.40625, 0.71875, false, false},
 	}, -- Interface/Reforging/UpgradeFrameHorizontal
+	["Interface/Runecarving/RuneCarvingTooltip"]={
+		["Maw-tooltip-topper"]={95, 27, 0.0078125, 0.75, 0.03125, 0.875, false, false},
+	}, -- Interface/Runecarving/RuneCarvingTooltip
+	["Interface/Runecarving/RuneCarvingUI"]={
+		["runecarving-background-smoke"]={588, 676, 0.000488281, 0.287598, 0.000976562, 0.661133, false, false},
+		["runecarving-frame-glow"]={448, 454, 0.288574, 0.507324, 0.000976562, 0.444336, false, false},
+		["runecarving-frame-runes"]={448, 454, 0.288574, 0.507324, 0.446289, 0.889648, false, false},
+		["runecarving-frame"]={448, 454, 0.508301, 0.727051, 0.000976562, 0.444336, false, false},
+		["runecarving-icon-arrow-open"]={35, 24, 0.000488281, 0.0175781, 0.974609, 0.998047, false, false},
+		["runecarving-icon-bag-item-glow"]={63, 62, 0.0830078, 0.11377, 0.897461, 0.958008, false, false},
+		["runecarving-icon-center-empty"]={88, 88, 0.0390625, 0.0820312, 0.663086, 0.749023, false, false},
+		["runecarving-icon-center-pressed"]={88, 88, 0.0390625, 0.0820312, 0.750977, 0.836914, false, false},
+		["runecarving-icon-center-selected"]={88, 88, 0.0390625, 0.0820312, 0.838867, 0.924805, false, false},
+		["runecarving-icon-power-empty"]={78, 78, 0.0830078, 0.121094, 0.663086, 0.739258, false, false},
+		["runecarving-icon-power-pressed"]={78, 78, 0.0830078, 0.121094, 0.741211, 0.817383, false, false},
+		["runecarving-icon-power-selected"]={78, 78, 0.0830078, 0.121094, 0.819336, 0.895508, false, false},
+		["runecarving-icon-reagent-empty"]={49, 50, 0.12207, 0.145996, 0.663086, 0.711914, false, false},
+		["runecarving-icon-reagent-pressed"]={49, 50, 0.12207, 0.145996, 0.713867, 0.762695, false, false},
+		["runecarving-icon-reagent-selected"]={49, 50, 0.12207, 0.145996, 0.764648, 0.813477, false, false},
+		["runecarving-menu-power-background"]={300, 368, 0.728027, 0.874512, 0.000976562, 0.360352, false, false},
+		["runecarving-menu-power-border"]={72, 72, 0.000488281, 0.0356445, 0.902344, 0.972656, false, false},
+		["runecarving-menu-power-selected"]={72, 72, 0.0390625, 0.0742188, 0.926758, 0.99707, false, false},
+		["runecarving-menu-reagent-background"]={77, 243, 0.000488281, 0.0380859, 0.663086, 0.900391, false, false},
+	}, -- Interface/Runecarving/RuneCarvingUI
 	["Interface/Scenarios/BattleForAzerothThreatsMap"]={
 		["bfa-threats-mapborder"]={1394, 928, 0.000488281, 0.681152, 0.000976562, 0.907227, false, false},
 	}, -- Interface/Scenarios/BattleForAzerothThreatsMap
