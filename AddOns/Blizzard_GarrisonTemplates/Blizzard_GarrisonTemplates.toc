@@ -1,7 +1,0 @@
-## Title: Blizzard Garrison Templates
-## Author: Blizzard Entertainment
-## Version: 1.0
-## LoadOnDemand: 1
-
-Blizzard_GarrisonSharedTemplates.xml
-Blizzard_GarrisonMissionTemplates.xml
