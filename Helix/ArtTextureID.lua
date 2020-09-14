@@ -16571,6 +16571,7 @@ local ArtTexturePaths = {
 	[2904097]="Interface/Icons/INV_Glaive_1h_Naga_C_01",
 	[2923978]="Interface/Icons/INV_Glaive_1h_NzothRaid_D_01",
 	[2016714]="Interface/Icons/INV_Glaive_1h_WarfrontsAlliance_C_01",
+	[3587470]="Interface/Icons/INV_Glaive_Ardenweald_D_01_temp",
 	[1239924]="Interface/Icons/INV_Glavie_1H_NPC_C_02",
 	[1733930]="Interface/Icons/INV_Glavie_1H_ZandalarQuest_B_01",
 	[1239915]="Interface/Icons/INV_Glavie__1H_NPC_C_02",
